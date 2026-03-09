@@ -258,12 +258,16 @@ function ActiveExercise({
 
             {/* Exercise hero — video demo placeholder + image */}
             <div className="relative overflow-hidden" style={{ height: "240px" }}>
-                {/* Video demo placeholder */}
-                <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 border border-white/10 text-xs text-zinc-400">
-                    <Video className="w-3 h-3" />
-                    <span>Demo video</span>
-                    <span className="text-zinc-600">· coming soon</span>
-                </div>
+                {/* Functional YouTube Demo Link */}
+                <a
+                    href={`https://www.youtube.com/results?search_query=how+to+do+${encodeURIComponent(ex.name)}+exercise`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs font-bold text-white hover:bg-white/10 transition-colors shadow-lg"
+                >
+                    <Video className="w-3.5 h-3.5 text-red-500" />
+                    <span>Watch Demo</span>
+                </a>
                 <img src={ex.imageUrl} alt={ex.name} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
