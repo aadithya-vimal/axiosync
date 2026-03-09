@@ -548,3 +548,19 @@ export async function getCustomWorkouts(uid: string): Promise<CustomWorkout[]> {
 export async function deleteCustomWorkout(uid: string, id: string): Promise<void> {
     await deleteDoc(doc(db, "users", uid, "custom_workouts", id));
 }
+
+// ─── ACCOUNT DELETION ────────────────────────────────────────────────────────
+export async function deleteAllUserData(uid: string) {
+    if (isDemoMode) return;
+    const cols = ["workouts", "activities", "nutrition", "supplements", "toxins", "sleep", "readiness", "body_metrics", "ai_insights", "custom_workouts"];
+    for (const col of cols) {
+        const q = query(userCol(uid, col));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+            await deleteDoc(d.ref);
+        }
+    }
+    // Delete base docs
+    try { await deleteDoc(doc(db, "users", uid, "profile", "main")); } catch (e) { }
+    try { await deleteDoc(doc(db, "users", uid, "onboarding", "main")); } catch (e) { }
+}
