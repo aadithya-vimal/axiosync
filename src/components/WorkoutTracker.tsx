@@ -191,7 +191,7 @@ function ActiveExercise({
     session: SessionState;
     onSetComplete: (reps: number, weightKg: number) => void;
     onSkip: () => void;
-    onEnd: () => void;
+    onEnd: (discard?: boolean) => void;
 }) {
     const plan = session.plan;
     const ex: Exercise = plan.exercises[session.exerciseIndex];
@@ -225,7 +225,7 @@ function ActiveExercise({
                         </div>
                         <div className="flex gap-3">
                             <button className="btn btn-ghost flex-1" onClick={() => setShowDiscardModal(false)}>Maintain Mission</button>
-                            <button className="btn btn-danger flex-1" onClick={() => handleEnd(true)}>Abort</button>
+                            <button className="btn btn-danger flex-1" onClick={() => onEnd(true)}>Abort</button>
                         </div>
                     </div>
                 </div>

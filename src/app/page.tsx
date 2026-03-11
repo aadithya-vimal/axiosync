@@ -121,6 +121,21 @@ export default function DashboardPage() {
     })();
   }, [user, refreshBodyState]);
 
+  const handleDelete = useCallback(async (id: string, type: 'workout' | 'activity') => {
+    if (!user) return;
+    try {
+      if (type === 'workout') {
+        await deleteWorkoutLog(user.uid, id);
+        setRecentWorkouts(prev => prev.filter(w => w.id !== id));
+      } else {
+        await deleteActivityLog(user.uid, id);
+        setRecentActivities(prev => prev.filter(a => a.id !== id));
+      }
+    } catch (e) {
+      console.error("Failed to delete log", e);
+    }
+  }, [user]);
+
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-base)" }}>
