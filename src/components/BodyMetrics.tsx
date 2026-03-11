@@ -102,7 +102,7 @@ export default function BodyMetrics() {
 
     return (
         <div className="space-y-6 pb-32">
-            <h1 className="text-3xl font-bold text-white px-2 tracking-tight">Report</h1>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] px-2 tracking-tight">Report</h1>
 
             {/* Top 3 Stats */}
             <div className="card p-5 grid grid-cols-3 divide-x divide-white/[0.06]">
@@ -111,8 +111,8 @@ export default function BodyMetrics() {
                         <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: bg }}>
                             <Icon className="w-5 h-5" style={{ color }} />
                         </div>
-                        <div className="text-2xl font-bold stat-num mt-1 text-white">{value}</div>
-                        <div className="text-xs text-zinc-500 font-medium">{label}</div>
+                        <div className="text-2xl font-bold stat-num mt-1 text-[var(--text-primary)]">{value}</div>
+                        <div className="text-xs text-[var(--text-muted)] font-medium">{label}</div>
                     </div>
                 ))}
             </div>
@@ -120,7 +120,7 @@ export default function BodyMetrics() {
             {/* History Calendar */}
             <div>
                 <div className="flex items-center justify-between mb-3 px-2">
-                    <h2 className="text-xl font-bold text-white tracking-tight">History</h2>
+                    <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">History</h2>
                     <button className="text-[#0A84FF] text-sm font-semibold">All records</button>
                 </div>
                 <div className="card p-6">
@@ -132,14 +132,14 @@ export default function BodyMetrics() {
 
                             return (
                                 <div key={i} className="flex flex-col items-center gap-2">
-                                    <span className="text-xs font-semibold text-zinc-500">{format(date, "EEEEEE")}</span>
+                                    <span className="text-xs font-semibold text-[var(--text-muted)]">{format(date, "EEEEEE")}</span>
                                     <div
                                         className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 text-sm font-bold
                                         ${isToday
                                                 ? "border-2 border-[#0A84FF] text-[#0A84FF]"
                                                 : hasActivity
-                                                    ? "bg-[#0A84FF] text-white"
-                                                    : "text-zinc-600"
+                                                    ? "bg-[#0A84FF] text-[var(--text-primary)]"
+                                                    : "text-[var(--text-muted)]"
                                             }`}
                                         style={isToday ? { boxShadow: "0 0 14px rgba(10,132,255,0.35)" } : {}}
                                     >
@@ -150,10 +150,10 @@ export default function BodyMetrics() {
                         })}
                     </div>
                     <div className="border-t border-white/[0.06] pt-4">
-                        <div className="text-xs font-semibold text-zinc-500 mb-1.5 uppercase tracking-widest">Day Streak</div>
+                        <div className="text-xs font-semibold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">Day Streak</div>
                         <div className="flex items-center gap-1.5">
                             <Flame className="w-5 h-5 text-[#FF453A]" fill="currentColor" />
-                            <span className="text-2xl font-bold stat-num text-white">{streakInfo.streak}</span>
+                            <span className="text-2xl font-bold stat-num text-[var(--text-primary)]">{streakInfo.streak}</span>
                         </div>
                     </div>
                 </div>
@@ -162,10 +162,10 @@ export default function BodyMetrics() {
             {/* Weight Section */}
             <div>
                 <div className="flex items-center justify-between mb-3 px-2">
-                    <h2 className="text-xl font-bold text-white tracking-tight">Weight</h2>
+                    <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Weight</h2>
                     <button
                         onClick={() => setLoggingWeight(true)}
-                        className="bg-[#0A84FF] text-white px-5 py-2 rounded-full text-sm font-semibold active:scale-95 transition-all duration-200"
+                        className="bg-[#0A84FF] text-[var(--text-primary)] px-5 py-2 rounded-full text-sm font-semibold active:scale-95 transition-all duration-200"
                         style={{ boxShadow: "0 4px 14px rgba(10,132,255,0.4)" }}
                     >
                         Log
@@ -174,7 +174,7 @@ export default function BodyMetrics() {
 
                 {loggingWeight ? (
                     <div className="card p-5 space-y-4 border-[#0A84FF]/20">
-                        <h3 className="font-bold text-white tracking-tight">Log Today&apos;s Weight</h3>
+                        <h3 className="font-bold text-[var(--text-primary)] tracking-tight">Log Today&apos;s Weight</h3>
                         <div className="flex gap-4">
                             <div className="flex-1">
                                 <label className="label">Weight (kg)</label>
@@ -194,20 +194,20 @@ export default function BodyMetrics() {
                     <div className="card p-5 pt-6 pb-2">
                         <div className="flex justify-between items-start mb-5">
                             <div>
-                                <div className="text-sm text-zinc-500 font-medium mb-1">Current</div>
+                                <div className="text-sm text-[var(--text-muted)] font-medium mb-1">Current</div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-bold stat-num tracking-tight text-white">{currentWeight.toFixed(1)}</span>
-                                    <span className="text-xl font-bold text-zinc-400">kg</span>
+                                    <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{currentWeight.toFixed(1)}</span>
+                                    <span className="text-xl font-bold text-[var(--text-muted)]">kg</span>
                                 </div>
                             </div>
                             <div className="text-right space-y-1.5">
                                 <div className="flex justify-between gap-5 text-sm">
-                                    <span className="text-zinc-500 font-medium">Heaviest</span>
-                                    <span className="font-bold stat-num text-white">{heaviest.toFixed(1)}</span>
+                                    <span className="text-[var(--text-muted)] font-medium">Heaviest</span>
+                                    <span className="font-bold stat-num text-[var(--text-primary)]">{heaviest.toFixed(1)}</span>
                                 </div>
                                 <div className="flex justify-between gap-5 text-sm">
-                                    <span className="text-zinc-500 font-medium">Lightest</span>
-                                    <span className="font-bold stat-num text-white">{lightest.toFixed(1)}</span>
+                                    <span className="text-[var(--text-muted)] font-medium">Lightest</span>
+                                    <span className="font-bold stat-num text-[var(--text-primary)]">{lightest.toFixed(1)}</span>
                                 </div>
                             </div>
                         </div>
@@ -235,7 +235,7 @@ export default function BodyMetrics() {
                                 </ResponsiveContainer>
                                 {/* Weight badge */}
                                 <div className="absolute top-[14%] left-1/2 -translate-x-1/2">
-                                    <div className="px-3 py-1 rounded-full text-sm font-bold text-white shadow-lg" style={{ background: "rgba(10,132,255,0.25)", backdropFilter: "blur(8px)", border: "1px solid rgba(10,132,255,0.3)" }}>
+                                    <div className="px-3 py-1 rounded-full text-sm font-bold text-[var(--text-primary)] shadow-lg" style={{ background: "rgba(10,132,255,0.25)", backdropFilter: "blur(8px)", border: "1px solid rgba(10,132,255,0.3)" }}>
                                         {currentWeight.toFixed(1)} kg
                                     </div>
                                 </div>
@@ -248,10 +248,10 @@ export default function BodyMetrics() {
             {/* BMI Section */}
             <div>
                 <div className="flex items-center justify-between mb-3 px-2">
-                    <h2 className="text-xl font-bold text-white tracking-tight">BMI</h2>
+                    <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">BMI</h2>
                     <button
                         onClick={() => setLoggingWeight(true)}
-                        className="bg-white/[0.08] hover:bg-white/[0.12] border border-white/10 text-white px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5"
+                        className="bg-white/[0.08] hover:bg-white/[0.12] border border-[var(--border-subtle)] text-[var(--text-primary)] px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5"
                     >
                         <Edit2 className="w-3.5 h-3.5" /> Edit
                     </button>
@@ -259,7 +259,7 @@ export default function BodyMetrics() {
 
                 <div className="card p-6">
                     <div className="flex justify-between items-center mb-8">
-                        <span className="text-4xl font-bold stat-num tracking-tight text-white">{bmi.toFixed(1)}</span>
+                        <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{bmi.toFixed(1)}</span>
                         <div
                             className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold"
                             style={{ color: bmiCategory.color, background: `${bmiCategory.color}18`, borderColor: `${bmiCategory.color}40` }}
@@ -281,16 +281,16 @@ export default function BodyMetrics() {
                             <div className="bmi-segment flex-[5] bg-[#FF6B35]" />
                             <div className="bmi-segment flex-[5] bg-[#FF453A]" />
                         </div>
-                        <div className="flex justify-between text-[11px] font-semibold text-zinc-600 mt-2 px-1">
+                        <div className="flex justify-between text-[11px] font-semibold text-[var(--text-muted)] mt-2 px-1">
                             <span>15</span><span>16</span><span>18.5</span><span>25</span><span>30</span><span>35</span><span>40</span>
                         </div>
                     </div>
 
                     <div className="border-t border-white/[0.06] pt-4 flex justify-between items-center">
-                        <span className="text-zinc-500 font-medium">Height</span>
+                        <span className="text-[var(--text-muted)] font-medium">Height</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-lg font-bold stat-num text-white">{height}</span>
-                            <span className="text-zinc-400 font-bold">cm</span>
+                            <span className="text-lg font-bold stat-num text-[var(--text-primary)]">{height}</span>
+                            <span className="text-[var(--text-muted)] font-bold">cm</span>
                         </div>
                     </div>
                 </div>

@@ -36,17 +36,17 @@ export default function NutrientTracker() {
                 const met = pct >= 80;
 
                 return (
-                    <div key={n.key} className={`rounded-xl p-3 border transition-all ${met ? "bg-emerald-500/10 border-emerald-500/30" : "bg-white/5 border-white/10"}`}>
+                    <div key={n.key} className={`rounded-xl p-3 border transition-all ${met ? "bg-emerald-500/10 border-emerald-500/30" : "bg-white/5 border-[var(--border-subtle)]"}`}>
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                                 <span className="text-base">{n.icon}</span>
                                 <div>
-                                    <div className="text-sm font-medium text-white">{n.label}</div>
+                                    <div className="text-sm font-medium text-[var(--text-primary)]">{n.label}</div>
                                     <div className="text-xs text-slate-500">{n.bodyEffect}</div>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className={`text-sm font-bold ${met ? "text-emerald-400" : "text-white"}`}>
+                                <div className={`text-sm font-bold ${met ? "text-emerald-400" : "text-[var(--text-primary)]"}`}>
                                     {current}
                                     <span className="text-xs text-slate-500 font-normal ml-0.5">{n.unit}</span>
                                 </div>

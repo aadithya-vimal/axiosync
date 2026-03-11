@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   getTodayToxins, getTodayNutrition, getOnboarding,
-  getRecentWorkouts, getRecentActivities, getTodayReadiness,
+  getRecentWorkouts, getRecentActivities, getTodayReadiness, getBodyMetrics,
 } from "@/lib/firestore";
 
 // Analytics
@@ -22,15 +23,15 @@ import DiscoverSection from "@/components/sections/DiscoverSection";
 import LibrarySection from "@/components/sections/LibrarySection";
 
 import {
-  Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library
+  Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library, Moon, Sun
 } from "lucide-react";
 
 const BodyAnalytics = dynamic(() => import("@/components/BodyAnalytics"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center min-h-[300px]">
-      <div className="text-zinc-500 text-sm flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-[#0A84FF]/40 animate-spin" style={{ borderTopColor: "transparent" }} />
+      <div className="text-[var(--text-muted)] text-sm flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--accent-blue)]/40 border-t-transparent animate-spin" />
         Loading Body Analytics…
       </div>
     </div>
@@ -40,13 +41,13 @@ const BodyAnalytics = dynamic(() => import("@/components/BodyAnalytics"), {
 type Section = "training" | "discover" | "body" | "library" | "analytics" | "log" | "settings";
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "training", label: "Training", icon: Timer },
-  { id: "discover", label: "Discover", icon: Compass },
-  { id: "body", label: "Body Analytics", icon: Accessibility },
-  { id: "library", label: "Library", icon: Library },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "log", label: "Log", icon: BookOpen },
-  { id: "settings", label: "Settings", icon: User },
+  { id: "training", label: "Operations", icon: Timer },
+  { id: "discover", label: "Intelligence", icon: Compass },
+  { id: "body", label: "Biometrics", icon: Accessibility },
+  { id: "library", label: "Arsenal", icon: Library },
+  { id: "analytics", label: "Briefing", icon: BarChart3 },
+  { id: "log", label: "Archive", icon: BookOpen },
+  { id: "settings", label: "Protocols", icon: User },
 ];
 
 const pageVariants = {
@@ -60,6 +61,7 @@ const pageVariants = {
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [section, setSection] = useState<Section>("training");
   const [nutrientAura, setNutrientAura] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -67,9 +69,8 @@ export default function DashboardPage() {
   const [recentWorkouts, setRecentWorkouts] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [readinessPct, setReadinessPct] = useState(70);
-  const [lastSleepHours, setLastSleepHours] = useState(7.5);
-  const [sleepQuality, setSleepQuality] = useState(7);
   const [streakDays, setStreakDays] = useState(0);
+  const [latestMetric, setLatestMetric] = useState<any>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
@@ -85,17 +86,19 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [onboarding, workouts, activities, readiness] = await Promise.all([
+      const [onboarding, workouts, activities, readiness, metrics] = await Promise.all([
         getOnboarding(user.uid),
         getRecentWorkouts(user.uid, 50),
         getRecentActivities(user.uid, 50),
         getTodayReadiness(user.uid),
+        getBodyMetrics(user.uid, 1),
       ]);
       if (!onboarding?.completed) setShowOnboarding(true);
       setOnboardingData(onboarding);
       setRecentWorkouts(workouts);
       setRecentActivities(activities);
       if (readiness) setReadinessPct(readiness.readiness_pct);
+      if (metrics.length > 0) setLatestMetric(metrics[0]);
 
       // Streak calc
       const allDays = new Set([
@@ -133,9 +136,8 @@ export default function DashboardPage() {
             recentWorkouts={recentWorkouts}
             recentActivities={recentActivities}
             readinessPct={readinessPct}
-            lastSleepHours={lastSleepHours}
-            sleepQuality={sleepQuality}
             streakDays={streakDays}
+            latestMetric={latestMetric}
             dataLoaded={dataLoaded}
           />
         )}
@@ -150,7 +152,7 @@ export default function DashboardPage() {
         )}
 
         {section === "body" && (
-          <motion.div key="body" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="absolute inset-0 z-0">
+          <motion.div key="body" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="w-full">
             <BodyAnalytics
               nutrientAura={nutrientAura}
               recentWorkouts={recentWorkouts}
@@ -183,12 +185,21 @@ export default function DashboardPage() {
 
       <div className="flex flex-col sm:flex-row h-screen overflow-hidden" style={{ background: "var(--bg-base)" }}>
         {/* ── Desktop Sidebar ── */}
-        <nav className="hidden sm:flex flex-col w-60 shrink-0 h-screen sticky top-0 p-4" style={{ background: "rgba(10,10,12,0.6)", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
-          <div className="flex items-center gap-3 px-2 mb-8 mt-2">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white text-lg" style={{ background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)", boxShadow: "0 0 20px rgba(59,130,246,0.3)" }}>
-              A
+        <nav className="hidden sm:flex flex-col w-60 shrink-0 h-screen sticky top-0 p-4 bg-[var(--bg-elevated)] border-r border-[var(--border-subtle)]">
+          <div className="flex items-center justify-between px-2 mb-8 mt-2">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-2xl tracking-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Axio</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">sync</span>
+              </span>
             </div>
-            <span className="font-bold text-lg tracking-tight text-white">Axiosync</span>
+
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-full hover:bg-[var(--border-subtle)] text-[var(--text-muted)] transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
           </div>
 
           <div className="flex-1 space-y-1">
@@ -198,18 +209,18 @@ export default function DashboardPage() {
                 <motion.button
                   key={id}
                   onClick={() => setSection(id)}
-                  whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                  whileHover={{ backgroundColor: "var(--border-subtle)" }}
                   whileTap={{ scale: 0.97 }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl font-medium transition-colors duration-200 text-left relative overflow-hidden ${isActive ? "bg-white/10 text-white" : "text-zinc-400"}`}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl font-medium transition-colors duration-200 text-left relative overflow-hidden ${isActive ? "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]" : "text-[var(--text-muted)]"}`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-indicator"
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-[#3B82F6]"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-[var(--accent-blue)]"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <Icon className={`w-5 h-5 ${isActive ? "text-[#3B82F6]" : ""}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? "text-[var(--accent-blue)]" : ""}`} />
                   {label}
                 </motion.button>
               );
@@ -217,39 +228,47 @@ export default function DashboardPage() {
           </div>
 
           {user && (
-            <div className="mt-auto pt-4 border-t border-white/[0.06]">
+            <div className="mt-auto pt-4 border-t border-[var(--border-subtle)]">
               <div className="flex items-center gap-3 px-2">
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full ring-1 ring-white/10" />
+                  <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full ring-1 ring-[var(--border-subtle)]" />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center">
-                    <User className="w-4 h-4 text-zinc-300" />
+                  <div className="w-8 h-8 rounded-full bg-[var(--border-subtle)] flex items-center justify-center">
+                    <User className="w-4 h-4 text-[var(--text-muted)]" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-white truncate">{user.displayName?.split(" ")[0] || "User"}</div>
-                  <div className="text-[11px] text-zinc-500 truncate">{user.email}</div>
+                  <div className="text-sm font-medium text-[var(--text-primary)] truncate">{user.displayName?.split(" ")[0] || "User"}</div>
+                  <div className="text-[11px] text-[var(--text-muted)] truncate">{user.email}</div>
                 </div>
               </div>
             </div>
           )}
         </nav>
 
+        {/* ── Mobile Top Nav (For Theme Toggle) ── */}
+        <div className="sm:hidden fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-[var(--bg-base)] to-transparent pointer-events-none">
+          <span className="font-extrabold text-xl tracking-tight pointer-events-auto">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Axio</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">sync</span>
+          </span>
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="p-2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-muted)] shadow-sm pointer-events-auto"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+
         {/* ── Main Content ── */}
-        <main className={`flex-1 overflow-y-auto no-scrollbar relative z-10 w-full ${section === "body" ? "p-0 max-w-none h-screen" : "px-4 sm:px-8 pt-6 pb-28 sm:pb-8 max-w-[1000px] mx-auto"}`}>
+        <main className="flex-1 overflow-y-auto no-scrollbar relative z-10 w-full px-4 sm:px-8 pt-24 sm:pt-6 pb-28 sm:pb-8 max-w-[1000px] mx-auto overflow-x-hidden">
           <SectionContent />
         </main>
 
         {/* ── Mobile Bottom Nav ── */}
         <div className="mobile-nav sm:hidden">
           <div
-            className="mx-2 mb-3 px-2 pt-3 pb-2 rounded-[28px] border border-white/10 flex items-center justify-around overflow-x-auto no-scrollbar gap-2"
-            style={{
-              background: "rgba(15,16,20,0.88)",
-              backdropFilter: "blur(32px) saturate(180%)",
-              WebkitBackdropFilter: "blur(32px) saturate(180%)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset",
-            }}
+            className="mx-1 mb-2 px-1 pt-2 pb-1.5 rounded-[24px] border border-[var(--border-strong)] flex items-center justify-between overflow-hidden gap-0.5 shadow-lg bg-[var(--bg-overlay)]/90 backdrop-blur-xl"
           >
             {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
               const isActive = section === id;
@@ -258,19 +277,19 @@ export default function DashboardPage() {
                   key={id}
                   onClick={() => setSection(id)}
                   whileTap={{ scale: 0.88 }}
-                  className={`flex flex-col items-center justify-center gap-1 min-w-[60px] py-1 transition-colors ${isActive ? "text-[#3B82F6]" : "text-zinc-500"}`}
+                  className={`flex flex-1 flex-col items-center justify-center gap-1 min-w-0 py-1 transition-colors ${isActive ? "text-[var(--accent-blue)]" : "text-[var(--text-muted)]"}`}
                 >
-                  <div className="relative">
+                  <div className="relative flex justify-center w-full">
                     {isActive && (
                       <motion.div
                         layoutId="mobile-indicator"
-                        className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#3B82F6]"
+                        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[var(--accent-blue)]"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <Icon className={`w-6 h-6 mt-1 ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
+                    <Icon className={`w-5 h-5 mt-1 shrink-0 ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
                   </div>
-                  <span className={`text-[10px] ${isActive ? "font-semibold" : "font-medium"}`}>{label}</span>
+                  <span className={`text-[9px] w-full text-center truncate px-0.5 ${isActive ? "font-semibold" : "font-medium"}`}>{label}</span>
                 </motion.button>
               );
             })}

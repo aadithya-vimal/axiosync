@@ -24,17 +24,15 @@ export default function TrainingSection({
     recentWorkouts,
     recentActivities,
     readinessPct,
-    lastSleepHours,
-    sleepQuality,
     streakDays,
     dataLoaded,
+    latestMetric,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
     readinessPct: number;
-    lastSleepHours: number;
-    sleepQuality: number;
     streakDays: number;
+    latestMetric: any;
     dataLoaded: boolean;
 }) {
     const [subView, setSubView] = useState<"home" | "strength" | "cardio">("home");
@@ -79,19 +77,19 @@ export default function TrainingSection({
             variants={pageVariants} initial="initial" animate="enter" exit="exit"
             className="space-y-4 pb-32"
         >
-            <h1 className="text-3xl font-bold text-white tracking-tight px-1 pt-2">Training</h1>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight px-1 pt-2">Operations</h1>
 
             {/* ── AI Insights Feed ── */}
             {dataLoaded && (
                 <div className="card p-5">
                     <AIInsightsFeed
                         readinessPct={readinessPct}
-                        lastSleepHours={lastSleepHours}
-                        lastSleepQuality={sleepQuality}
                         daysSinceWorkout={daysSince}
                         totalVolumeToday={totalToday}
                         streakDays={streakDays}
                         lastCardioKm={lastCardioKm}
+                        weightKg={latestMetric?.weight_kg}
+                        heightCm={latestMetric?.height_cm}
                     />
                 </div>
             )}
@@ -110,11 +108,11 @@ export default function TrainingSection({
                         className="absolute inset-0 opacity-10 pointer-events-none"
                         style={{ background: `radial-gradient(circle at 80% 20%, ${scoreColor}, transparent 60%)` }}
                     />
-                    <div className="text-xs text-zinc-500 font-semibold uppercase tracking-widest">Readiness</div>
+                    <div className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-widest">Readiness</div>
                     {dataLoaded ? (
                         <>
                             <div className="text-4xl font-bold stat-num" style={{ color: scoreColor }}>{readinessPct}</div>
-                            <div className="text-xs text-zinc-600">
+                            <div className="text-xs text-[var(--text-muted)]">
                                 {readinessPct >= 80 ? "Peak — go hard" : readinessPct >= 60 ? "Good — train steady" : "Low — recover"}
                             </div>
                             <div className="w-full h-1 bg-white/[0.06] rounded-full mt-1">
@@ -141,14 +139,14 @@ export default function TrainingSection({
                         className="absolute inset-0 opacity-10 pointer-events-none"
                         style={{ background: "radial-gradient(circle at 80% 20%, #FF9F0A, transparent 60%)" }}
                     />
-                    <div className="text-xs text-zinc-500 font-semibold uppercase tracking-widest">Streak</div>
+                    <div className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-widest">Streak</div>
                     {dataLoaded ? (
                         <>
                             <div className="flex items-end gap-1">
                                 <div className="text-4xl font-bold stat-num text-[#FF9F0A]">{streakDays}</div>
-                                <div className="text-sm text-zinc-500 mb-1">days</div>
+                                <div className="text-sm text-[var(--text-muted)] mb-1">days</div>
                             </div>
-                            <div className="text-xs text-zinc-600">
+                            <div className="text-xs text-[var(--text-muted)]">
                                 {streakDays === 0 ? "Start today!" : streakDays < 3 ? "Keep going!" : streakDays < 7 ? "Building momentum" : "🔥 On fire!"}
                             </div>
                         </>
@@ -171,8 +169,8 @@ export default function TrainingSection({
                         <Dumbbell className="w-5 h-5 text-[#0A84FF]" />
                     </div>
                     <div>
-                        <div className="font-bold text-white text-base">Strength</div>
-                        <div className="text-xs text-zinc-500 mt-0.5">
+                        <div className="font-bold text-[var(--text-primary)] text-base">Power Deployment</div>
+                        <div className="text-xs text-[var(--text-muted)] mt-0.5">
                             {daysSince < 99 ? `Last: ${daysSince === 0 ? "today" : `${daysSince}d ago`}` : "No sessions yet"}
                         </div>
                     </div>
@@ -191,8 +189,8 @@ export default function TrainingSection({
                         <Activity className="w-5 h-5 text-[#FF9F0A]" />
                     </div>
                     <div>
-                        <div className="font-bold text-white text-base">Cardio</div>
-                        <div className="text-xs text-zinc-500 mt-0.5">
+                        <div className="font-bold text-[var(--text-primary)] text-base">Endurance Protocol</div>
+                        <div className="text-xs text-[var(--text-muted)] mt-0.5">
                             {lastCardioKm > 0 ? `Last: ${lastCardioKm.toFixed(1)}km` : "No sessions yet"}
                         </div>
                     </div>
@@ -202,7 +200,7 @@ export default function TrainingSection({
             {/* ── Bento Row 3: Recent activity + Stats ── */}
             {dataLoaded && (recentWorkouts.length > 0 || recentActivities.length > 0) && (
                 <div className="card p-4 space-y-3">
-                    <div className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Recent Sessions</div>
+                    <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">Recent Sessions</div>
                     {[...recentWorkouts.slice(0, 2).map(w => ({ type: "strength" as const, name: w.name, value: `${Math.round(w.total_volume_kg || 0).toLocaleString()}kg`, date: w.timestamp?.toDate?.() })),
                     ...recentActivities.slice(0, 2).map(a => ({ type: "cardio" as const, name: a.name || a.type, value: a.distance_km ? `${a.distance_km.toFixed(1)}km` : `${a.duration_min}min`, date: a.timestamp?.toDate?.() })),
                     ].sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)).slice(0, 3).map((s, i) => (
@@ -211,10 +209,10 @@ export default function TrainingSection({
                                 {s.type === "strength" ? <Dumbbell className="w-3.5 h-3.5" /> : <Activity className="w-3.5 h-3.5" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <div className="text-sm text-white font-medium truncate capitalize">{s.name}</div>
-                                <div className="text-xs text-zinc-600">{s.date ? s.date.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" }) : ""}</div>
+                                <div className="text-sm text-[var(--text-primary)] font-medium truncate capitalize">{s.name}</div>
+                                <div className="text-xs text-[var(--text-muted)]">{s.date ? s.date.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" }) : ""}</div>
                             </div>
-                            <div className="text-sm font-bold stat-num text-zinc-300">{s.value}</div>
+                            <div className="text-sm font-bold stat-num text-[var(--text-secondary)]">{s.value}</div>
                         </div>
                     ))}
                 </div>

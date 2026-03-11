@@ -83,14 +83,14 @@ export default function CircadianChart() {
         <div className="space-y-4">
             {/* Summary stats */}
             <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div className="bg-white/5 border border-[var(--border-subtle)] rounded-xl p-3">
                     <div className="text-xs text-slate-400 mb-1">Avg Sleep</div>
                     <div className={`text-xl font-bold ${avgSleep >= 7.5 ? "text-emerald-400" : avgSleep >= 6 ? "text-yellow-400" : "text-red-400"}`}>
                         {avgSleep.toFixed(1)}h
                     </div>
                     <div className="text-xs text-slate-500">of 8h target</div>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div className="bg-white/5 border border-[var(--border-subtle)] rounded-xl p-3">
                     <div className="text-xs text-slate-400 mb-1">Sleep Debt</div>
                     <div className={`text-xl font-bold ${totalDebt < 2 ? "text-emerald-400" : totalDebt < 5 ? "text-yellow-400" : "text-red-400"}`}>
                         {totalDebt.toFixed(1)}h

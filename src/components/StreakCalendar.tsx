@@ -89,8 +89,8 @@ export default function StreakCalendar({ workouts, activities }: Props) {
         <div className="card p-5 space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-white">Activity Calendar</h3>
-                <div className="flex gap-3 text-xs text-zinc-500">
+                <h3 className="font-semibold text-[var(--text-primary)]">Activity Calendar</h3>
+                <div className="flex gap-3 text-xs text-[var(--text-muted)]">
                     <span><span className="text-[#30D158] font-bold">{currentStreak}</span> day streak</span>
                     <span><span className="text-[#0A84FF] font-bold">{totalActiveDays}</span> active days</span>
                 </div>
@@ -102,7 +102,7 @@ export default function StreakCalendar({ workouts, activities }: Props) {
                     <span className="text-lg">🔥</span>
                     <div>
                         <div className="text-sm font-semibold text-[#30D158]">{currentStreak}-day streak!</div>
-                        <div className="text-xs text-zinc-600">Longest: {longestStreak} days</div>
+                        <div className="text-xs text-[var(--text-muted)]">Longest: {longestStreak} days</div>
                     </div>
                 </div>
             )}
@@ -111,7 +111,7 @@ export default function StreakCalendar({ workouts, activities }: Props) {
             <div className="overflow-x-auto no-scrollbar">
                 <div style={{ display: "flex", gap: 3, marginLeft: 20, marginBottom: 2 }}>
                     {MONTH_LABELS.map(({ label, col }) => (
-                        <div key={`${label}-${col}`} style={{ minWidth: (col === 0 ? 0 : (col - (MONTH_LABELS.find(m => m.col < col)?.col ?? 0)) * 13) + "px" }} className="text-[9px] text-zinc-600 shrink-0">
+                        <div key={`${label}-${col}`} style={{ minWidth: (col === 0 ? 0 : (col - (MONTH_LABELS.find(m => m.col < col)?.col ?? 0)) * 13) + "px" }} className="text-[9px] text-[var(--text-muted)] shrink-0">
                             {label}
                         </div>
                     ))}
@@ -122,7 +122,7 @@ export default function StreakCalendar({ workouts, activities }: Props) {
                     {/* Day labels */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingTop: 0 }}>
                         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                            <div key={i} className="text-[9px] text-zinc-600 flex items-center justify-end" style={{ width: 14, height: 10, lineHeight: 1 }}>{d}</div>
+                            <div key={i} className="text-[9px] text-[var(--text-muted)] flex items-center justify-end" style={{ width: 14, height: 10, lineHeight: 1 }}>{d}</div>
                         ))}
                     </div>
 
@@ -147,31 +147,31 @@ export default function StreakCalendar({ workouts, activities }: Props) {
 
                 {/* Legend */}
                 <div className="flex items-center gap-2 mt-3 justify-end">
-                    <span className="text-[9px] text-zinc-600">Less</span>
+                    <span className="text-[9px] text-[var(--text-muted)]">Less</span>
                     {[0, 1, 2, 3].map(n => (
                         <div key={n} style={{ width: 10, height: 10, borderRadius: 2, background: cellColor(n) }} />
                     ))}
-                    <span className="text-[9px] text-zinc-600">More</span>
+                    <span className="text-[9px] text-[var(--text-muted)]">More</span>
                 </div>
             </div>
 
             {/* Daily Details Modal */}
             <AnimatePresence>
                 {selectedDate && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="bg-[#12121a] border border-white/10 shadow-2xl rounded-2xl w-full max-w-md overflow-hidden relative"
+                            className="bg-[#12121a] border border-[var(--border-subtle)] shadow-2xl rounded-2xl w-full max-w-md overflow-hidden relative"
                         >
-                            <div className="p-5 border-b border-white/5 flex items-center justify-between bg-[#1a1a24]">
+                            <div className="p-5 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[#1a1a24]">
                                 <div>
-                                    <h3 className="font-bold text-lg text-white">Daily Summary</h3>
-                                    <p className="text-zinc-500 text-sm">{new Date(selectedDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                    <h3 className="font-bold text-lg text-[var(--text-primary)]">Daily Summary</h3>
+                                    <p className="text-[var(--text-muted)] text-sm">{new Date(selectedDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                 </div>
                                 <button onClick={() => setSelectedDate(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                                    <X className="w-5 h-5 text-zinc-400" />
+                                    <X className="w-5 h-5 text-[var(--text-muted)]" />
                                 </button>
                             </div>
                             <div className="p-5 max-h-[60vh] overflow-y-auto space-y-4">
@@ -180,24 +180,24 @@ export default function StreakCalendar({ workouts, activities }: Props) {
                                     const wItem = item as WorkoutLog;
                                     const aItem = item as ActivityLog;
                                     return (
-                                        <div key={idx} className="bg-[#1a1a24] border border-white/5 rounded-xl p-4 flex flex-col gap-2">
+                                        <div key={idx} className="bg-[#1a1a24] border border-[var(--border-subtle)] rounded-xl p-4 flex flex-col gap-2">
                                             <div className="flex items-center justify-between">
-                                                <span className="font-semibold text-white capitalize flex items-center gap-2">
+                                                <span className="font-semibold text-[var(--text-primary)] capitalize flex items-center gap-2">
                                                     {isWorkout ? "🏋️ Strength & Muscle" : "🏃 Cardiovascular"}
                                                 </span>
-                                                <span className="text-xs font-semibold text-zinc-400 bg-black/50 px-2 py-1 rounded-md flex items-center gap-1">
+                                                <span className="text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-overlay)] px-2 py-1 rounded-md flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
                                                     {item.duration_min} min
                                                 </span>
                                             </div>
                                             {isWorkout && (
-                                                <div className="mt-2 text-sm text-zinc-400 flex items-center gap-2">
+                                                <div className="mt-2 text-sm text-[var(--text-muted)] flex items-center gap-2">
                                                     <Target className="w-4 h-4 text-[#A855F7]" />
                                                     {wItem.name} • {wItem.exercises.length} Exercises
                                                 </div>
                                             )}
                                             {!isWorkout && (
-                                                <div className="mt-2 text-sm text-zinc-400 capitalize flex items-center gap-2">
+                                                <div className="mt-2 text-sm text-[var(--text-muted)] capitalize flex items-center gap-2">
                                                     Activity: {aItem.type.replace("_", " ")}
                                                 </div>
                                             )}

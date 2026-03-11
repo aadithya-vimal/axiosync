@@ -98,7 +98,7 @@ function SortableExerciseRow({
             <div className="flex items-center gap-2 p-3">
                 {/* Drag handle */}
                 <div
-                    className="p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-400 shrink-0 touch-none"
+                    className="p-1.5 rounded-lg cursor-grab active:cursor-grabbing text-[var(--text-muted)] hover:text-[var(--text-muted)] shrink-0 touch-none"
                     {...listeners}
                     {...attributes}
                 >
@@ -108,17 +108,17 @@ function SortableExerciseRow({
                 {/* Muscle dot + name */}
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                 <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{item.exercise.name}</div>
-                    <div className="text-[10px] text-zinc-600 capitalize">
+                    <div className="text-sm font-semibold text-[var(--text-primary)] truncate">{item.exercise.name}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] capitalize">
                         {item.exercise.muscleGroup.replace("_", " ")} · {item.sets.length} sets
                     </div>
                 </div>
 
                 {/* Expand / remove */}
-                <button onClick={toggle} className="p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors">
+                <button onClick={toggle} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
                     {item.expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
-                <button onClick={onRemove} className="p-1.5 text-zinc-700 hover:text-red-400 transition-colors">
+                <button onClick={onRemove} className="p-1.5 text-[var(--text-secondary)] hover:text-red-400 transition-colors">
                     <Trash2 className="w-4 h-4" />
                 </button>
             </div>
@@ -136,17 +136,17 @@ function SortableExerciseRow({
                             {/* Column headers */}
                             <div className="grid gap-1 sm:gap-2" style={{ gridTemplateColumns: "1.5rem 1fr 1fr 1.5rem" }}>
                                 <div />
-                                <div className="text-[9px] text-zinc-600 uppercase text-center tracking-widest font-bold">
+                                <div className="text-[9px] text-[var(--text-muted)] uppercase text-center tracking-widest font-bold">
                                     {isTimed ? "Time" : "Reps"}
                                 </div>
-                                <div className="text-[9px] text-zinc-600 uppercase text-center tracking-widest font-bold">Rest</div>
+                                <div className="text-[9px] text-[var(--text-muted)] uppercase text-center tracking-widest font-bold">Rest</div>
                                 <div />
                                 <div />
                             </div>
 
                             {item.sets.map((s, i) => (
                                 <div key={i} className="grid items-center gap-1 sm:gap-2" style={{ gridTemplateColumns: "1.5rem 1fr 1fr 1.5rem" }}>
-                                    <div className="text-[10px] font-bold text-zinc-600 text-center">{i + 1}</div>
+                                    <div className="text-[10px] font-bold text-[var(--text-muted)] text-center">{i + 1}</div>
 
                                     {/* Reps or Time */}
                                     <div className="flex items-center rounded-xl overflow-hidden"
@@ -154,35 +154,35 @@ function SortableExerciseRow({
                                         <button onClick={() => updateSet(i, isTimed
                                             ? { time_s: Math.max(5, (s.time_s ?? 30) - 5) }
                                             : { reps: Math.max(1, (s.reps ?? 10) - 1) })}
-                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-zinc-400 hover:text-white text-sm font-bold touch-manipulation">−</button>
-                                        <div className="flex-1 text-center text-xs sm:text-sm font-bold text-white tabular-nums">
+                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm font-bold touch-manipulation">−</button>
+                                        <div className="flex-1 text-center text-xs sm:text-sm font-bold text-[var(--text-primary)] tabular-nums">
                                             {isTimed ? `${s.time_s ?? 30}s` : (s.reps ?? 10)}
                                         </div>
                                         <button onClick={() => updateSet(i, isTimed
                                             ? { time_s: (s.time_s ?? 30) + 5 }
                                             : { reps: (s.reps ?? 10) + 1 })}
-                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-zinc-400 hover:text-white text-sm font-bold touch-manipulation">+</button>
+                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm font-bold touch-manipulation">+</button>
                                     </div>
 
                                     {/* Rest */}
                                     <div className="flex items-center rounded-xl overflow-hidden"
                                         style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                                         <button onClick={() => updateSet(i, { restSeconds: Math.max(10, s.restSeconds - 15) })}
-                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-zinc-400 hover:text-white text-sm font-bold touch-manipulation">−</button>
-                                        <div className="flex-1 text-center text-[11px] sm:text-xs font-bold text-white tabular-nums">{s.restSeconds}s</div>
+                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm font-bold touch-manipulation">−</button>
+                                        <div className="flex-1 text-center text-[11px] sm:text-xs font-bold text-[var(--text-primary)] tabular-nums">{s.restSeconds}s</div>
                                         <button onClick={() => updateSet(i, { restSeconds: s.restSeconds + 15 })}
-                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-zinc-400 hover:text-white text-sm font-bold touch-manipulation">+</button>
+                                            className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm font-bold touch-manipulation">+</button>
                                     </div>
 
                                     <button onClick={() => removeSet(i)}
-                                        className="text-zinc-700 hover:text-red-400 p-1.5 transition-colors flex items-center justify-center">
+                                        className="text-[var(--text-secondary)] hover:text-red-400 p-1.5 transition-colors flex items-center justify-center">
                                         <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                     </button>
                                 </div>
                             ))}
 
                             <button onClick={addSet}
-                                className="w-full py-2 rounded-xl text-xs font-semibold text-zinc-500 hover:text-zinc-300 border border-dashed border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-1.5">
+                                className="w-full py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-dashed border-[var(--border-subtle)] hover:border-[var(--border-subtle)] transition-all flex items-center justify-center gap-1.5">
                                 <Plus className="w-3.5 h-3.5" /> Add Set
                             </button>
 
@@ -191,7 +191,7 @@ function SortableExerciseRow({
                                 placeholder="Notes (optional)…"
                                 value={item.notes}
                                 onChange={e => onUpdate({ ...item, notes: e.target.value })}
-                                className="w-full px-3 py-2 rounded-xl text-xs text-zinc-400 placeholder-zinc-700 outline-none"
+                                className="w-full px-3 py-2 rounded-xl text-xs text-[var(--text-muted)] placeholder-zinc-700 outline-none"
                                 style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
                             />
                         </div>
@@ -249,24 +249,24 @@ function ExerciseSearchPanel({
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-white text-base flex items-center gap-2">
-                    <Dumbbell className="w-4 h-4 text-zinc-400" /> Exercise Library
+                <h3 className="font-bold text-[var(--text-primary)] text-base flex items-center gap-2">
+                    <Dumbbell className="w-4 h-4 text-[var(--text-muted)]" /> Exercise Library
                 </h3>
-                <button onClick={onClose} className="p-1.5 text-zinc-500 hover:text-white">
+                <button onClick={onClose} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                     <X className="w-5 h-5" />
                 </button>
             </div>
 
             {/* Search */}
             <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                 <input
                     ref={inputRef}
                     autoFocus
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Search exercises…"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm text-white placeholder-zinc-600 outline-none"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm text-[var(--text-primary)] placeholder-zinc-600 outline-none"
                     style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
                 />
             </div>
@@ -288,7 +288,7 @@ function ExerciseSearchPanel({
             {/* Results list */}
             <div className="flex-1 overflow-y-auto space-y-1 no-scrollbar">
                 {filtered.length === 0 && (
-                    <div className="text-center py-8 text-zinc-600 text-sm">No exercises found</div>
+                    <div className="text-center py-8 text-[var(--text-muted)] text-sm">No exercises found</div>
                 )}
                 {filtered.map(ex => {
                     const added = addedIds.has(ex.id);
@@ -304,15 +304,15 @@ function ExerciseSearchPanel({
                             }}
                         >
                             <div className="flex-1 min-w-0">
-                                <div className="text-sm font-semibold text-white truncate">{ex.name}</div>
-                                <div className="text-[10px] text-zinc-600 capitalize mt-0.5">
+                                <div className="text-sm font-semibold text-[var(--text-primary)] truncate">{ex.name}</div>
+                                <div className="text-[10px] text-[var(--text-muted)] capitalize mt-0.5">
                                     {ex.muscleGroup.replace("_", " ")} · {ex.modality} · {"⬤".repeat(ex.difficulty)}{"○".repeat(3 - ex.difficulty)}
                                 </div>
                             </div>
                             <div className="shrink-0">
                                 {added
                                     ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                                    : <Plus className="w-5 h-5 text-zinc-600" />
+                                    : <Plus className="w-5 h-5 text-[var(--text-muted)]" />
                                 }
                             </div>
                         </motion.button>
@@ -444,18 +444,18 @@ export default function CustomWorkoutBuilder({ initialWorkout, onSaved, onCancel
                 <input
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="flex-1 bg-transparent text-xl font-bold text-white outline-none placeholder-zinc-700"
+                    className="flex-1 bg-transparent text-xl font-bold text-[var(--text-primary)] outline-none placeholder-zinc-700"
                     placeholder="Workout name…"
                 />
                 {onCancel && (
-                    <button onClick={onCancel} className="p-1.5 text-zinc-600 hover:text-white">
+                    <button onClick={onCancel} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                         <X className="w-5 h-5" />
                     </button>
                 )}
             </div>
 
             {/* ── Stat pills ── */}
-            <div className="flex gap-3 text-xs text-zinc-500">
+            <div className="flex gap-3 text-xs text-[var(--text-muted)]">
                 <div className="flex items-center gap-1"><Dumbbell className="w-3.5 h-3.5" />{exercises.length} exercises</div>
                 <div className="flex items-center gap-1"><Repeat className="w-3.5 h-3.5" />{exercises.reduce((a, e) => a + e.sets.length, 0)} total sets</div>
                 <div className="flex items-center gap-1">
@@ -487,9 +487,9 @@ export default function CustomWorkoutBuilder({ initialWorkout, onSaved, onCancel
 
             {/* Empty state */}
             {exercises.length === 0 && (
-                <div className="border border-dashed border-white/10 rounded-2xl p-8 text-center">
-                    <Dumbbell className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-                    <p className="text-sm text-zinc-600">Tap "Add Exercise" to start building your routine</p>
+                <div className="border border-dashed border-[var(--border-subtle)] rounded-2xl p-8 text-center">
+                    <Dumbbell className="w-8 h-8 text-[var(--text-secondary)] mx-auto mb-3" />
+                    <p className="text-sm text-[var(--text-muted)]">Tap "Add Exercise" to start building your routine</p>
                 </div>
             )}
 

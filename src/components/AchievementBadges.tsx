@@ -191,8 +191,8 @@ export default function AchievementBadges({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-white">Achievements</h3>
-                <span className="text-xs text-zinc-500 font-medium tabular-nums">
+                <h3 className="font-semibold text-[var(--text-primary)]">Achievements</h3>
+                <span className="text-xs text-[var(--text-muted)] font-medium tabular-nums">
                     <span className="text-[#FF9F0A] font-bold">{unlocked.length}</span>/{achievements.length} unlocked
                 </span>
             </div>
@@ -220,7 +220,7 @@ export default function AchievementBadges({
                             />
                             <span className="text-2xl">{a.icon}</span>
                             <div className="text-[10px] font-bold" style={{ color: a.color }}>{a.title}</div>
-                            <div className="text-[9px] text-zinc-500 leading-tight">{a.desc}</div>
+                            <div className="text-[9px] text-[var(--text-muted)] leading-tight">{a.desc}</div>
                         </motion.div>
                     ))}
                 </motion.div>
@@ -232,8 +232,8 @@ export default function AchievementBadges({
                     <div key={a.id} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
                         <span className="text-xl opacity-30">{a.icon}</span>
                         <div className="flex-1 min-w-0">
-                            <div className="text-xs font-semibold text-zinc-500">{a.title}</div>
-                            <div className="text-[10px] text-zinc-700">{a.desc}</div>
+                            <div className="text-xs font-semibold text-[var(--text-muted)]">{a.title}</div>
+                            <div className="text-[10px] text-[var(--text-secondary)]">{a.desc}</div>
                             {a.progress !== undefined && (
                                 <div className="flex items-center gap-2 mt-1">
                                     <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
@@ -245,7 +245,7 @@ export default function AchievementBadges({
                                             style={{ background: a.color }}
                                         />
                                     </div>
-                                    <span className="text-[9px] text-zinc-600 tabular-nums">{a.progressLabel}</span>
+                                    <span className="text-[9px] text-[var(--text-muted)] tabular-nums">{a.progressLabel}</span>
                                 </div>
                             )}
                         </div>

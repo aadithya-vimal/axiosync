@@ -56,7 +56,7 @@ const QUICK_SUPPLEMENTS: SupplementEntry[] = [
 
 function TodayPills({ logs }: { logs: (SupplementEntry & { id: string })[] }) {
     if (logs.length === 0) return (
-        <p className="text-xs text-zinc-700 text-center py-2">No supplements logged today</p>
+        <p className="text-xs text-[var(--text-secondary)] text-center py-2">No supplements logged today</p>
     );
     return (
         <div className="flex flex-wrap gap-1.5">
@@ -191,9 +191,9 @@ export default function SupplementLogger() {
                             >
                                 <span className="text-lg shrink-0">{cat.emoji}</span>
                                 <div className="min-w-0">
-                                    <div className="text-xs font-semibold text-white truncate">{s.name}</div>
+                                    <div className="text-xs font-semibold text-[var(--text-primary)] truncate">{s.name}</div>
                                     {s.amount_g && (
-                                        <div className="text-[10px] text-zinc-600">
+                                        <div className="text-[10px] text-[var(--text-muted)]">
                                             {s.amount_g < 1 ? `${s.amount_g * 1000}mcg` : `${s.amount_g}g`}
                                         </div>
                                     )}
@@ -208,7 +208,7 @@ export default function SupplementLogger() {
             <div>
                 <button
                     onClick={() => setShowForm(v => !v)}
-                    className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-semibold"
+                    className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors font-semibold"
                 >
                     {showForm ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                     {showForm ? "Cancel" : "Log Custom Supplement"}
