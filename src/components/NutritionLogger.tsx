@@ -43,8 +43,8 @@ function MacroRing({ calories, target = 2500 }: { calories: number; target?: num
                 />
             </svg>
             <div className="absolute text-center">
-                <div className="text-xl font-bold stat-num text-white">{Math.round(calories)}</div>
-                <div className="text-[9px] text-zinc-500 font-medium uppercase tracking-wider">kcal</div>
+                <div className="text-xl font-bold stat-num text-[var(--text-primary)]">{Math.round(calories)}</div>
+                <div className="text-[9px] text-[var(--text-muted)] font-medium uppercase tracking-wider">kcal</div>
             </div>
         </div>
     );
@@ -55,10 +55,10 @@ function MacroRing({ calories, target = 2500 }: { calories: number; target?: num
 function MacroBar({ label, grams, color, icon }: { label: string; grams: number; color: string; icon: React.ReactNode }) {
     return (
         <div className="flex items-center gap-2">
-            <div className="text-zinc-500 shrink-0">{icon}</div>
+            <div className="text-[var(--text-muted)] shrink-0">{icon}</div>
             <div className="flex-1">
                 <div className="flex justify-between text-xs mb-1">
-                    <span className="text-zinc-400 font-medium">{label}</span>
+                    <span className="text-[var(--text-muted)] font-medium">{label}</span>
                     <span className="stat-num font-bold" style={{ color }}>{grams}g</span>
                 </div>
                 <div className="progress-track">
@@ -167,14 +167,14 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
                             style={{ background: "var(--bg-overlay)" }}
                         >
                             <div className="flex items-center gap-2.5">
-                                <Utensils className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
-                                <span className="text-sm text-white font-medium">{m.name}</span>
+                                <Utensils className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+                                <span className="text-sm text-[var(--text-primary)] font-medium">{m.name}</span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-zinc-500 tabular-nums">
+                            <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] tabular-nums">
                                 <span className="text-[#22C55E] font-semibold">{m.protein_g}g P</span>
                                 <span className="text-[#3B82F6] font-semibold">{m.carbs_g}g C</span>
                                 <span className="text-[#F59E0B] font-semibold">{m.fat_g}g F</span>
-                                <span className="text-zinc-400 font-bold">{m.calories}kcal</span>
+                                <span className="text-[var(--text-muted)] font-bold">{m.calories}kcal</span>
                             </div>
                         </motion.div>
                     ))}
@@ -185,7 +185,7 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
             <div>
                 <button
                     onClick={() => setShowTemplates(v => !v)}
-                    className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium"
+                    className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors font-medium"
                 >
                     {showTemplates ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     Quick-add foods
@@ -210,8 +210,8 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
                                     >
                                         <span className="text-base shrink-0">{t.emoji}</span>
                                         <div className="min-w-0">
-                                            <div className="text-white truncate">{t.name.split("(")[0].trim()}</div>
-                                            <div className="text-zinc-600">{t.calories}kcal · {t.protein_g}g P</div>
+                                            <div className="text-[var(--text-primary)] truncate">{t.name.split("(")[0].trim()}</div>
+                                            <div className="text-[var(--text-muted)]">{t.calories}kcal · {t.protein_g}g P</div>
                                         </div>
                                     </button>
                                 ))}
@@ -252,7 +252,7 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
                             </div>
                             {/* Micronutrients */}
                             <details>
-                                <summary className="text-xs text-zinc-600 cursor-pointer hover:text-zinc-400 transition-colors">+ Micronutrients (optional)</summary>
+                                <summary className="text-xs text-[var(--text-muted)] cursor-pointer hover:text-[var(--text-muted)] transition-colors">+ Micronutrients (optional)</summary>
                                 <div className="grid grid-cols-3 gap-2 mt-2">
                                     {[
                                         { label: "Fiber (g)", val: fiber, set: setFiber },

@@ -92,7 +92,7 @@ export default function ActivityLogger() {
                 ].map(({ label, value }) => (
                     <div key={label} className="card p-4">
                         <div className="label mb-1">{label}</div>
-                        <div className="text-xl font-bold text-white stat-num">{value}</div>
+                        <div className="text-xl font-bold text-[var(--text-primary)] stat-num">{value}</div>
                     </div>
                 ))}
             </div>
@@ -125,8 +125,8 @@ export default function ActivityLogger() {
             ) : (
                 <div className="card p-4 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-white">Log Activity</h3>
-                        <button onClick={() => setLogging(false)} className="text-zinc-500 hover:text-white transition-colors p-1">
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Log Activity</h3>
+                        <button onClick={() => setLogging(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-1">
                             <X className="w-4 h-4" />
                         </button>
                     </div>
@@ -142,8 +142,8 @@ export default function ActivityLogger() {
                                     onClick={() => setForm((f) => ({ ...f, type }))}
                                     className={`flex flex-col items-center gap-1 p-2.5 rounded-2xl border transition-all duration-200 text-xs active:scale-[0.96]
                                     ${isSelected
-                                            ? "border-[#0A84FF]/50 bg-[#0A84FF]/12 text-white"
-                                            : "border-white/[0.07] bg-transparent text-zinc-500 hover:text-white hover:border-white/15 hover:bg-white/[0.04]"
+                                            ? "border-[#0A84FF]/50 bg-[#0A84FF]/12 text-[var(--text-primary)]"
+                                            : "border-white/[0.07] bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--border-subtle)] hover:bg-white/[0.04]"
                                         }`}
                                 >
                                     <span className="text-lg">{c.emoji}</span>
@@ -206,8 +206,8 @@ export default function ActivityLogger() {
                                     {c.emoji}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-white">{c.label}</div>
-                                    <div className="text-xs text-zinc-500 truncate">
+                                    <div className="text-sm font-medium text-[var(--text-primary)]">{c.label}</div>
+                                    <div className="text-xs text-[var(--text-muted)] truncate">
                                         {format(a.timestamp.toDate(), "MMM d")} ·{" "}
                                         {a.duration_min}min
                                         {a.distance_km ? ` · ${a.distance_km}km` : ""}
@@ -226,7 +226,7 @@ export default function ActivityLogger() {
             )}
 
             {activities.length === 0 && !logging && (
-                <div className="text-center py-10 text-zinc-600 text-sm">
+                <div className="text-center py-10 text-[var(--text-muted)] text-sm">
                     No activities logged yet. Get moving! 🏃
                 </div>
             )}

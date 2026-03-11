@@ -48,7 +48,7 @@ function ExerciseCard({ ex }: { ex: Exercise }) {
         <motion.div
             layout
             className="rounded-2xl overflow-hidden"
-            style={{ border: "1px solid rgba(255,255,255,0.07)", background: "var(--bg-elevated)" }}
+            style={{ border: "1px solid var(--border-subtle)", background: "var(--bg-elevated)" }}
         >
             <button onClick={() => setOpen(o => !o)} className="w-full flex items-center gap-3 p-4 text-left">
                 {/* Color indicator */}
@@ -58,17 +58,17 @@ function ExerciseCard({ ex }: { ex: Exercise }) {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{ex.name}</div>
-                    <div className="text-[10px] text-zinc-600 mt-0.5 capitalize flex items-center gap-2">
+                    <div className="text-sm font-semibold text-[var(--text-primary)] truncate">{ex.name}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] mt-0.5 capitalize flex items-center gap-2">
                         <span style={{ color }} className="font-semibold">{ex.muscleGroup.replace("_", " ")}</span>
                         <span>·</span>
                         <span>{ex.modality}</span>
                         <span>·</span>
-                        <span className="tracking-tight text-zinc-500">{diffDots}</span>
+                        <span className="tracking-tight text-[var(--text-muted)]">{diffDots}</span>
                     </div>
                 </div>
 
-                <div className="shrink-0 text-zinc-600">
+                <div className="shrink-0 text-[var(--text-muted)]">
                     {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </div>
             </button>
@@ -81,20 +81,12 @@ function ExerciseCard({ ex }: { ex: Exercise }) {
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-4 pb-4 border-t border-white/[0.05] pt-3 space-y-3">
-                            {/* GIF / Video placeholder */}
-                            <div className="w-full aspect-video rounded-xl flex items-center justify-center"
-                                style={{ background: `${color}08`, border: `1px dashed ${color}25` }}>
-                                <div className="text-center">
-                                    <Play className="w-8 h-8 mx-auto mb-2 opacity-30" style={{ color }} />
-                                    <p className="text-[10px] text-zinc-700 uppercase tracking-widest">Demo Video</p>
-                                </div>
-                            </div>
+                        <div className="px-4 pb-4 pt-3 space-y-3">
 
                             {/* Instructions */}
                             <div>
-                                <div className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold mb-1">Instructions</div>
-                                <p className="text-xs text-zinc-400 leading-relaxed">{ex.instructions}</p>
+                                <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold mb-1">Instructions</div>
+                                <p className="text-xs text-[var(--text-muted)] leading-relaxed">{ex.instructions}</p>
                             </div>
 
                             {/* Coaching cue */}
@@ -102,17 +94,17 @@ function ExerciseCard({ ex }: { ex: Exercise }) {
                                 <div className="px-3 py-2 rounded-xl"
                                     style={{ background: `${color}10`, border: `1px solid ${color}25` }}>
                                     <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color }}>Key Cue</div>
-                                    <p className="text-xs text-zinc-300">{ex.cue}</p>
+                                    <p className="text-xs text-[var(--text-secondary)]">{ex.cue}</p>
                                 </div>
                             )}
 
                             {/* Secondary muscles */}
                             {ex.secondaryMuscles.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
-                                    <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold self-center mr-1">Also:</span>
+                                    <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold self-center mr-1">Also:</span>
                                     {ex.secondaryMuscles.map(m => (
                                         <span key={m} className="text-[10px] px-2 py-0.5 rounded-full capitalize"
-                                            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--text-muted)" }}>
+                                            style={{ background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)", color: "var(--text-muted)" }}>
                                             {m.replace("_", " ")}
                                         </span>
                                     ))}
@@ -189,35 +181,35 @@ function MyRoutinesTab({ onStartWorkout }: { onStartWorkout?: (w: CustomWorkout)
                     color: "white",
                 }}
             >
-                <Plus className="w-4 h-4" /> New Custom Routine
+                <Plus className="w-4 h-4" /> Initialize Protocol
             </motion.button>
 
             {routines.length === 0 ? (
                 <div className="card p-8 text-center flex flex-col items-center gap-3">
-                    <Layers className="w-8 h-8 text-zinc-700" />
-                    <p className="text-sm text-zinc-600">No saved routines yet. Create your first custom workout above.</p>
+                    <Layers className="w-8 h-8 text-[var(--text-secondary)]" />
+                    <p className="text-sm text-[var(--text-muted)]">No saved routines yet. Create your first custom workout above.</p>
                 </div>
             ) : (
                 routines.map(r => (
                     <motion.div key={r.id} layout
                         className="card p-4"
-                        style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+                        style={{ border: "1px solid var(--border-subtle)" }}
                     >
                         <div className="flex items-center gap-3 mb-2">
                             <div className="flex-1 min-w-0">
-                                <div className="text-sm font-bold text-white truncate">{r.emoji ?? "🏋️"} {r.name}</div>
-                                <div className="text-[10px] text-zinc-600 mt-0.5">
+                                <div className="text-sm font-bold text-[var(--text-primary)] truncate">{r.emoji ?? "🏋️"} {r.name}</div>
+                                <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
                                     {r.exercises.length} exercises · {r.exercises.reduce((a, e) => a + e.sets.length, 0)} sets
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <button onClick={() => setEditingId(r.id!)}
-                                    className="p-2 rounded-xl text-zinc-600 hover:text-zinc-300 transition-colors"
-                                    style={{ background: "rgba(255,255,255,0.05)" }}>
+                                    className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                                    style={{ background: "var(--bg-overlay)" }}>
                                     <Edit3 className="w-3.5 h-3.5" />
                                 </button>
                                 <button onClick={() => setDeletingId(r.id!)}
-                                    className="p-2 rounded-xl text-zinc-600 hover:text-red-400 transition-colors"
+                                    className="p-2 rounded-xl text-[var(--text-muted)] hover:text-red-400 transition-colors"
                                     style={{ background: "rgba(255,255,255,0.05)" }}>
                                     <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -228,12 +220,12 @@ function MyRoutinesTab({ onStartWorkout }: { onStartWorkout?: (w: CustomWorkout)
                         <AnimatePresence>
                             {deletingId === r.id && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                                    className="flex items-center gap-2 pt-2 border-t border-white/[0.05]">
-                                    <span className="text-xs text-zinc-500 flex-1">Delete "{r.name}"?</span>
+                                    className="flex items-center gap-2 pt-2 border-t border-[var(--border-subtle)]">
+                                    <span className="text-xs text-[var(--text-muted)] flex-1">Delete "{r.name}"?</span>
                                     <button onClick={() => handleDelete(r.id!)}
                                         className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 border border-red-500/30 bg-red-500/10">Delete</button>
                                     <button onClick={() => setDeletingId(null)}
-                                        className="px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-500 border border-white/10">Cancel</button>
+                                        className="px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--text-muted)] border border-[var(--border-subtle)]">Cancel</button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -280,21 +272,21 @@ export default function LibrarySection() {
                 <div className="w-10 h-10 rounded-2xl bg-teal-500/20 flex items-center justify-center">
                     <Library className="w-5 h-5 text-teal-400" />
                 </div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">Library</h1>
+                <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Arsenal</h1>
             </div>
 
             {/* Tabs */}
             <div className="flex gap-2">
                 {[
-                    { id: "directory", label: "Exercise Directory", icon: BookOpen },
-                    { id: "routines", label: "My Routines", icon: Layers },
+                    { id: "directory", label: "Field Manual", icon: BookOpen },
+                    { id: "routines", label: "Assigned Protocols", icon: Layers },
                 ].map(t => (
                     <button key={t.id}
                         onClick={() => setTab(t.id as any)}
                         className="flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
                         style={tab === t.id
                             ? { background: "rgba(20,184,166,0.15)", border: "1px solid rgba(20,184,166,0.35)", color: "#14B8A6" }
-                            : { background: "var(--bg-elevated)", border: "1px solid rgba(255,255,255,0.07)", color: "var(--text-muted)" }
+                            : { background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--text-muted)" }
                         }>
                         <t.icon className="w-3.5 h-3.5" />{t.label}
                     </button>
@@ -306,13 +298,13 @@ export default function LibrarySection() {
                     <motion.div key="dir" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                         {/* Search */}
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                             <input
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder={`Search ${EXERCISE_DATABASE.length}+ exercises…`}
-                                className="w-full pl-9 pr-10 py-3 rounded-2xl text-sm text-white placeholder-zinc-600 outline-none"
-                                style={{ background: "var(--bg-elevated)", border: "1px solid rgba(255,255,255,0.08)" }}
+                                className="w-full pl-9 pr-10 py-3 rounded-2xl text-sm text-[var(--text-primary)] placeholder-zinc-600 outline-none"
+                                style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}
                             />
                             <button onClick={() => setShowFilters(o => !o)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1"
@@ -330,20 +322,20 @@ export default function LibrarySection() {
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                                     className="overflow-hidden card p-4 space-y-3">
                                     <div>
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-2">Muscle Group</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Muscle Group</div>
                                         <div className="flex flex-wrap gap-1.5">
                                             {MUSCLE_OPTIONS.map(m => (
                                                 <button key={m} onClick={() => setMuscleFilter(m)}
                                                     className="px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize transition-all"
                                                     style={muscleFilter === m
                                                         ? { background: "rgba(20,184,166,0.18)", border: "1px solid rgba(20,184,166,0.4)", color: "#14B8A6" }
-                                                        : { background: "var(--bg-elevated)", border: "1px solid rgba(255,255,255,0.07)", color: "var(--text-muted)" }
+                                                        : { background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--text-muted)" }
                                                     }>{MUSCLE_LABELS[m] ?? m}</button>
                                             ))}
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-2">Equipment</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Equipment</div>
                                         <div className="flex flex-wrap gap-1.5">
                                             {EQUIPMENT_OPTIONS.map(e => (
                                                 <button key={e} onClick={() => setEquipFilter(e)}
@@ -356,7 +348,7 @@ export default function LibrarySection() {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-2">Difficulty</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Difficulty</div>
                                         <div className="flex gap-1.5">
                                             {DIFFICULTY_OPTIONS.map(d => (
                                                 <button key={d} onClick={() => setDiffFilter(d)}
@@ -370,7 +362,7 @@ export default function LibrarySection() {
                                     </div>
                                     {activeFilterCount > 0 && (
                                         <button onClick={() => { setMuscleFilter("all"); setEquipFilter("all"); setDiffFilter("all"); }}
-                                            className="text-xs text-zinc-600 hover:text-red-400 transition-colors flex items-center gap-1">
+                                            className="text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors flex items-center gap-1">
                                             <X className="w-3 h-3" /> Clear filters
                                         </button>
                                     )}
@@ -379,7 +371,7 @@ export default function LibrarySection() {
                         </AnimatePresence>
 
                         {/* Result count */}
-                        <div className="text-xs text-zinc-600">
+                        <div className="text-xs text-[var(--text-muted)]">
                             {filtered.length} of {EXERCISE_DATABASE.length} exercises
                         </div>
 

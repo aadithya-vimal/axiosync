@@ -4,35 +4,53 @@
 :root {
   /* Warm Accent Palette */
   --accent-blue: #3B82F6;
-  --accent-green: #22C55E;
-  --accent-amber: #F59E0B;
-  --accent-red: #EF4444;
-  --accent-purple: #A855F7;
-  --accent-teal: #06B6D4;
+  --accent-green: #30D158;
+  --accent-amber: #FF9F0A;
+  --accent-red: #FF453A;
+  --accent-purple: #BF5AF2;
+  --accent-teal: #64D2FF;
 
-  /* Semantic surfaces */
+  /* Semantic surfaces - LIGHT MODE DEFAULT */
+  --bg-base: #F4F7FB;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F9FAFB;
+  --bg-overlay: #FFFFFF;
+
+  /* Text - LIGHT MODE */
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
+
+  /* Borders - LIGHT MODE */
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.15);
+
+  /* Shadows Multi-layered - LIGHT MODE */
+  --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  --shadow-lg: 0 16px 48px -8px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  --shadow-xl: 0 32px 80px -12px rgba(0, 0, 0, 0.15), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+.dark {
+  /* Semantic surfaces - DARK MODE */
   --bg-base: #050507;
-  /* Deep void base */
   --bg-surface: #0a0a0f;
-  /* Rich dark violet-tinted pane */
   --bg-elevated: #12121a;
-  /* Elevated with deep indigo tint */
   --bg-overlay: #1a1a24;
-  /* Overlay */
 
-  /* Text */
+  /* Text - DARK MODE */
   --text-primary: #F4F4F5;
   --text-secondary: #A1A1AA;
   --text-muted: #52525B;
 
-  /* Borders */
-  --border-subtle: rgba(139, 92, 246, 0.15);
-  /* Violet-tinted soft border */
-  --border-default: rgba(14, 165, 233, 0.20);
-  /* Cyan-tinted stronger border */
+  /* Borders - DARK MODE */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.16);
 
-  /* Shadows Multi-layered */
+  /* Shadows Multi-layered - DARK MODE */
   --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
   --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
   --shadow-lg: 0 16px 48px -8px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
@@ -50,13 +68,13 @@
     background-color: var(--bg-base);
     color: var(--text-primary);
     font-family: 'Inter', 'SF Pro Display', -apple-system, sans-serif;
-    color-scheme: dark;
+    color-scheme: light dark;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   * {
-    @apply selection:bg-blue-500/25 selection:text-white;
+    @apply selection:bg-blue-500/25 selection:text-current;
   }
 
   h1,
@@ -162,9 +180,13 @@
 
   /* ── Inputs ── */
   .field {
-    @apply w-full rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none transition-all duration-200;
+    @apply w-full rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none transition-all duration-200;
     background: var(--bg-overlay);
     border: 1px solid var(--border-subtle);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .field {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   }
 
@@ -211,7 +233,7 @@
   }
 
   .btn-ghost {
-    @apply text-white;
+    @apply text-[var(--text-primary)];
     background: var(--bg-elevated);
     border: 1px solid var(--border-default);
     box-shadow: var(--shadow-sm);

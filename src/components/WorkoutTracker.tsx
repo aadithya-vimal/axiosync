@@ -16,7 +16,7 @@ import {
     type Goal, type Equipment, type GeneratedWorkout, type GeneratedExercise,
     type Duration, type Intensity, type WorkoutStyle,
 } from "@/lib/WorkoutEngine";
-import AnatomyMap from "./BodyMap3D";
+import AnatomyMap from "./BodyMap2D";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ function PlanCard({ plan, onSelect }: { plan: WorkoutPlan; onSelect: () => void 
     return (
         <button
             onClick={onSelect}
-            className="w-full text-left card overflow-hidden hover:border-white/15 active:scale-[0.98] transition-all duration-300 group"
+            className="w-full text-left card overflow-hidden hover:border-[var(--border-subtle)] active:scale-[0.98] transition-all duration-300 group"
         >
             <div className="relative h-36 overflow-hidden">
                 <img
@@ -102,15 +102,15 @@ function PlanCard({ plan, onSelect }: { plan: WorkoutPlan; onSelect: () => void 
                     {plan.emoji} {diffLabels[plan.difficulty]}
                 </div>
                 <div className="absolute bottom-3 left-3 right-3">
-                    <h3 className="text-white font-bold text-lg leading-tight tracking-tight">{plan.name}</h3>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-zinc-400">
+                    <h3 className="text-[var(--text-primary)] font-bold text-lg leading-tight tracking-tight">{plan.name}</h3>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-muted)]">
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{plan.estimatedMinutes} min</span>
                         <span className="flex items-center gap-1"><Dumbbell className="w-3 h-3" />{plan.exercises.length} exercises</span>
                     </div>
                 </div>
             </div>
             <div className="p-3">
-                <p className="text-xs text-zinc-500 leading-relaxed">{plan.description}</p>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">{plan.description}</p>
             </div>
         </button>
     );
@@ -127,8 +127,8 @@ function PreviewSheet({ plan, onStart, onBack }: { plan: WorkoutPlan; onStart: (
                     <ChevronLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">{plan.emoji} {plan.name}</h1>
-                    <p className="text-sm text-zinc-500">{plan.exercises.length} exercises · ~{plan.estimatedMinutes} min</p>
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">{plan.emoji} {plan.name}</h1>
+                    <p className="text-sm text-[var(--text-muted)]">{plan.exercises.length} exercises · ~{plan.estimatedMinutes} min</p>
                 </div>
             </div>
 
@@ -143,8 +143,8 @@ function PreviewSheet({ plan, onStart, onBack }: { plan: WorkoutPlan; onStart: (
                         { label: "Difficulty", value: ["", "Easy", "Med", "Hard"][plan.difficulty] },
                     ].map(({ label, value }) => (
                         <div key={label}>
-                            <div className="text-xl font-bold text-white">{value}</div>
-                            <div className="text-xs text-zinc-400">{label}</div>
+                            <div className="text-xl font-bold text-[var(--text-primary)]">{value}</div>
+                            <div className="text-xs text-[var(--text-muted)]">{label}</div>
                         </div>
                     ))}
                 </div>
@@ -161,10 +161,10 @@ function PreviewSheet({ plan, onStart, onBack }: { plan: WorkoutPlan; onStart: (
                             <img src={ex.imageUrl} alt={ex.name} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-white">{ex.name}</div>
-                            <div className="text-xs text-zinc-500">{ex.sets} sets · {ex.reps} reps · {ex.restSeconds}s rest</div>
+                            <div className="text-sm font-semibold text-[var(--text-primary)]">{ex.name}</div>
+                            <div className="text-xs text-[var(--text-muted)]">{ex.sets} sets · {ex.reps} reps · {ex.restSeconds}s rest</div>
                         </div>
-                        <div className="text-xs text-zinc-600 capitalize">{ex.muscleGroup.replace("_", " ")}</div>
+                        <div className="text-xs text-[var(--text-muted)] capitalize">{ex.muscleGroup.replace("_", " ")}</div>
                     </div>
                 ))}
             </div>
@@ -174,7 +174,7 @@ function PreviewSheet({ plan, onStart, onBack }: { plan: WorkoutPlan; onStart: (
                 className="btn btn-primary w-full text-base py-4"
                 style={{ boxShadow: `0 12px 32px ${plan.color}50` }}
             >
-                <Play className="w-5 h-5" fill="currentColor" /> Start Workout
+                <Play className="w-5 h-5" fill="currentColor" /> Commence Operation
             </button>
         </div>
     );
@@ -220,12 +220,12 @@ function ActiveExercise({
                             <AlertTriangle className="w-6 h-6 text-[#FF453A]" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-white">Discard Workout?</h3>
-                            <p className="text-sm text-zinc-500 mt-1">Your progress won't be saved. This can't be undone.</p>
+                            <h3 className="text-lg font-bold text-[var(--text-primary)]">Discard Workout?</h3>
+                            <p className="text-sm text-[var(--text-muted)] mt-1">Your progress won't be saved. This can't be undone.</p>
                         </div>
                         <div className="flex gap-3">
-                            <button className="btn btn-ghost flex-1" onClick={() => setShowDiscardModal(false)}>Keep Training</button>
-                            <button className="btn btn-danger flex-1" onClick={onEnd}>Discard</button>
+                            <button className="btn btn-ghost flex-1" onClick={() => setShowDiscardModal(false)}>Maintain Mission</button>
+                            <button className="btn btn-danger flex-1" onClick={onEnd}>Abort</button>
                         </div>
                     </div>
                 </div>
@@ -237,14 +237,14 @@ function ActiveExercise({
                     <X className="w-4 h-4" />
                 </button>
                 <div className="text-center">
-                    <div className="text-xs text-zinc-500 uppercase tracking-widest font-semibold">{plan.name}</div>
-                    <div className="text-white text-sm font-semibold mt-0.5">
+                    <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-semibold">{plan.name}</div>
+                    <div className="text-[var(--text-primary)] text-sm font-semibold mt-0.5">
                         Exercise {session.exerciseIndex + 1}/{plan.exercises.length}
                     </div>
                 </div>
                 <div className="text-right">
-                    <div className="text-xs text-zinc-500">Elapsed</div>
-                    <div className="text-sm font-bold text-white stat-num">{formatTime(session.elapsed)}</div>
+                    <div className="text-xs text-[var(--text-muted)]">Elapsed</div>
+                    <div className="text-sm font-bold text-[var(--text-primary)] stat-num">{formatTime(session.elapsed)}</div>
                 </div>
             </div>
 
@@ -256,26 +256,15 @@ function ActiveExercise({
                 />
             </div>
 
-            {/* Exercise hero — video demo placeholder + image */}
             <div className="relative overflow-hidden" style={{ height: "240px" }}>
-                {/* Functional YouTube Demo Link */}
-                <a
-                    href={`https://www.youtube.com/results?search_query=how+to+do+${encodeURIComponent(ex.name)}+exercise`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs font-bold text-white hover:bg-white/10 transition-colors shadow-lg"
-                >
-                    <Video className="w-3.5 h-3.5 text-red-500" />
-                    <span>Watch Demo</span>
-                </a>
                 <img src={ex.imageUrl} alt={ex.name} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                     <div className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: plan.color }}>
                         {ex.muscleGroup.replace("_", " ")}
                     </div>
-                    <h2 className="text-2xl font-bold text-white tracking-tight leading-tight">{ex.name}</h2>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{ex.instructions}</p>
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight leading-tight">{ex.name}</h2>
+                    <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">{ex.instructions}</p>
                 </div>
             </div>
 
@@ -304,8 +293,8 @@ function ActiveExercise({
                     })}
                 </div>
 
-                <div className="text-center text-zinc-400 text-sm font-medium">
-                    Set <span className="text-white font-bold">{currentSet}</span> of {totalSets} · Target <span className="text-white font-bold">{ex.reps}</span> reps
+                <div className="text-center text-[var(--text-muted)] text-sm font-medium">
+                    Set <span className="text-[var(--text-primary)] font-bold">{currentSet}</span> of {totalSets} · Target <span className="text-[var(--text-primary)] font-bold">{ex.reps}</span> reps
                 </div>
 
                 {/* Reps + Weight controls */}
@@ -313,13 +302,13 @@ function ActiveExercise({
                     <div className="grid grid-cols-2 gap-4">
                         {/* Reps */}
                         <div className="text-center">
-                            <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2 font-semibold">Reps</div>
+                            <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest mb-2 font-semibold">Reps</div>
                             <div className="flex items-center justify-center gap-3">
                                 <button
                                     onClick={() => setReps(r => Math.max(1, r - 1))}
                                     className="w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.14] flex items-center justify-center text-lg font-bold transition-colors"
                                 >−</button>
-                                <span className="text-3xl font-bold stat-num text-white w-10 text-center">{reps}</span>
+                                <span className="text-3xl font-bold stat-num text-[var(--text-primary)] w-10 text-center">{reps}</span>
                                 <button
                                     onClick={() => setReps(r => r + 1)}
                                     className="w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.14] flex items-center justify-center text-lg font-bold transition-colors"
@@ -329,7 +318,7 @@ function ActiveExercise({
 
                         {/* Weight */}
                         <div className="text-center">
-                            <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2 font-semibold">
+                            <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest mb-2 font-semibold">
                                 Weight {ex.weightKg === 0 ? "(BW)" : "(kg)"}
                             </div>
                             <div className="flex items-center justify-center gap-3">
@@ -338,7 +327,7 @@ function ActiveExercise({
                                     disabled={ex.weightKg === 0}
                                     className="w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.14] flex items-center justify-center text-lg font-bold transition-colors disabled:opacity-30"
                                 >−</button>
-                                <span className="text-3xl font-bold stat-num text-white w-14 text-center">
+                                <span className="text-3xl font-bold stat-num text-[var(--text-primary)] w-14 text-center">
                                     {ex.weightKg === 0 ? "BW" : weight}
                                 </span>
                                 <button
@@ -354,13 +343,13 @@ function ActiveExercise({
                 {/* Previous sets in this exercise */}
                 {currentLog?.sets.filter(s => s.completed).length > 0 && (
                     <div className="space-y-1.5">
-                        <div className="text-xs text-zinc-600 uppercase tracking-widest font-semibold">Completed Sets</div>
+                        <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-semibold">Completed Sets</div>
                         {currentLog.sets.filter(s => s.completed).map((s, i) => (
                             <div key={i} className="flex items-center justify-between px-3 py-2 rounded-2xl bg-white/[0.04] text-sm">
-                                <span className="text-zinc-500">Set {i + 1}</span>
-                                <span className="text-white font-semibold stat-num">
+                                <span className="text-[var(--text-muted)]">Set {i + 1}</span>
+                                <span className="text-[var(--text-primary)] font-semibold stat-num">
                                     {s.reps} reps {s.weightKg > 0 ? `× ${s.weightKg}kg` : "(BW)"}
-                                    <span className="text-zinc-600 ml-2">= {(s.reps * s.weightKg).toFixed(0)}kg vol</span>
+                                    <span className="text-[var(--text-muted)] ml-2">= {(s.reps * s.weightKg).toFixed(0)}kg vol</span>
                                 </span>
                             </div>
                         ))}
@@ -430,20 +419,20 @@ function RestView({
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black px-6 pb-safe text-center">
-            <div className="text-xs text-zinc-500 uppercase tracking-widest font-semibold mb-6">Rest Period</div>
+            <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-semibold mb-6">Tactical Recovery</div>
 
             {/* Countdown ring */}
             <div className="relative mb-6">
                 <RestRing remaining={remaining} total={restSeconds} color={planColor} />
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-4xl font-bold stat-num text-white">{remaining}</span>
-                    <span className="text-xs text-zinc-500">seconds</span>
+                    <span className="text-4xl font-bold stat-num text-[var(--text-primary)]">{remaining}</span>
+                    <span className="text-xs text-[var(--text-muted)]">seconds</span>
                 </div>
             </div>
 
             {/* Next up */}
             <div className="card p-4 w-full max-w-xs mb-8 text-left">
-                <div className="text-xs text-zinc-500 uppercase tracking-widest font-semibold mb-2">
+                <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-semibold mb-2">
                     {nextSetNum ? `Next — Set ${nextSetNum}` : "Up Next"}
                 </div>
                 <div className="flex items-center gap-3">
@@ -451,8 +440,8 @@ function RestView({
                         <img src={nextExercise.imageUrl} alt={nextExercise.name} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                        <div className="text-white font-semibold text-sm">{nextExercise.name}</div>
-                        <div className="text-xs text-zinc-500">{nextExercise.reps} reps</div>
+                        <div className="text-[var(--text-primary)] font-semibold text-sm">{nextExercise.name}</div>
+                        <div className="text-xs text-[var(--text-muted)]">{nextExercise.reps} reps</div>
                     </div>
                 </div>
             </div>
@@ -521,8 +510,8 @@ function CompleteView({
                 <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: session.plan.color }} />
             </div>
 
-            <h1 className="text-3xl font-bold text-white tracking-tight mb-1">Workout Complete!</h1>
-            <p className="text-zinc-500 text-sm mb-8">{session.plan.name} · {formatTime(session.elapsed)}</p>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight mb-1">Mission Accomplished</h1>
+            <p className="text-[var(--text-muted)] text-sm mb-8">{session.plan.name} · {formatTime(session.elapsed)}</p>
 
             {/* Stats grid */}
             <div className="grid grid-cols-3 gap-3 w-full max-w-xs mb-8">
@@ -532,9 +521,9 @@ function CompleteView({
                     { label: "Duration", value: formatTime(session.elapsed), unit: "" },
                 ].map(({ label, value, unit }) => (
                     <div key={label} className="card p-3 text-center">
-                        <div className="text-xl font-bold stat-num text-white">{value}</div>
-                        <div className="text-[10px] text-zinc-500 mt-0.5">{unit || label}</div>
-                        {unit && <div className="text-[9px] text-zinc-600">{label}</div>}
+                        <div className="text-xl font-bold stat-num text-[var(--text-primary)]">{value}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{unit || label}</div>
+                        {unit && <div className="text-[9px] text-[var(--text-muted)]">{label}</div>}
                     </div>
                 ))}
             </div>
@@ -546,8 +535,8 @@ function CompleteView({
                     const vol = completedSets.reduce((a, s) => a + s.reps * s.weightKg, 0);
                     return (
                         <div key={log.exerciseId} className="flex items-center justify-between p-3">
-                            <div className="text-sm font-medium text-white">{log.name}</div>
-                            <div className="text-xs text-zinc-500 stat-num">
+                            <div className="text-sm font-medium text-[var(--text-primary)]">{log.name}</div>
+                            <div className="text-xs text-[var(--text-muted)] stat-num">
                                 {completedSets.length} sets{vol > 0 ? ` · ${vol.toFixed(0)}kg` : ""}
                             </div>
                         </div>
@@ -555,7 +544,7 @@ function CompleteView({
                 })}
             </div>
 
-            <div className="text-xs text-zinc-600 mb-4">
+            <div className="text-xs text-[var(--text-muted)] mb-4">
                 {saved ? "✓ Saved to your health log" : saving ? "Saving…" : ""}
             </div>
 
@@ -654,7 +643,6 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                 equipment: (ge.exercise.equipment[0] as any) || "bodyweight",
                 instructions: ge.exercise.instructions,
                 imageUrl: ge.exercise.imageUrl,
-                gifKeyword: ge.exercise.id,
                 weightKg: ge.sets.filter(s => !s.isWarmup)[0]?.weightKg || 0,
                 restSeconds: ge.sets.filter(s => !s.isWarmup)[0]?.restSeconds || 90,
             })),
@@ -696,7 +684,7 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                     ))}
                 </div>
                 {intensity !== "intermediate" && (
-                    <p className="text-[10px] text-zinc-600 mt-1.5 px-0.5">
+                    <p className="text-[10px] text-[var(--text-muted)] mt-1.5 px-0.5">
                         {intensity === "beginner" ? "🌱 Longer rests, fewer sets. Great for building consistency." : "⚡ Short rests, high volume. Bring your game."}
                     </p>
                 )}
@@ -718,7 +706,7 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
 
             {/* ── Target muscle / Focus ── */}
             <div className="flex flex-col gap-3">
-                <p className="text-sm font-semibold text-white/90">Target Muscle Group</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]/90">Target Muscle Group</p>
                 <motion.button whileTap={{ scale: 0.96 }}
                     onClick={() => { setFocus("full body"); setGenerated(null); }}
                     className="w-full py-3 rounded-xl text-sm font-bold tracking-tight transition-all duration-200 flex items-center justify-center gap-2"
@@ -796,13 +784,13 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                         {/* Header */}
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="font-bold text-white text-base">{generated.emoji} {generated.name}</h3>
-                                <p className="text-xs text-zinc-500 mt-0.5">
+                                <h3 className="font-bold text-[var(--text-primary)] text-base">{generated.emoji} {generated.name}</h3>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5">
                                     {generated.working.length} exercises · ~{generated.estimatedMinutes} min · {generated.rpeLabel}
                                 </p>
                             </div>
                             <div className="text-right">
-                                <div className="text-[11px] text-zinc-600">Rest between sets</div>
+                                <div className="text-[11px] text-[var(--text-muted)]">Rest between sets</div>
                                 <div className="text-sm font-bold stat-num" style={{ color: generated.color }}>{generated.restSeconds}s</div>
                             </div>
                         </div>
@@ -821,9 +809,9 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                                 {/* Warmup */}
                                 {generated.warmup.length > 0 && (
                                     <div className="px-3 py-2">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Warmup</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Warmup</span>
                                         {generated.warmup.map(ge => (
-                                            <div key={ge.exercise.id} className="text-xs text-zinc-500 py-0.5">{ge.exercise.name}</div>
+                                            <div key={ge.exercise.id} className="text-xs text-[var(--text-muted)] py-0.5">{ge.exercise.name}</div>
                                         ))}
                                     </div>
                                 )}
@@ -835,8 +823,8 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                                             <div className="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
                                                 style={{ background: `${generated.color}20`, color: generated.color }}>{i + 1}</div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-xs font-semibold text-white truncate">{ge.exercise.name}</div>
-                                                <div className="text-[10px] text-zinc-600">
+                                                <div className="text-xs font-semibold text-[var(--text-primary)] truncate">{ge.exercise.name}</div>
+                                                <div className="text-[10px] text-[var(--text-muted)]">
                                                     {workSets.length} × {workSets[0]?.reps} · {workSets[0]?.restSeconds}s rest
                                                 </div>
                                             </div>
@@ -1032,7 +1020,7 @@ export default function WorkoutTracker() {
     return (
         <div className="space-y-5 pb-32">
             <div className="flex items-center justify-between px-1 pt-2">
-                <h1 className="text-3xl font-bold text-white tracking-tight">Strength</h1>
+                <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Strength</h1>
                 <Flame className="w-6 h-6" style={{ color: "#EF4444" }} fill="currentColor" />
             </div>
 
@@ -1066,8 +1054,8 @@ export default function WorkoutTracker() {
                         <div className="card p-5">
                             <div className="flex items-center gap-2 mb-4">
                                 <Sparkles className="w-4 h-4 text-[#A855F7]" />
-                                <span className="font-semibold text-white">AI Workout Generator</span>
-                                <span className="text-[10px] text-zinc-600 bg-[#A855F7]/10 text-[#A855F7] px-2 py-0.5 rounded-full font-semibold uppercase tracking-widest border border-[#A855F7]/20">New</span>
+                                <span className="font-semibold text-[var(--text-primary)]">AI Workout Generator</span>
+                                <span className="text-[10px] text-[var(--text-muted)] bg-[#A855F7]/10 text-[#A855F7] px-2 py-0.5 rounded-full font-semibold uppercase tracking-widest border border-[#A855F7]/20">New</span>
                             </div>
                             <WorkoutGenerator onStart={plan => { setSelectedPlan(plan); setEngineState("preview"); }} />
                         </div>

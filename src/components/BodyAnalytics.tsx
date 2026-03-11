@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Dumbbell, CalendarDays } from "lucide-react";
-import AnatomyMap from "./BodyMap3D";
+import AnatomyMap from "./BodyMap2D";
 import { Timestamp } from "firebase/firestore";
 import type { MuscleGroup } from "@/lib/WorkoutEngine";
 
@@ -64,8 +64,8 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
         <div className="space-y-5">
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Body Analytics</h2>
-                <p className="text-sm text-zinc-500 mt-1">
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Biometric Analytics</h2>
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                     {selectedMuscle
                         ? `Showing ${selectedMuscle} training history (7 days)`
                         : "Muscles lit = trained in last 7 days. Tap to filter history."}
@@ -73,17 +73,9 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
             </div>
 
             {/* Two-column layout: SVG map + history */}
-            <div className="flex flex-col md:flex-row gap-6 md:gap-4 md:items-start">
+            <div className="flex flex-col md:flex-row gap-6 md:gap-8 md:items-start">
                 {/* Left: SVG anatomy map */}
-                <div
-                    className="shrink-0 rounded-2xl p-4 w-full md:w-auto flex justify-center"
-                    style={{
-                        background: "rgba(9,9,11,0.6)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        backdropFilter: "blur(12px)",
-                        minWidth: 160,
-                    }}
-                >
+                <div className="shrink-0 rounded-3xl w-full md:w-[50%] lg:w-[55%] flex justify-center">
                     <AnatomyMap
                         activeMuscles={activeMuscles}
                         onMuscleClick={(m) => setSelectedMuscle(prev => prev === m ? null : m)}
@@ -108,7 +100,7 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
                                             ? { background: `${m.color}22`, border: `1px solid ${m.color}60`, color: m.color }
                                             : isWorked
                                                 ? { background: `${m.color}10`, border: `1px solid ${m.color}35`, color: m.color, opacity: 0.8 }
-                                                : { background: "var(--bg-elevated)", border: "1px solid rgba(255,255,255,0.06)", color: "var(--text-muted)" }
+                                                : { background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--text-muted)" }
                                     }
                                 >
                                     {m.label}
@@ -131,10 +123,10 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
                                 {history.length === 0 ? (
                                     <div
                                         className="rounded-2xl p-5 text-center"
-                                        style={{ background: "var(--bg-elevated)", border: "1px solid rgba(255,255,255,0.06)" }}
+                                        style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}
                                     >
-                                        <Activity className="w-7 h-7 text-zinc-700 mx-auto mb-2" />
-                                        <p className="text-xs text-zinc-500">No {selectedMuscle} work logged in the last 7 days.</p>
+                                        <Activity className="w-7 h-7 text-[var(--text-muted)] mx-auto mb-2" />
+                                        <p className="text-xs text-[var(--text-muted)]">No {selectedMuscle} work logged in the last 7 days.</p>
                                     </div>
                                 ) : (
                                     history.slice(0, 4).map((w, i) => (
@@ -144,19 +136,19 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: i * 0.06 }}
                                             className="rounded-2xl p-3"
-                                            style={{ background: "var(--bg-elevated)", border: "1px solid rgba(255,255,255,0.06)" }}
+                                            style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}
                                         >
                                             <div className="flex items-center justify-between mb-1.5">
                                                 <div className="flex items-center gap-2">
-                                                    <Dumbbell className="w-3.5 h-3.5 text-zinc-500" />
-                                                    <span className="text-xs font-semibold text-white truncate">{w.name}</span>
+                                                    <Dumbbell className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                                                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{w.name}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 text-[10px] text-zinc-600">
+                                                <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
                                                     <CalendarDays className="w-3 h-3" />
                                                     {w.timestamp.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                                                 </div>
                                             </div>
-                                            <div className="text-[10px] text-zinc-600">
+                                            <div className="text-[10px] text-[var(--text-muted)]">
                                                 {w.exercises?.filter((ex: any) => (ex.muscleGroup || "").toLowerCase().includes(selectedMuscle))
                                                     .slice(0, 3)
                                                     .map((ex: any, j: number) => (
@@ -174,9 +166,9 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 className="rounded-2xl p-5 text-center"
-                                style={{ background: "var(--bg-elevated)", border: "1px dashed rgba(255,255,255,0.06)" }}
+                                style={{ background: "var(--bg-elevated)", border: "1px dashed var(--border-subtle)" }}
                             >
-                                <p className="text-xs text-zinc-600">Select a muscle group to view training history</p>
+                                <p className="text-xs text-[var(--text-muted)]">Select a muscle group to view training history</p>
                             </motion.div>
                         )}
                     </AnimatePresence>

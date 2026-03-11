@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, LogOut, Save, Check, Scale, Activity, Target, ChevronDown, AlertTriangle } from "lucide-react";
-import WearableSync from "@/components/WearableSync";
 import PromptCompiler from "@/components/PromptCompiler";
 import { upsertOnboarding, getOnboarding, deleteAllUserData } from "@/lib/firestore";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,7 +58,7 @@ function EditableField({
             onClick={() => { if (!editing) { setEditing(true); setTimeout(() => inputRef.current?.focus(), 50); } }}
         >
             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">{label}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">{label}</span>
                 <AnimatePresence>
                     {saved && (
                         <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
@@ -79,21 +78,21 @@ function EditableField({
                         onChange={e => setLocal(e.target.value)}
                         onBlur={commit}
                         onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }}
-                        className="flex-1 bg-transparent text-xl font-bold text-white outline-none min-w-0"
+                        className="flex-1 bg-transparent text-xl font-bold text-[var(--text-primary)] outline-none min-w-0"
                         style={{ caretColor: "#3B82F6" }}
                     />
-                    {unit && <span className="text-sm text-zinc-500 shrink-0">{unit}</span>}
+                    {unit && <span className="text-sm text-[var(--text-muted)] shrink-0">{unit}</span>}
                     <button onClick={commit} className="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-500/30">
                         <Save className="w-3 h-3" />
                     </button>
                 </div>
             ) : (
                 <div className="flex items-center gap-1.5">
-                    <span className="text-xl font-bold text-white stat-num">
-                        {value != null && value !== "" ? value : <span className="text-zinc-600">—</span>}
+                    <span className="text-xl font-bold text-[var(--text-primary)] stat-num">
+                        {value != null && value !== "" ? value : <span className="text-[var(--text-muted)]">—</span>}
                     </span>
-                    {unit && value != null && value !== "" && <span className="text-sm text-zinc-500">{unit}</span>}
-                    {!value && <span className="text-xs text-zinc-600 italic">tap to set</span>}
+                    {unit && value != null && value !== "" && <span className="text-sm text-[var(--text-muted)]">{unit}</span>}
+                    {!value && <span className="text-xs text-[var(--text-muted)] italic">tap to set</span>}
                 </div>
             )}
         </div>
@@ -132,14 +131,14 @@ function OptionsField<T extends string>({
                 onClick={() => setOpen(o => !o)}
             >
                 <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 mb-0.5">{label}</div>
-                    <div className="text-base font-bold text-white flex items-center gap-1.5">
-                        {selected ? <>{selected.emoji} {selected.label}</> : <span className="text-zinc-600 text-sm italic">tap to set</span>}
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-0.5">{label}</div>
+                    <div className="text-base font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                        {selected ? <>{selected.emoji} {selected.label}</> : <span className="text-[var(--text-muted)] text-sm italic">tap to set</span>}
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5">
                     {saved && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] text-emerald-400 flex items-center gap-0.5"><Check className="w-3 h-3" /> Saved</motion.span>}
-                    <ChevronDown className={`w-4 h-4 text-zinc-600 transition-transform ${open ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-180" : ""}`} />
                 </div>
             </div>
             <AnimatePresence>
@@ -211,7 +210,7 @@ export default function SettingsSection({
 
     return (
         <motion.div key="settings" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="space-y-5 pb-32 px-1">
-            <h1 className="text-3xl font-bold text-white pt-2 tracking-tight">Settings</h1>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] pt-2 tracking-tight">Protocols</h1>
 
             {/* ── Profile Card ── */}
             <div className="card p-5 flex items-center gap-4">
@@ -223,14 +222,14 @@ export default function SettingsSection({
                     </div>
                 )}
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-lg font-bold text-white truncate">{user?.displayName || "Athlete"}</h2>
-                    <p className="text-sm text-zinc-500 truncate">{user?.email}</p>
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] truncate">{user?.displayName || "Athlete"}</h2>
+                    <p className="text-sm text-[var(--text-muted)] truncate">{user?.email}</p>
                 </div>
                 {bmi && (
                     <div className="text-center shrink-0">
-                        <div className="text-2xl font-bold text-white stat-num">{bmi}</div>
-                        <div className="text-[10px] text-zinc-500 font-semibold">{bmiCategory}</div>
-                        <div className="text-[9px] text-zinc-600 uppercase tracking-widest">BMI</div>
+                        <div className="text-2xl font-bold text-[var(--text-primary)] stat-num">{bmi}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-semibold">{bmiCategory}</div>
+                        <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest">BMI</div>
                     </div>
                 )}
             </div>
@@ -238,8 +237,8 @@ export default function SettingsSection({
             {/* ── Body Metrics ── */}
             <div>
                 <div className="flex items-center gap-2 mb-3 px-0.5">
-                    <Scale className="w-4 h-4 text-zinc-500" />
-                    <span className="text-sm font-semibold text-zinc-400 uppercase tracking-widest text-[11px]">Body Metrics</span>
+                    <Scale className="w-4 h-4 text-[var(--text-muted)]" />
+                    <span className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest text-[11px]">Body Metrics</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     <EditableField label="Age" value={data.age} unit="y/o" min={10} max={100}
@@ -255,8 +254,8 @@ export default function SettingsSection({
             {/* ── Profile & Goals ── */}
             <div>
                 <div className="flex items-center gap-2 mb-3 px-0.5">
-                    <Target className="w-4 h-4 text-zinc-500" />
-                    <span className="text-sm font-semibold text-zinc-400 uppercase tracking-widest text-[11px]">Profile & Goals</span>
+                    <Target className="w-4 h-4 text-[var(--text-muted)]" />
+                    <span className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest text-[11px]">Profile & Goals</span>
                 </div>
                 <div className="space-y-2">
                     <OptionsField
@@ -286,11 +285,11 @@ export default function SettingsSection({
             {/* ── Nutrition Goals ── */}
             <div>
                 <div className="flex items-center gap-2 mb-3 px-0.5">
-                    <Activity className="w-4 h-4 text-zinc-500" />
-                    <span className="text-sm font-semibold text-zinc-400 uppercase tracking-widest text-[11px]">Daily Nutrition Targets</span>
+                    <Activity className="w-4 h-4 text-[var(--text-muted)]" />
+                    <span className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest text-[11px]">Daily Nutrition Targets</span>
                 </div>
                 <div className="card p-4 space-y-2">
-                    <p className="text-xs text-zinc-600 mb-3">These targets power your progress bars in the Log section and the AI Prompt Compiler.</p>
+                    <p className="text-xs text-[var(--text-muted)] mb-3">These targets power your progress bars in the Log section and the AI Prompt Compiler.</p>
                     <div className="grid grid-cols-2 gap-2">
                         <EditableField label="Calories" value={data.goals?.calories} unit="kcal"
                             onSave={async v => save({ goals: { ...data.goals, calories: parseInt(v) || 2000 } })} />
@@ -302,11 +301,6 @@ export default function SettingsSection({
                             onSave={async v => save({ goals: { ...data.goals, fat_g: parseInt(v) || 80 } })} />
                     </div>
                 </div>
-            </div>
-
-            {/* ── Wearable Sync ── */}
-            <div className="card p-5">
-                <WearableSync />
             </div>
 
             {/* ── AI Coaching Brief ── */}
@@ -328,10 +322,10 @@ export default function SettingsSection({
             {/* ── Danger Zone ── */}
             <div className="pt-10">
                 <div className="flex flex-col items-center justify-center text-center gap-3">
-                    <p className="text-xs text-zinc-500">Need to start fresh or leave?</p>
+                    <p className="text-xs text-[var(--text-muted)]">Need to start fresh or leave?</p>
                     <button
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="text-xs font-semibold text-zinc-400 hover:text-red-400 transition-colors uppercase tracking-widest"
+                        className="text-xs font-semibold text-[var(--text-muted)] hover:text-red-400 transition-colors uppercase tracking-widest"
                     >
                         Delete Account Data
                     </button>
@@ -341,7 +335,7 @@ export default function SettingsSection({
             {/* ── Delete Confirmation Modal ── */}
             <AnimatePresence>
                 {showDeleteConfirm && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-md">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -351,8 +345,8 @@ export default function SettingsSection({
                             <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                                 <AlertTriangle className="w-7 h-7 text-red-500" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Delete Everything?</h3>
-                            <p className="text-sm text-zinc-400 mb-8 leading-relaxed">
+                            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Delete Everything?</h3>
+                            <p className="text-sm text-[var(--text-muted)] mb-8 leading-relaxed">
                                 This will permanently erase all your synced workouts, analytics, body metrics, and profile data from the cloud. This action <strong>cannot</strong> be undone.
                             </p>
 
@@ -365,14 +359,14 @@ export default function SettingsSection({
                                         await deleteAllUserData(authUser.uid);
                                         signOut(); // Data cleared, force them to login screen
                                     }}
-                                    className="w-full py-3.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors disabled:opacity-50"
+                                    className="w-full py-3.5 rounded-xl bg-red-500 hover:bg-red-600 text-[var(--text-primary)] font-bold transition-colors disabled:opacity-50"
                                 >
                                     {isDeleting ? "Erasing..." : "Yes, delete everything"}
                                 </button>
                                 <button
                                     disabled={isDeleting}
                                     onClick={() => setShowDeleteConfirm(false)}
-                                    className="w-full py-3.5 rounded-xl bg-zinc-800 text-white font-semibold hover:bg-zinc-700 transition-colors"
+                                    className="w-full py-3.5 rounded-xl bg-[var(--bg-elevated)] text-[var(--text-primary)] font-semibold hover:bg-zinc-700 transition-colors"
                                 >
                                     Cancel
                                 </button>
