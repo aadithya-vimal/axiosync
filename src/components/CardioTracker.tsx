@@ -72,10 +72,10 @@ function generateSplits(distanceKm: number, avgPaceMin: number, avgHR: number, e
 function StatCard({ label, value, unit, color, icon }: { label: string; value: string; unit: string; color: string; icon: React.ReactNode }) {
     return (
         <div className="flex flex-col gap-1 p-3.5 rounded-2xl" style={{ background: "var(--bg-elevated)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <div className="flex items-center gap-1.5 text-zinc-600 text-xs">{icon} {label}</div>
+            <div className="flex items-center gap-1.5 text-[var(--text-muted)] text-xs">{icon} {label}</div>
             <div className="flex items-end gap-1">
                 <span className="text-2xl font-bold stat-num" style={{ color }}>{value}</span>
-                <span className="text-xs text-zinc-500 mb-0.5">{unit}</span>
+                <span className="text-xs text-[var(--text-muted)] mb-0.5">{unit}</span>
             </div>
         </div>
     );
@@ -109,8 +109,8 @@ function MapPlaceholder() {
             </svg>
             <div className="text-center relative z-10 space-y-1">
                 <Navigation className="w-5 h-5 text-[#3B82F6] mx-auto opacity-60" />
-                <p className="text-xs text-zinc-600 font-medium">Route Map</p>
-                <p className="text-[10px] text-zinc-700">Mapbox / Leaflet integration ready</p>
+                <p className="text-xs text-[var(--text-muted)] font-medium">Route Map</p>
+                <p className="text-[10px] text-[var(--text-secondary)]">Mapbox / Leaflet integration ready</p>
             </div>
         </div>
     );
@@ -241,7 +241,7 @@ export default function CardioTracker() {
                             <div className="relative">
                                 <input type="number" placeholder={placeholder} value={value}
                                     onChange={e => set(e.target.value)} className="field text-sm pr-12" />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-600 pointer-events-none">{unit}</span>
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] pointer-events-none">{unit}</span>
                             </div>
                         </div>
                     ))}
@@ -255,7 +255,7 @@ export default function CardioTracker() {
                     <div className="relative">
                         <input type="number" placeholder="148" value={avgHR}
                             onChange={e => setAvgHR(e.target.value)} className="field text-sm pr-12" />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-600 pointer-events-none">bpm</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] pointer-events-none">bpm</span>
                     </div>
                 </div>
                 <div>
@@ -263,7 +263,7 @@ export default function CardioTracker() {
                     <div className="relative">
                         <input type="number" placeholder="172" value={maxHR}
                             onChange={e => setMaxHR(e.target.value)} className="field text-sm pr-12" />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-600 pointer-events-none">bpm</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] pointer-events-none">bpm</span>
                     </div>
                 </div>
             </div>
@@ -294,7 +294,7 @@ export default function CardioTracker() {
             <div>
                 <button
                     onClick={() => setShowZones(v => !v)}
-                    className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium"
+                    className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors font-medium"
                 >
                     <Heart className="w-3.5 h-3.5" />
                     HR Zone Distribution
@@ -318,7 +318,7 @@ export default function CardioTracker() {
                                             onChange={e => setZones(prev => { const n = [...prev]; n[i] = parseFloat(e.target.value) || 0; return n; })}
                                             className="field text-sm text-center px-1"
                                         />
-                                        <div className="text-center text-[9px] text-zinc-700">{z.label}</div>
+                                        <div className="text-center text-[9px] text-[var(--text-secondary)]">{z.label}</div>
                                     </div>
                                 ))}
                             </div>
@@ -334,7 +334,7 @@ export default function CardioTracker() {
                                             ) : null;
                                         })}
                                     </div>
-                                    <div className="flex justify-between text-[9px] text-zinc-600">
+                                    <div className="flex justify-between text-[9px] text-[var(--text-muted)]">
                                         <span>Aerobic: {Math.round(((zones[0] + zones[1] + zones[2]) / totalZoneMins) * 100)}%</span>
                                         <span>Anaerobic: {Math.round(((zones[3] + zones[4]) / totalZoneMins) * 100)}%</span>
                                     </div>
@@ -350,7 +350,7 @@ export default function CardioTracker() {
                 <div>
                     <button
                         onClick={() => setShowSplits(v => !v)}
-                        className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium"
+                        className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors font-medium"
                     >
                         <TrendingUp className="w-3.5 h-3.5" />
                         Km Splits ({splits.length})
@@ -366,7 +366,7 @@ export default function CardioTracker() {
                             >
                                 <div className="rounded-2xl overflow-hidden border border-white/[0.06]" style={{ background: "var(--bg-elevated)" }}>
                                     {/* Table header */}
-                                    <div className="grid grid-cols-4 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600 border-b border-white/[0.05]">
+                                    <div className="grid grid-cols-4 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] border-b border-white/[0.05]">
                                         <span>KM</span><span>Pace</span><span>HR</span><span>↑ Ele</span>
                                     </div>
                                     <div className="thin-scrollbar overflow-y-auto" style={{ maxHeight: 180 }}>
@@ -378,7 +378,7 @@ export default function CardioTracker() {
                                                 transition={{ delay: i * 0.03 }}
                                                 className="grid grid-cols-4 px-3 py-2 text-xs border-b border-white/[0.03] last:border-0"
                                             >
-                                                <span className="font-bold text-white">{s.km}</span>
+                                                <span className="font-bold text-[var(--text-primary)]">{s.km}</span>
                                                 <span className="stat-num" style={{ color: current.color }}>{s.paceMin}</span>
                                                 <span className="text-[#EF4444] stat-num">{s.hr} bpm</span>
                                                 <span className="text-[#22C55E]">{s.elevation > 0 ? "+" : ""}{s.elevation}m</span>

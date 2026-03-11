@@ -65,22 +65,22 @@ export default function LoginPage() {
                     className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left"
                 >
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-[0_0_30px_rgba(124,58,237,0.5)] border border-white/10 ring-1 ring-white/5 relative overflow-hidden">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-[0_0_30px_rgba(124,58,237,0.5)] border border-[var(--border-subtle)] ring-1 ring-white/5 relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent translate-y-[-100%] animate-[shimmer_2s_infinite]"></div>
                             {/* We use the custom Logo if available, otherwise fallback to an abstract icon */}
                             <Image src="/icon.png" alt="Logo" width={48} height={48} className="object-cover rounded-2xl" />
                         </div>
-                        <span className="text-3xl font-bold text-white tracking-tight">Axiosync</span>
+                        <span className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Axiosync</span>
                     </div>
 
-                    <h1 className="text-5xl lg:text-7xl font-extrabold text-white leading-[1.1] mb-6 tracking-tighter">
+                    <h1 className="text-5xl lg:text-7xl font-extrabold text-[var(--text-primary)] leading-[1.1] mb-6 tracking-tighter">
                         Experience <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 animate-gradient-x">
                             Ultra-Fitness.
                         </span>
                     </h1>
 
-                    <p className="text-zinc-400 text-lg lg:text-xl leading-relaxed max-w-xl mb-10 font-medium">
+                    <p className="text-[var(--text-muted)] text-lg lg:text-xl leading-relaxed max-w-xl mb-10 font-medium">
                         The world's most premium AI health companion. Real-time 3D tracking, 500+ dynamic exercises, and flawless analytics.
                     </p>
 
@@ -93,7 +93,7 @@ export default function LoginPage() {
                         ].map(({ icon: Icon, label, color, bg, border }) => (
                             <div key={label} className={`flex items-center gap-2 px-4 py-2 rounded-full ${bg} ${border} border backdrop-blur-md`}>
                                 <Icon className={`w-4 h-4 ${color}`} />
-                                <span className="text-sm font-semibold text-white/90">{label}</span>
+                                <span className="text-sm font-semibold text-[var(--text-primary)]/90">{label}</span>
                             </div>
                         ))}
                     </div>
@@ -110,14 +110,14 @@ export default function LoginPage() {
                         {/* Glow effect behind card */}
                         <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-600 rounded-[2rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
 
-                        <div className="relative bg-[#1A1A24]/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 lg:p-10 shadow-2xl overflow-hidden">
+                        <div className="relative bg-[#1A1A24]/60 backdrop-blur-2xl border border-[var(--border-subtle)] rounded-[2rem] p-8 lg:p-10 shadow-2xl overflow-hidden">
                             {/* Inner shine */}
                             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
                             <div className="text-center mb-10">
                                 <Sparkles className="w-8 h-8 text-fuchsia-400 mx-auto mb-4" />
-                                <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Access Portal</h2>
-                                <p className="text-zinc-400 text-base">Enter the next generation of fitness</p>
+                                <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-2 tracking-tight">Access Portal</h2>
+                                <p className="text-[var(--text-muted)] text-base">Enter the next generation of fitness</p>
                             </div>
 
                             <button
@@ -135,7 +135,7 @@ export default function LoginPage() {
                             </button>
 
                             <div className="mt-8 flex flex-col items-center gap-4">
-                                <p className="text-zinc-500 text-xs text-center leading-relaxed">
+                                <p className="text-[var(--text-muted)] text-xs text-center leading-relaxed">
                                     By continuing, you agree to our Terms of Service and securely link your anonymized health data.
                                 </p>
                             </div>

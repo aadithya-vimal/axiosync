@@ -6,7 +6,7 @@ import { Brain, RefreshCw, ChevronRight } from "lucide-react";
 
 interface Insight {
     id: string;
-    category: "readiness" | "training" | "nutrition" | "sleep" | "motivation";
+    category: "readiness" | "training" | "nutrition" | "motivation";
     text: string;
     emoji: string;
     color: string;
@@ -15,21 +15,21 @@ interface Insight {
 // Deterministic insight generation based on data snapshot
 function generateInsights(opts: {
     readinessPct?: number;
-    lastSleepHours?: number;
-    lastSleepQuality?: number;
     daysSinceWorkout?: number;
     totalVolumeToday?: number;
     streakDays?: number;
     lastCardioKm?: number;
+    weightKg?: number;
+    heightCm?: number;
 }): Insight[] {
     const {
         readinessPct = 70,
-        lastSleepHours = 7,
-        lastSleepQuality = 7,
         daysSinceWorkout = 1,
         totalVolumeToday = 0,
         streakDays = 0,
         lastCardioKm = 0,
+        weightKg,
+        heightCm,
     } = opts;
 
     const insights: Insight[] = [];
@@ -58,25 +58,6 @@ function generateInsights(opts: {
             text: `Readiness is low at ${readinessPct}%. Your body's signaling it needs recovery. Active rest — a walk, yoga, or mobility work — will serve you better than pushing hard today.`,
             emoji: "🛌",
             color: "#FF9F0A",
-        });
-    }
-
-    // Sleep insight
-    if (lastSleepHours < 6) {
-        insights.push({
-            id: "sleep_poor",
-            category: "sleep",
-            text: `You got ${lastSleepHours.toFixed(1)}h of sleep — below the minimum needed for muscle protein synthesis to peak. Even a 20-minute nap this afternoon can meaningfully restore cognitive performance.`,
-            emoji: "😴",
-            color: "#5AC8FA",
-        });
-    } else if (lastSleepHours >= 8 && lastSleepQuality >= 7) {
-        insights.push({
-            id: "sleep_great",
-            category: "sleep",
-            text: `Excellent sleep last night — ${lastSleepHours.toFixed(1)}h with a quality score of ${lastSleepQuality}/10. Growth hormone secreted during deep sleep will directly support strength gains from yesterday's training.`,
-            emoji: "🌙",
-            color: "#BF5AF2",
         });
     }
 
@@ -129,25 +110,38 @@ function generateInsights(opts: {
         });
     }
 
+    // Biometric specific (BMI awareness)
+    if (weightKg && heightCm) {
+        const bmi = (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1);
+        if (parseFloat(bmi) > 25 && readinessPct < 60) {
+            insights.push({
+                id: "body_recovery",
+                category: "readiness",
+                text: `Current BMI is ${bmi}. With readiness at ${readinessPct}%, prioritize low-impact recovery today (walking/swimming) to manage systemic load while staying active.`,
+                emoji: "⚖️",
+                color: "#0A84FF",
+            });
+        }
+    }
+
     return insights.slice(0, 3);
 }
 
 const CATEGORY_CONFIG = {
-    readiness: { label: "Readiness", color: "#30D158" },
-    training: { label: "Training", color: "#0A84FF" },
-    nutrition: { label: "Nutrition", color: "#FF9F0A" },
-    sleep: { label: "Sleep", color: "#5AC8FA" },
-    motivation: { label: "Motivation", color: "#BF5AF2" },
+    readiness: { label: "Condition", color: "#30D158" },
+    training: { label: "Deployment", color: "#0A84FF" },
+    nutrition: { label: "Sustainment", color: "#FF9F0A" },
+    motivation: { label: "Directive", color: "#BF5AF2" },
 };
 
 interface Props {
     readinessPct?: number;
-    lastSleepHours?: number;
-    lastSleepQuality?: number;
     daysSinceWorkout?: number;
     totalVolumeToday?: number;
     streakDays?: number;
     lastCardioKm?: number;
+    weightKg?: number;
+    heightCm?: number;
 }
 
 export default function AIInsightsFeed(props: Props) {
@@ -158,8 +152,9 @@ export default function AIInsightsFeed(props: Props) {
     useEffect(() => {
         setInsights(generateInsights(props));
     }, [
-        props.readinessPct, props.lastSleepHours, props.lastSleepQuality,
-        props.daysSinceWorkout, props.totalVolumeToday, props.streakDays, props.lastCardioKm
+        props.readinessPct,
+        props.daysSinceWorkout, props.totalVolumeToday, props.streakDays, props.lastCardioKm,
+        props.weightKg, props.heightCm
     ]);
 
     const handleRefresh = () => {
@@ -180,14 +175,14 @@ export default function AIInsightsFeed(props: Props) {
                     <div className="w-6 h-6 rounded-lg bg-[#BF5AF2]/20 flex items-center justify-center">
                         <Brain className="w-3.5 h-3.5 text-[#BF5AF2]" />
                     </div>
-                    <span className="text-sm font-semibold text-white">AI Insights</span>
-                    <span className="text-[10px] text-zinc-600 bg-white/[0.05] px-2 py-0.5 rounded-full">Today</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">Operational Intelligence</span>
+                    <span className="text-[10px] text-[var(--text-muted)] bg-[var(--bg-elevated)] px-2 py-0.5 rounded-full">Active</span>
                 </div>
                 <motion.button
                     onClick={handleRefresh}
                     animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                    className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                 >
                     <RefreshCw className="w-3.5 h-3.5" />
                 </motion.button>
@@ -206,7 +201,7 @@ export default function AIInsightsFeed(props: Props) {
                     {refreshing ? (
                         /* Skeleton loaders */
                         [0, 1, 2].map(i => (
-                            <div key={i} className="h-20 rounded-2xl bg-white/[0.04] border border-white/[0.05] animate-pulse" />
+                            <div key={i} className="h-20 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] animate-pulse" />
                         ))
                     ) : (
                         insights.map((insight, i) => {
@@ -234,7 +229,7 @@ export default function AIInsightsFeed(props: Props) {
                                                     {cfg.label}
                                                 </span>
                                             </div>
-                                            <p className={`text-xs text-zinc-300 leading-relaxed ${isOpen ? "" : "line-clamp-2"}`}>
+                                            <p className={`text-xs text-[var(--text-secondary)] leading-relaxed ${isOpen ? "" : "line-clamp-2"}`}>
                                                 {insight.text}
                                             </p>
                                         </div>
@@ -243,7 +238,7 @@ export default function AIInsightsFeed(props: Props) {
                                             transition={{ duration: 0.2 }}
                                             className="shrink-0 mt-1"
                                         >
-                                            <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
+                                            <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                                         </motion.div>
                                     </div>
                                 </motion.div>

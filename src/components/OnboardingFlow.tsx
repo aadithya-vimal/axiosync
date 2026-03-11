@@ -93,8 +93,8 @@ export default function OnboardingFlow({ onComplete }: Props) {
                             A
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white tracking-tight">Welcome to Axiosync</h1>
-                            <p className="text-zinc-500 mt-2 leading-relaxed">
+                            <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Welcome to Axiosync</h1>
+                            <p className="text-[var(--text-muted)] mt-2 leading-relaxed">
                                 Hey {user?.displayName?.split(" ")[0] || "there"} 👋<br />
                                 Let's personalize your experience. Takes 30 seconds.
                             </p>
@@ -109,8 +109,8 @@ export default function OnboardingFlow({ onComplete }: Props) {
                 {step === 1 && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-white tracking-tight">About you</h2>
-                            <p className="text-zinc-500 text-sm mt-1">Helps us calculate your optimal zones.</p>
+                            <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">About you</h2>
+                            <p className="text-[var(--text-muted)] text-sm mt-1">Helps us calculate your optimal zones.</p>
                         </div>
 
                         <div>
@@ -181,8 +181,8 @@ export default function OnboardingFlow({ onComplete }: Props) {
                 {step === 2 && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-white tracking-tight">Primary Goal</h2>
-                            <p className="text-zinc-500 text-sm mt-1">This tailors your analytics dashboard.</p>
+                            <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Primary Goal</h2>
+                            <p className="text-[var(--text-muted)] text-sm mt-1">This tailors your analytics dashboard.</p>
                         </div>
 
                         <div className="space-y-2">
@@ -199,8 +199,8 @@ export default function OnboardingFlow({ onComplete }: Props) {
                                 >
                                     <span className="text-2xl">{g.emoji}</span>
                                     <div className="flex-1">
-                                        <div className="text-white font-semibold">{g.label}</div>
-                                        <div className="text-zinc-500 text-xs">{g.desc}</div>
+                                        <div className="text-[var(--text-primary)] font-semibold">{g.label}</div>
+                                        <div className="text-[var(--text-muted)] text-xs">{g.desc}</div>
                                     </div>
                                     {goal === g.id && <Check className="w-4 h-4 text-[#0A84FF]" />}
                                 </button>
@@ -218,8 +218,8 @@ export default function OnboardingFlow({ onComplete }: Props) {
                 {step === 3 && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-white tracking-tight">Target Areas</h2>
-                            <p className="text-zinc-500 text-sm mt-1">Select the muscle groups you want to focus on.</p>
+                            <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Target Areas</h2>
+                            <p className="text-[var(--text-muted)] text-sm mt-1">Select the muscle groups you want to focus on.</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">

@@ -88,10 +88,10 @@ function WorkoutOfTheDay({ onSave }: { onSave: (exercises: Exercise[], name: str
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <Flame className="w-4 h-4 text-red-400" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Workout of the Day</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">Daily Directive</span>
                     </div>
-                    <h3 className="text-lg font-bold text-white">{wod.emoji} {wod.focus.charAt(0).toUpperCase() + wod.focus.slice(1)} Blast</h3>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-zinc-500 text-xs">
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">{wod.emoji} {wod.focus.charAt(0).toUpperCase() + wod.focus.slice(1)} Blast</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[var(--text-muted)] text-xs">
                         <Calendar className="w-3 h-3" />{dateStr}
                     </div>
                 </div>
@@ -99,16 +99,16 @@ function WorkoutOfTheDay({ onSave }: { onSave: (exercises: Exercise[], name: str
             </div>
 
             {/* Exercise list */}
-            <div className="divide-y divide-white/[0.05]">
+            <div className="divide-y border-t border-[var(--border-subtle)]">
                 {wod.exercises.map((ex, i) => (
                     <div key={ex.id} className="flex items-center gap-3 px-5 py-3">
                         <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 text-red-400"
                             style={{ background: "rgba(239,68,68,0.12)" }}>{i + 1}</div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-white truncate">{ex.name}</div>
-                            <div className="text-[10px] text-zinc-600 capitalize">{ex.muscleGroup.replace("_", " ")}</div>
+                            <div className="text-sm font-semibold text-[var(--text-primary)] truncate">{ex.name}</div>
+                            <div className="text-[10px] text-[var(--text-muted)] capitalize">{ex.muscleGroup.replace("_", " ")}</div>
                         </div>
-                        <div className="text-[10px] font-bold text-zinc-600">
+                        <div className="text-[10px] font-bold text-[var(--text-muted)]">
                             {ex.duration_s ? `${ex.duration_s}s` : `3×12`}
                         </div>
                     </div>
@@ -232,28 +232,28 @@ function TrendingRoutineCard({
                 <span className="text-3xl mt-0.5">{routine.emoji}</span>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                        <h3 className="text-sm font-bold text-white truncate">{routine.name}</h3>
+                        <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{routine.name}</h3>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                             style={{ background: `${routine.color}20`, color: routine.color, border: `1px solid ${routine.color}35` }}>
                             {routine.tag}
                         </span>
-                        <span className="text-[10px] text-zinc-600">{routine.exercises.length} exercises</span>
+                        <span className="text-[10px] text-[var(--text-muted)]">{routine.exercises.length} exercises</span>
                     </div>
                 </div>
             </div>
 
             <div className="px-4 py-3 flex-1">
-                <p className="text-xs text-zinc-500 leading-relaxed">{routine.description}</p>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">{routine.description}</p>
                 <div className="mt-2.5 space-y-0.5">
                     {exs.map((name, i) => (
-                        <div key={i} className="text-[11px] text-zinc-600 flex items-center gap-1.5">
+                        <div key={i} className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                             <div className="w-1 h-1 rounded-full shrink-0" style={{ background: routine.color }} />{name}
                         </div>
                     ))}
                     {routine.exercises.length > 4 && (
-                        <div className="text-[11px] text-zinc-700">+{routine.exercises.length - 4} more…</div>
+                        <div className="text-[11px] text-[var(--text-secondary)]">+{routine.exercises.length - 4} more…</div>
                     )}
                 </div>
             </div>
@@ -286,18 +286,18 @@ function NewsCard({ article, index }: { article: Article; index: number }) {
     return (
         <a href={article.url === "#" ? undefined : article.url} target="_blank" rel="noopener noreferrer"
             className="card p-4 flex gap-3 items-start transition-all hover:bg-white/[0.04] cursor-pointer"
-            style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ border: "1px solid var(--border-subtle)" }}>
             {/* Color indicator strip */}
             <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: color }} />
             <div className="flex-1 min-w-0">
                 <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color }}>{article.source}</div>
-                <div className="text-sm font-semibold text-white leading-snug line-clamp-2">{article.title}</div>
+                <div className="text-sm font-semibold text-[var(--text-primary)] leading-snug line-clamp-2">{article.title}</div>
                 {article.summary && (
-                    <p className="text-xs text-zinc-600 mt-1.5 line-clamp-2 leading-relaxed">{article.summary}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1.5 line-clamp-2 leading-relaxed">{article.summary}</p>
                 )}
-                <div className="text-[10px] text-zinc-700 mt-2">{article.pubDate}</div>
+                <div className="text-[10px] text-[var(--text-secondary)] mt-2">{article.pubDate}</div>
             </div>
-            <ExternalLink className="w-3.5 h-3.5 text-zinc-700 shrink-0 mt-0.5" />
+            <ExternalLink className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0 mt-0.5" />
         </a>
     );
 }
@@ -328,12 +328,12 @@ function NewsSection() {
         <div>
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                    <Newspaper className="w-4 h-4 text-zinc-500" />
-                    <span className="text-sm font-bold text-white">Fitness News</span>
-                    <span className="text-[10px] text-zinc-600 px-2 py-0.5 rounded-full border border-white/10">Live</span>
+                    <Newspaper className="w-4 h-4 text-[var(--text-muted)]" />
+                    <span className="text-sm font-bold text-[var(--text-primary)]">SITREP Feed</span>
+                    <span className="text-[10px] text-[var(--text-muted)] px-2 py-0.5 rounded-full border border-[var(--border-subtle)]">Live</span>
                 </div>
                 {!loading && (
-                    <button onClick={fetchNews} className="p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors">
+                    <button onClick={fetchNews} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
                         <RefreshCw className="w-3.5 h-3.5" />
                     </button>
                 )}
@@ -347,7 +347,7 @@ function NewsSection() {
                 </div>
             ) : error ? (
                 <div className="card p-5 text-center">
-                    <p className="text-sm text-zinc-600">Could not load news. <button onClick={fetchNews} className="text-blue-400 underline">Retry</button></p>
+                    <p className="text-sm text-[var(--text-muted)]">Could not load news. <button onClick={fetchNews} className="text-blue-400 underline">Retry</button></p>
                 </div>
             ) : (
                 <div className="space-y-2">
@@ -412,8 +412,8 @@ export default function DiscoverSection() {
                     <Compass className="w-5 h-5 text-indigo-400" />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Discover</h1>
-                    <p className="text-xs text-zinc-600">Today&apos;s workout, trending plans & news</p>
+                    <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Intelligence</h1>
+                    <p className="text-xs text-[var(--text-muted)]">Operational briefs, trending plans & SITREPs</p>
                 </div>
             </div>
 
@@ -424,8 +424,8 @@ export default function DiscoverSection() {
             <div>
                 <div className="flex items-center gap-2 mb-3 px-0.5">
                     <TrendingUp className="w-4 h-4 text-orange-400" />
-                    <span className="text-sm font-bold text-white">Trending Routines</span>
-                    <span className="ml-auto text-[10px] text-zinc-600">Tap to save →</span>
+                    <span className="text-sm font-bold text-[var(--text-primary)]">Strategic Protocols</span>
+                    <span className="ml-auto text-[10px] text-[var(--text-muted)]">Extraction point →</span>
                 </div>
 
                 {/* Horizontal scroll on mobile, 2-col grid on wider */}

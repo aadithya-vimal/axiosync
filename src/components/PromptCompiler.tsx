@@ -4,8 +4,8 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-    getWorkoutLogs, getActivityLogs, getNutritionLogs, getSleepLogs, getReadinessLogs,
-    type WorkoutLog, type ActivityLog, type NutritionLog, type SleepLog, type ReadinessLog,
+    getWorkoutLogs, getActivityLogs, getNutritionLogs, getSleepLogs, getReadinessLogs, getBodyMetrics, getOnboarding,
+    type WorkoutLog, type ActivityLog, type NutritionLog, type SleepLog, type ReadinessLog, type BodyMetric,
 } from "@/lib/firestore";
 import { Brain, Copy, CheckCircle, Download, Loader2, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 
@@ -20,9 +20,12 @@ function buildPrompt(opts: {
     nutrition: NutritionLog[];
     sleep: SleepLog[];
     readiness: ReadinessLog[];
+    weight_kg?: number;
+    height_cm?: number;
+    bmi?: number;
     userName?: string;
 }): string {
-    const { range, workouts, activities, nutrition, sleep, readiness, userName } = opts;
+    const { range, workouts, activities, nutrition, sleep, readiness, weight_kg, height_cm, bmi, userName } = opts;
 
     // Aggregate stats
     const totalVolume = workouts.reduce((a, w) => a + (w.total_volume_kg || 0), 0);
@@ -68,6 +71,13 @@ function buildPrompt(opts: {
         `═══════════════════════════════════════════════════`,
         ``,
         `ROLE: You are an expert strength & conditioning coach and sports nutritionist. Analyze the following ${range}-day health data and provide specific, actionable coaching insights. Be direct, data-driven, and prescriptive.`,
+        ``,
+        `────────────────────────────────────────────────────`,
+        `SECTION 0: BIOMETRIC PROFILE`,
+        `────────────────────────────────────────────────────`,
+        (weight_kg && height_cm)
+            ? `Current Weight: ${weight_kg} kg\nHeight: ${height_cm} cm\nBMI: ${bmi || (weight_kg / Math.pow(height_cm / 100, 2)).toFixed(1)}`
+            : "No recent biometric metrics logged.",
         ``,
         `────────────────────────────────────────────────────`,
         `SECTION 1: TRAINING DATA`,
@@ -150,15 +160,26 @@ export default function PromptCompiler() {
     const compile = useCallback(async () => {
         if (!user) return;
         setLoading(true);
-        const [workouts, activities, nutrition, sleep, readiness] = await Promise.all([
+        const [workouts, activities, nutrition, sleep, readiness, metrics, onboarding] = await Promise.all([
             getWorkoutLogs(user.uid, range),
             getActivityLogs(user.uid, range),
             getNutritionLogs(user.uid, range),
             getSleepLogs(user.uid, range),
             getReadinessLogs(user.uid, range),
+            getBodyMetrics(user.uid, 1),
+            getOnboarding(user.uid),
         ]);
+
+        // Biometric resolution: Prefer metric log, fallback to onboarding
+        const latestWeight = metrics[0]?.weight_kg || onboarding?.weight_kg;
+        const latestHeight = metrics[0]?.height_cm || onboarding?.height_cm;
+        const latestBmi = metrics[0]?.bmi || (latestWeight && latestHeight ? (latestWeight / Math.pow(latestHeight / 100, 2)) : undefined);
+
         const text = buildPrompt({
             range, workouts, activities, nutrition, sleep, readiness,
+            weight_kg: latestWeight,
+            height_cm: latestHeight,
+            bmi: typeof latestBmi === 'number' ? Number(latestBmi.toFixed(1)) : undefined,
             userName: user.displayName || undefined,
         });
         setPrompt(text);
@@ -192,8 +213,8 @@ export default function PromptCompiler() {
                     <Brain className="w-5 h-5 text-[#A855F7]" />
                 </div>
                 <div>
-                    <h3 className="font-semibold text-white">AI Coaching Brief Compiler</h3>
-                    <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">
+                    <h3 className="font-semibold text-[var(--text-primary)]">AI Coaching Brief Compiler</h3>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5 leading-relaxed">
                         Aggregates your Firebase data into a structured prompt — paste it into ChatGPT, Claude, or Gemini for personalized coaching.
                     </p>
                 </div>
@@ -251,7 +272,7 @@ export default function PromptCompiler() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setShowPreview(v => !v)}
-                                className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-medium"
+                                className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors font-medium"
                             >
                                 {showPreview ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                                 {showPreview ? "Hide" : "Show"} Preview
@@ -278,7 +299,7 @@ export default function PromptCompiler() {
                         </div>
 
                         {/* Char count */}
-                        <div className="text-[10px] text-zinc-700 text-right">{prompt.length.toLocaleString()} characters · ready to paste into any AI</div>
+                        <div className="text-[10px] text-[var(--text-secondary)] text-right">{prompt.length.toLocaleString()} characters · ready to paste into any AI</div>
 
                         {/* Prompt preview */}
                         <AnimatePresence>
@@ -292,7 +313,7 @@ export default function PromptCompiler() {
                                     <textarea
                                         readOnly
                                         value={prompt}
-                                        className="w-full h-60 font-mono text-[10px] leading-relaxed text-zinc-400 resize-none focus:outline-none thin-scrollbar"
+                                        className="w-full h-60 font-mono text-[10px] leading-relaxed text-[var(--text-muted)] resize-none focus:outline-none thin-scrollbar"
                                         style={{ background: "var(--bg-base)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "12px 14px" }}
                                     />
                                 </motion.div>
@@ -311,7 +332,7 @@ export default function PromptCompiler() {
                                     href={url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold text-zinc-400 transition-all hover:text-white"
+                                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold text-[var(--text-muted)] transition-all hover:text-[var(--text-primary)]"
                                     style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.06)" }}
                                 >
                                     {emoji} {name}

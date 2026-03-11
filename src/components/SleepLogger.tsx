@@ -67,8 +67,8 @@ export default function SleepLogger() {
 
             <div className="card p-3 flex items-center justify-center gap-3">
                 <Moon className="w-4 h-4 text-indigo-400" />
-                <span className="text-sm font-semibold text-white stat-num">{durationHours}h</span>
-                <span className="text-slate-500 text-sm">of sleep</span>
+                <span className="text-sm font-semibold text-[var(--text-primary)] stat-num">{durationHours}h</span>
+                <span className="text-[var(--text-muted)] text-sm">of recovery</span>
                 <span className={`badge text-xs ${durationHours >= 7.5 ? "badge-green" : durationHours >= 6 ? "badge-amber" : "badge-red"}`}>
                     {durationHours >= 7.5 ? "Optimal" : durationHours >= 6 ? "Fair" : "Insufficient"}
                 </span>

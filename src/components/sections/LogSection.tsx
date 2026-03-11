@@ -21,14 +21,14 @@ export default function LogSection({
 }) {
     return (
         <motion.div key="log" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="space-y-5 pb-32">
-            <h1 className="text-3xl font-bold text-white px-1 pt-2 tracking-tight">Log</h1>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] px-1 pt-2 tracking-tight">Archive</h1>
 
             {/* Activity Calendar */}
             <StreakCalendar workouts={recentWorkouts} activities={recentActivities} />
 
             {/* Nutrition Logger */}
             <div className="card p-5">
-                <h3 className="font-semibold text-white mb-4">Nutrition</h3>
+                <h3 className="font-semibold text-[var(--text-primary)] mb-4">Nutrition</h3>
                 <NutritionLogger />
             </div>
 
