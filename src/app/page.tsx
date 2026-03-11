@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   getTodayToxins, getTodayNutrition, getOnboarding,
   getRecentWorkouts, getRecentActivities, getTodayReadiness, getBodyMetrics,
+  deleteWorkoutLog, deleteActivityLog,
 } from "@/lib/firestore";
 
 // Analytics
@@ -164,6 +165,7 @@ export default function DashboardPage() {
           <LogSection
             recentWorkouts={recentWorkouts}
             recentActivities={recentActivities}
+            onDelete={handleDelete}
           />
         )}
 

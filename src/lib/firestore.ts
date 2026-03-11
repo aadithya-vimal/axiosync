@@ -414,6 +414,16 @@ export async function getWorkoutLogs(uid: string, days = 30): Promise<WorkoutLog
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as WorkoutLog));
 }
 
+export async function deleteWorkoutLog(uid: string, id: string): Promise<void> {
+    if (isDemoMode) return;
+    await deleteDoc(doc(db, "users", uid, "logs_workout", id));
+}
+
+export async function deleteActivityLog(uid: string, id: string): Promise<void> {
+    if (isDemoMode) return;
+    await deleteDoc(doc(db, "users", uid, "logs_activity", id));
+}
+
 // ─── READINESS ────────────────────────────────────────────────────────────────
 
 export async function addReadinessLog(uid: string, log: Omit<ReadinessLog, "id" | "uid" | "timestamp">) {

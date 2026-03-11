@@ -225,7 +225,7 @@ function ActiveExercise({
                         </div>
                         <div className="flex gap-3">
                             <button className="btn btn-ghost flex-1" onClick={() => setShowDiscardModal(false)}>Maintain Mission</button>
-                            <button className="btn btn-danger flex-1" onClick={onEnd}>Abort</button>
+                            <button className="btn btn-danger flex-1" onClick={() => handleEnd(true)}>Abort</button>
                         </div>
                     </div>
                 </div>
@@ -953,8 +953,14 @@ export default function WorkoutTracker() {
     }, []);
 
     // ── End / close ──
-    const handleEnd = useCallback(() => {
-        setEngineState("complete");
+    const handleEnd = useCallback((discard = false) => {
+        if (discard) {
+            setSession(null);
+            setSelectedPlan(null);
+            setEngineState("browse");
+        } else {
+            setEngineState("complete");
+        }
     }, []);
 
     const handleClose = useCallback(() => {

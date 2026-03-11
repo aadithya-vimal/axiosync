@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import type { WorkoutLog, ActivityLog } from "@/lib/firestore";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Target } from "lucide-react";
+import { X, Clock, Target, Trash2, AlertTriangle } from "lucide-react";
 
 interface Props {
     workouts: WorkoutLog[];
     activities: ActivityLog[];
+    onDelete?: (id: string, type: 'workout' | 'activity') => Promise<void>;
 }
 
 function getDateKey(ts: any): string {
@@ -16,12 +17,14 @@ function getDateKey(ts: any): string {
     return d.toISOString().split("T")[0];
 }
 
-export default function StreakCalendar({ workouts, activities }: Props) {
+export default function StreakCalendar({ workouts, activities, onDelete }: Props) {
     const WEEKS = 16;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const [selectedDate, setSelectedDate] = useState<{ date: string; items: (WorkoutLog | ActivityLog)[] } | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Build activity map: dateKey → count & items
     const activityMap = useMemo(() => {
@@ -179,16 +182,36 @@ export default function StreakCalendar({ workouts, activities }: Props) {
                                     const isWorkout = 'exercises' in item;
                                     const wItem = item as WorkoutLog;
                                     const aItem = item as ActivityLog;
+                                    const itemId = item.id || '';
+                                    const isConfirming = deletingId === itemId;
+
                                     return (
-                                        <div key={idx} className="bg-[#1a1a24] border border-[var(--border-subtle)] rounded-xl p-4 flex flex-col gap-2">
+                                        <div key={itemId || idx} className="bg-[#1a1a24] border border-[var(--border-subtle)] rounded-xl p-4 flex flex-col gap-2 relative group">
                                             <div className="flex items-center justify-between">
                                                 <span className="font-semibold text-[var(--text-primary)] capitalize flex items-center gap-2">
                                                     {isWorkout ? "🏋️ Strength & Muscle" : "🏃 Cardiovascular"}
                                                 </span>
-                                                <span className="text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-overlay)] px-2 py-1 rounded-md flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    {item.duration_min} min
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-overlay)] px-2 py-1 rounded-md flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        {item.duration_min} min
+                                                    </span>
+                                                    {onDelete && (
+                                                        <button
+                                                            onClick={() => isConfirming ? (async () => {
+                                                                setIsDeleting(true);
+                                                                await onDelete(itemId, isWorkout ? 'workout' : 'activity');
+                                                                setSelectedDate(prev => prev ? { ...prev, items: prev.items.filter(i => i.id !== itemId) } : null);
+                                                                setDeletingId(null);
+                                                                setIsDeleting(false);
+                                                            })() : setDeletingId(itemId)}
+                                                            disabled={isDeleting}
+                                                            className={`p-1.5 rounded-lg transition-all ${isConfirming ? "bg-red-500 text-white" : "text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-500/10"}`}
+                                                        >
+                                                            {isConfirming ? <span className="text-[10px] font-bold px-1">Confirm</span> : <Trash2 className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                             {isWorkout && (
                                                 <div className="mt-2 text-sm text-[var(--text-muted)] flex items-center gap-2">
@@ -199,6 +222,11 @@ export default function StreakCalendar({ workouts, activities }: Props) {
                                             {!isWorkout && (
                                                 <div className="mt-2 text-sm text-[var(--text-muted)] capitalize flex items-center gap-2">
                                                     Activity: {aItem.type.replace("_", " ")}
+                                                </div>
+                                            )}
+                                            {isConfirming && (
+                                                <div className="absolute inset-x-0 -bottom-8 flex justify-center z-10">
+                                                    <button onClick={() => setDeletingId(null)} className="text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] bg-[#1a1a24] px-2 py-1 rounded-full border border-[var(--border-subtle)]">Cancel Deletion</button>
                                                 </div>
                                             )}
                                         </div>

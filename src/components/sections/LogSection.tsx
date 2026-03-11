@@ -15,16 +15,18 @@ const pageVariants = {
 export default function LogSection({
     recentWorkouts,
     recentActivities,
+    onDelete,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
+    onDelete?: (id: string, type: 'workout' | 'activity') => Promise<void>;
 }) {
     return (
         <motion.div key="log" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="space-y-5 pb-32">
             <h1 className="text-3xl font-bold text-[var(--text-primary)] px-1 pt-2 tracking-tight">Archive</h1>
 
             {/* Activity Calendar */}
-            <StreakCalendar workouts={recentWorkouts} activities={recentActivities} />
+            <StreakCalendar workouts={recentWorkouts} activities={recentActivities} onDelete={onDelete} />
 
             {/* Nutrition Logger */}
             <div className="card p-5">
