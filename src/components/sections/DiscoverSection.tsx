@@ -8,8 +8,10 @@ import {
     Calendar,
 } from "lucide-react";
 import { EXERCISE_DATABASE, type Exercise } from "@/lib/WorkoutEngine";
-import { saveCustomWorkout, type CustomExerciseBlock } from "@/lib/firestore";
+import { saveCustomWorkout, getUserPlans, type CustomExerciseBlock, type UserPlan } from "@/lib/firestore";
 import { useAuth } from "@/contexts/AuthContext";
+import WorkoutDetailView from "../WorkoutDetailView";
+import { Eye, Layers } from "lucide-react";
 
 const pageVariants = {
     initial: { opacity: 0, y: 16 },
@@ -66,7 +68,13 @@ function generateWOD(): { exercises: Exercise[]; focus: string; emoji: string } 
 }
 
 // ── WOD Component ─────────────────────────────────────────────────────────────
-function WorkoutOfTheDay({ onSave }: { onSave: (exercises: Exercise[], name: string) => Promise<void> }) {
+function WorkoutOfTheDay({ 
+    onSave, 
+    onViewDetail 
+}: { 
+    onSave: (exercises: Exercise[], name: string) => Promise<void>;
+    onViewDetail: (workout: any) => void;
+}) {
     const wod = useMemo(() => generateWOD(), []);
     const [saved, setSaved] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -78,6 +86,14 @@ function WorkoutOfTheDay({ onSave }: { onSave: (exercises: Exercise[], name: str
         await onSave(wod.exercises, `WOD — ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`);
         setSaved(true);
         setSaving(false);
+    };
+
+    const workoutForDetail = {
+        name: `${wod.focus.charAt(0).toUpperCase() + wod.focus.slice(1)} Blast`,
+        emoji: wod.emoji,
+        color: "#EF4444",
+        exercises: wod.exercises,
+        description: `Operational exercise protocol generated for ${dateStr}.`
     };
 
     return (
@@ -118,13 +134,21 @@ function WorkoutOfTheDay({ onSave }: { onSave: (exercises: Exercise[], name: str
             {/* Actions */}
             <div className="px-5 pb-5 pt-3 flex gap-2">
                 <motion.button whileTap={{ scale: 0.96 }} onClick={handleSave} disabled={saved || saving}
-                    className="flex-1 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-[2] py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                     style={saved
                         ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", color: "#22C55E" }
                         : { background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", color: "#EF4444" }
                     }>
                     {saved ? <><CheckCircle2 className="w-3.5 h-3.5" /> Saved!</> : <><BookmarkPlus className="w-3.5 h-3.5" /> Save to Library</>}
                 </motion.button>
+                <button 
+                    onClick={() => onViewDetail(workoutForDetail)}
+                    className="p-3 rounded-xl transition-all"
+                    style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", color: "#EF4444" }}
+                >
+                    <Eye className="w-4 h-4" />
+                </button>
+                <div data-view-detail={JSON.stringify(workoutForDetail)} className="hidden" />
             </div>
         </div>
     );
@@ -258,9 +282,9 @@ function TrendingRoutineCard({
                 </div>
             </div>
 
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 flex gap-2">
                 <button onClick={handleSave} disabled={saved || saving}
-                    className="w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                     style={saved
                         ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", color: "#22C55E" }
                         : { background: `${routine.color}14`, border: `1px solid ${routine.color}30`, color: routine.color }
@@ -268,8 +292,27 @@ function TrendingRoutineCard({
                     {saved
                         ? <><CheckCircle2 className="w-3.5 h-3.5" /> Saved!</>
                         : saving ? "Saving…"
-                            : <><BookmarkPlus className="w-3.5 h-3.5" /> Save to Library</>
+                            : <><BookmarkPlus className="w-3.5 h-3.5" /> Library</>
                     }
+                </button>
+                <button 
+                    onClick={() => {
+                        const exs = routine.exercises
+                            .map(id => EXERCISE_DATABASE.find(e => e.id === id))
+                            .filter(Boolean) as Exercise[];
+                        (window as any).__showWorkoutDetail?.({
+                            name: routine.name,
+                            emoji: routine.emoji,
+                            color: routine.color,
+                            description: routine.description,
+                            exercises: exs,
+                            targetMuscles: Array.from(new Set(exs.map(e => e.muscleGroup)))
+                        });
+                    }}
+                    className="p-2.5 rounded-xl transition-all"
+                    style={{ background: `${routine.color}14`, border: `1px solid ${routine.color}30`, color: routine.color }}
+                >
+                    <Eye className="w-4 h-4" />
                 </button>
             </div>
         </motion.div>
@@ -376,6 +419,24 @@ function NewsSection() {
 export default function DiscoverSection() {
     const { user } = useAuth();
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+    const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
+    const [userPlans, setUserPlans] = useState<UserPlan[]>([]);
+    const [loadingPlans, setLoadingPlans] = useState(true);
+
+    useEffect(() => {
+        if (!user) return;
+        const fetchPlans = async () => {
+            const plans = await getUserPlans(user.uid);
+            setUserPlans(plans);
+            setLoadingPlans(false);
+        };
+        fetchPlans();
+    }, [user]);
+
+    useEffect(() => {
+        (window as any).__showWorkoutDetail = setViewingWorkout;
+        return () => { delete (window as any).__showWorkoutDetail; };
+    }, []);
 
     const exercisesToBlocks = (exercises: Exercise[]) =>
         exercises.map<CustomExerciseBlock>(ex => ({
@@ -431,7 +492,10 @@ export default function DiscoverSection() {
             </div>
 
             {/* WOD */}
-            <WorkoutOfTheDay onSave={(exs, name) => saveRoutine(exs, name)} />
+            <WorkoutOfTheDay 
+                onSave={(exs, name) => saveRoutine(exs, name)} 
+                onViewDetail={setViewingWorkout}
+            />
 
             {/* Trending */}
             <div>
@@ -455,6 +519,46 @@ export default function DiscoverSection() {
 
             {/* News */}
             <NewsSection />
+
+            {/* User Plans */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 px-0.5">
+                    <Layers className="w-4 h-4 text-purple-400" />
+                    <span className="text-sm font-bold text-[var(--text-primary)]">Your Protocols</span>
+                </div>
+
+                {loadingPlans ? (
+                    <div className="grid grid-cols-2 gap-3">
+                        {[1, 2].map(i => <div key={i} className="h-24 rounded-2xl bg-white/5 animate-pulse" />)}
+                    </div>
+                ) : userPlans.length === 0 ? (
+                    <div className="card p-8 border border-dashed border-white/10 text-center text-[var(--text-muted)] text-sm">
+                        No saved plans yet. Generate or save routines to see them here.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {userPlans.map(plan => (
+                            <motion.button
+                                key={plan.id}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setViewingWorkout(plan)}
+                                className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05] text-left hover:bg-white/[0.05] transition-all"
+                            >
+                                <div className="text-2xl mb-2">{plan.emoji || "🏋️"}</div>
+                                <div className="text-sm font-bold text-white truncate">{plan.name}</div>
+                                <div className="text-[10px] text-[var(--text-muted)] font-bold mt-1">
+                                    {plan.exercises?.length || 0} Exercises
+                                </div>
+                            </motion.button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <WorkoutDetailView 
+                workout={viewingWorkout} 
+                onClose={() => setViewingWorkout(null)} 
+            />
         </motion.div>
     );
 }

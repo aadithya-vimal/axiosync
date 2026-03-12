@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Library, Search, Filter, ChevronDown, ChevronUp, Dumbbell, Plus, Trash2, Play, Edit3, X, BookOpen, Layers } from "lucide-react";
+import { Library, Search, Filter, ChevronDown, ChevronUp, Dumbbell, Plus, Trash2, Play, Edit3, X, BookOpen, Layers, Eye } from "lucide-react";
 import { EXERCISE_DATABASE, type Exercise, type MuscleGroup } from "@/lib/WorkoutEngine";
 import { getCustomWorkouts, deleteCustomWorkout, type CustomWorkout } from "@/lib/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import CustomWorkoutBuilder from "@/components/CustomWorkoutBuilder";
+import WorkoutDetailView from "../WorkoutDetailView";
 
 const pageVariants = {
     initial: { opacity: 0, y: 16 },
@@ -120,7 +121,7 @@ function ExerciseCard({ ex }: { ex: Exercise }) {
 
 // ── My Routines sub-tab ───────────────────────────────────────────────────────
 
-function MyRoutinesTab({ onStartWorkout }: { onStartWorkout?: (w: CustomWorkout) => void }) {
+function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: CustomWorkout) => void, onViewDetail: (w: any) => void }) {
     const { user } = useAuth();
     const [routines, setRoutines] = useState<CustomWorkout[]>([]);
     const [loading, setLoading] = useState(true);
@@ -203,6 +204,11 @@ function MyRoutinesTab({ onStartWorkout }: { onStartWorkout?: (w: CustomWorkout)
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5">
+                                <button onClick={() => onViewDetail(r)}
+                                    className="p-2 rounded-xl text-[var(--text-muted)] hover:text-blue-400 transition-colors"
+                                    style={{ background: "var(--bg-overlay)" }}>
+                                    <Eye className="w-3.5 h-3.5" />
+                                </button>
                                 <button onClick={() => setEditingId(r.id!)}
                                     className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                                     style={{ background: "var(--bg-overlay)" }}>
@@ -251,6 +257,7 @@ export default function LibrarySection() {
     const [equipFilter, setEquipFilter] = useState<string>("all");
     const [diffFilter, setDiffFilter] = useState<string>("all");
     const [showFilters, setShowFilters] = useState(false);
+    const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
 
     const filtered = useMemo(() => {
         return EXERCISE_DATABASE.filter(ex => {
@@ -382,10 +389,15 @@ export default function LibrarySection() {
                     </motion.div>
                 ) : (
                     <motion.div key="routines" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <MyRoutinesTab />
+                        <MyRoutinesTab onViewDetail={setViewingWorkout} />
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <WorkoutDetailView 
+                workout={viewingWorkout} 
+                onClose={() => setViewingWorkout(null)} 
+            />
         </motion.div>
     );
 }

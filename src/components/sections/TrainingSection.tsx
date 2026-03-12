@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Dumbbell, Activity } from "lucide-react";
+import { Dumbbell, Activity, Eye } from "lucide-react";
 import WorkoutTracker from "@/components/WorkoutTracker";
+import WorkoutDetailView from "../WorkoutDetailView";
 import CardioTracker from "@/components/CardioTracker";
 import AIInsightsFeed from "@/components/AIInsightsFeed";
 import AchievementBadges from "@/components/AchievementBadges";
@@ -36,6 +37,8 @@ export default function TrainingSection({
     dataLoaded: boolean;
 }) {
     const [subView, setSubView] = useState<"home" | "strength" | "cardio">("home");
+    const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
+    const [showDetail, setShowDetail] = useState(false);
 
     // Workout recency
     const lastWorkoutTs = recentWorkouts[0]?.timestamp?.toDate?.();
@@ -203,18 +206,34 @@ export default function TrainingSection({
                     <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">Recent Sessions</div>
                     {[...recentWorkouts.slice(0, 2).map(w => ({ type: "strength" as const, name: w.name, value: `${Math.round(w.total_volume_kg || 0).toLocaleString()}kg`, date: w.timestamp?.toDate?.() })),
                     ...recentActivities.slice(0, 2).map(a => ({ type: "cardio" as const, name: a.name || a.type, value: a.distance_km ? `${a.distance_km.toFixed(1)}km` : `${a.duration_min}min`, date: a.timestamp?.toDate?.() })),
-                    ].sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)).slice(0, 3).map((s, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs ${s.type === "strength" ? "bg-[#0A84FF]/15 text-[#0A84FF]" : "bg-[#FF9F0A]/15 text-[#FF9F0A]"}`}>
-                                {s.type === "strength" ? <Dumbbell className="w-3.5 h-3.5" /> : <Activity className="w-3.5 h-3.5" />}
+                    ].sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)).slice(0, 3).map((s, i) => {
+                        const originalItem = s.type === "strength" 
+                            ? recentWorkouts.find(w => w.timestamp?.toDate?.()?.getTime() === s.date?.getTime())
+                            : recentActivities.find(a => a.timestamp?.toDate?.()?.getTime() === s.date?.getTime());
+                        
+                        return (
+                            <div key={i} className="flex items-center gap-3">
+                                <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs ${s.type === "strength" ? "bg-[#0A84FF]/15 text-[#0A84FF]" : "bg-[#FF9F0A]/15 text-[#FF9F0A]"}`}>
+                                    {s.type === "strength" ? <Dumbbell className="w-3.5 h-3.5" /> : <Activity className="w-3.5 h-3.5" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-sm text-[var(--text-primary)] font-medium truncate capitalize">{s.name}</div>
+                                    <div className="text-xs text-[var(--text-muted)]">{s.date ? s.date.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" }) : ""}</div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="text-sm font-bold stat-num text-[var(--text-secondary)]">{s.value}</div>
+                                    {s.type === "strength" && (
+                                        <button 
+                                            onClick={() => setViewingWorkout(originalItem)}
+                                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all"
+                                        >
+                                            <Eye className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="text-sm text-[var(--text-primary)] font-medium truncate capitalize">{s.name}</div>
-                                <div className="text-xs text-[var(--text-muted)]">{s.date ? s.date.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" }) : ""}</div>
-                            </div>
-                            <div className="text-sm font-bold stat-num text-[var(--text-secondary)]">{s.value}</div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -225,6 +244,11 @@ export default function TrainingSection({
                 </div>
             )}
             {!dataLoaded && <Skeleton className="h-48" />}
+
+            <WorkoutDetailView 
+                workout={viewingWorkout} 
+                onClose={() => setViewingWorkout(null)} 
+            />
         </motion.div>
     );
 }

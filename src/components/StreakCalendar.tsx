@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import type { WorkoutLog, ActivityLog } from "@/lib/firestore";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Target, Trash2, Maximize2, Flame, Calendar, Info, ChevronDown } from "lucide-react";
+import { X, Clock, Target, Trash2, Maximize2, Flame, Calendar, Info, ChevronDown, Eye } from "lucide-react";
+import WorkoutDetailView from "./WorkoutDetailView";
 
 interface Props {
     workouts: WorkoutLog[];
@@ -33,6 +34,7 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
     const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
     const [selectedYear, setSelectedYear] = useState(today.getFullYear());
     const [selectedDate, setSelectedDate] = useState<{ date: string; items: (WorkoutLog | ActivityLog)[] } | null>(null);
+    const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -283,6 +285,16 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
                                                     </div>
                                                 </div>
 
+                                                <div className="flex items-center gap-1.5">
+                                                    {isWorkout && (
+                                                        <button 
+                                                            onClick={() => setViewingWorkout(item)}
+                                                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+
                                                 {onDelete && (
                                                     <button
                                                         onClick={(e) => {
@@ -305,6 +317,7 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
                                                         {isConfirming ? <span className="text-[10px] font-bold px-2">Confirm</span> : <Trash2 className="w-4 h-4" />}
                                                     </button>
                                                 )}
+                                                </div>
                                             </div>
 
                                             {isWorkout && (
@@ -329,6 +342,11 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
                     </div>
                 )}
             </AnimatePresence>
+
+            <WorkoutDetailView 
+                workout={viewingWorkout} 
+                onClose={() => setViewingWorkout(null)} 
+            />
         </div>
     );
 }

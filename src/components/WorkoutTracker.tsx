@@ -8,7 +8,7 @@ import {
     Sparkles, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { addWorkoutLog } from "@/lib/firestore";
+import { addWorkoutLog, saveUserPlan } from "@/lib/firestore";
 import { WORKOUT_PLANS, WorkoutPlan, Exercise } from "@/lib/workoutData";
 import {
     generateWorkout, FOCUS_OPTIONS, GOAL_OPTIONS, ALL_EQUIPMENT,
@@ -583,6 +583,9 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
     const [style, setStyle] = useState<WorkoutStyle>("strength_hypertrophy");
     const [generated, setGenerated] = useState<GeneratedWorkout | null>(null);
     const [generating, setGenerating] = useState(false);
+    const { user } = useAuth();
+    const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     const GOAL_LABELS: Record<Goal, string> = {
         hypertrophy: "Hypertrophy", strength: "Strength", powerbuilding: "Powerbuilding",
@@ -618,7 +621,42 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
             });
             setGenerated(result);
             setGenerating(false);
+            setSaved(false);
         }, 600);
+    };
+
+    const handleSavePlan = async () => {
+        if (!user || !generated || saved) return;
+        setSaving(true);
+        try {
+            const planToSave = {
+                name: generated.name,
+                description: `Auto-generated ${goal} workout targeting ${generated.focus.join(", ")}.`,
+                emoji: generated.emoji,
+                color: generated.color,
+                difficulty,
+                estimatedMinutes: generated.estimatedMinutes,
+                targetMuscles: generated.focus,
+                exercises: generated.working.map(ge => ({
+                    id: ge.exercise.id,
+                    name: ge.exercise.name,
+                    sets: ge.sets.filter(s => !s.isWarmup).length,
+                    reps: ge.sets.filter(s => !s.isWarmup)[0]?.reps || "8-12",
+                    muscleGroup: ge.exercise.muscleGroup,
+                    equipment: ge.exercise.equipment[0] || "bodyweight",
+                    instructions: ge.exercise.instructions,
+                    imageUrl: ge.exercise.imageUrl,
+                    weightKg: ge.sets.filter(s => !s.isWarmup)[0]?.weightKg || 0,
+                    restSeconds: ge.sets.filter(s => !s.isWarmup)[0]?.restSeconds || 90,
+                })),
+            };
+            await saveUserPlan(user.uid, planToSave);
+            setSaved(true);
+        } catch (e) {
+            console.error("Failed to save plan", e);
+        } finally {
+            setSaving(false);
+        }
     };
 
     // Convert GeneratedWorkout → WorkoutPlan for the existing session engine
@@ -796,10 +834,10 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                         </div>
 
                         {/* Anatomy preview + exercise list */}
-                        <div className="flex gap-3">
+                        <div className="flex flex-col md:flex-row gap-4 items-start">
                             {/* SVG anatomy mini-map */}
-                            <div className="shrink-0 w-24">
-                                <AnatomyMap activeMuscles={generated.musclesWorked} className="scale-90 origin-top" />
+                            <div className="w-full md:w-1/3 aspect-[3/4] max-h-[300px] flex items-center justify-center">
+                                <AnatomyMap activeMuscles={generated.musclesWorked} className="scale-100 h-full" />
                             </div>
 
                             {/* Exercise list */}
@@ -834,17 +872,26 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                             </div>
                         </div>
 
-                        <button
-                            onClick={handleStart}
-                            className="btn w-full py-4 text-base font-semibold"
-                            style={{
-                                background: `linear-gradient(135deg, ${generated.color} 0%, ${generated.color}cc 100%)`,
-                                boxShadow: `0 8px 28px ${generated.color}40, 0 1px 0 rgba(255,255,255,0.1) inset`,
-                                color: "white",
-                            }}
-                        >
-                            <Play className="w-5 h-5" fill="currentColor" /> Start {generated.name}
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleSavePlan}
+                                disabled={saving || saved}
+                                className="btn btn-ghost flex-1 py-4 text-sm font-semibold border-white/[0.08]"
+                            >
+                                {saved ? "✓ Saved" : saving ? "Saving…" : "Save Plan"}
+                            </button>
+                            <button
+                                onClick={handleStart}
+                                className="btn flex-[2] py-4 text-base font-semibold"
+                                style={{
+                                    background: `linear-gradient(135deg, ${generated.color} 0%, ${generated.color}cc 100%)`,
+                                    boxShadow: `0 8px 28px ${generated.color}40, 0 1px 0 rgba(255,255,255,0.1) inset`,
+                                    color: "white",
+                                }}
+                            >
+                                <Play className="w-5 h-5" fill="currentColor" /> Start {generated.name}
+                            </button>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

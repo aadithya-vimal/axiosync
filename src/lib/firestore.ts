@@ -507,6 +507,45 @@ export async function exportAllData(uid: string): Promise<Record<string, unknown
 }
 
 // ─── CUSTOM WORKOUTS ──────────────────────────────────────────────────────────
+export interface UserPlan {
+    id?: string;
+    uid: string;
+    name: string;
+    description?: string;
+    emoji?: string;
+    color?: string;
+    difficulty: number;
+    estimatedMinutes: number;
+    targetMuscles: string[];
+    exercises: {
+        id: string;
+        name: string;
+        sets: number;
+        reps: string | number;
+        muscleGroup: string;
+        equipment: string;
+        instructions: string;
+        imageUrl: string;
+        weightKg: number;
+        restSeconds: number;
+    }[];
+    createdAt: Timestamp;
+}
+
+export async function saveUserPlan(uid: string, plan: Omit<UserPlan, "id" | "uid" | "createdAt">): Promise<string> {
+    const ref = await addDoc(userCol(uid, "saved_plans"), {
+        uid,
+        ...plan,
+        createdAt: Timestamp.now(),
+    });
+    return ref.id;
+}
+
+export async function getUserPlans(uid: string): Promise<UserPlan[]> {
+    const q = query(userCol(uid, "saved_plans"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as UserPlan));
+}
 
 export interface CustomSetBlock {
     reps?: number;          // target reps
