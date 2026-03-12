@@ -547,6 +547,10 @@ export async function getUserPlans(uid: string): Promise<UserPlan[]> {
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as UserPlan));
 }
 
+export async function deleteUserPlan(uid: string, id: string): Promise<void> {
+    await deleteDoc(doc(db, "users", uid, "saved_plans", id));
+}
+
 export interface CustomSetBlock {
     reps?: number;          // target reps
     time_s?: number;        // target time (isometric / timed)

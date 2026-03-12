@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Library, Search, Filter, ChevronDown, ChevronUp, Dumbbell, Plus, Trash2, Play, Edit3, X, BookOpen, Layers, Eye } from "lucide-react";
 import { EXERCISE_DATABASE, type Exercise, type MuscleGroup } from "@/lib/WorkoutEngine";
-import { getCustomWorkouts, deleteCustomWorkout, type CustomWorkout } from "@/lib/firestore";
+import { getCustomWorkouts, deleteCustomWorkout, type CustomWorkout, getUserPlans, deleteUserPlan, type UserPlan } from "@/lib/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import CustomWorkoutBuilder from "@/components/CustomWorkoutBuilder";
 import WorkoutDetailView from "../WorkoutDetailView";
@@ -121,9 +121,9 @@ function ExerciseCard({ ex }: { ex: Exercise }) {
 
 // ── My Routines sub-tab ───────────────────────────────────────────────────────
 
-function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: CustomWorkout) => void, onViewDetail: (w: any) => void }) {
+function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: any) => void, onViewDetail: (w: any) => void }) {
     const { user } = useAuth();
-    const [routines, setRoutines] = useState<CustomWorkout[]>([]);
+    const [routines, setRoutines] = useState<(CustomWorkout | UserPlan)[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [showBuilder, setShowBuilder] = useState(false);
@@ -132,21 +132,34 @@ function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: 
     const fetchRoutines = useCallback(async () => {
         if (!user) return;
         setLoading(true);
-        const data = await getCustomWorkouts(user.uid);
-        setRoutines(data);
+        const [custom, ai] = await Promise.all([
+            getCustomWorkouts(user.uid),
+            getUserPlans(user.uid)
+        ]);
+        // Sort both by createdAt/updatedAt descending
+        const merged = [...custom, ...ai].sort((a, b) => {
+            const dateA = (a as any).updatedAt?.toDate?.() || (a as any).createdAt?.toDate?.() || new Date(0);
+            const dateB = (b as any).updatedAt?.toDate?.() || (b as any).createdAt?.toDate?.() || new Date(0);
+            return dateB.getTime() - dateA.getTime();
+        });
+        setRoutines(merged);
         setLoading(false);
     }, [user]);
 
     useEffect(() => { fetchRoutines(); }, [fetchRoutines]);
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: string, isAi: boolean) => {
         if (!user) return;
-        await deleteCustomWorkout(user.uid, id);
+        if (isAi) {
+            await deleteUserPlan(user.uid, id);
+        } else {
+            await deleteCustomWorkout(user.uid, id);
+        }
         setDeletingId(null);
         fetchRoutines();
     };
 
-    const editingRoutine = routines.find(r => r.id === editingId);
+    const editingRoutine = routines.find(r => r.id === editingId) as CustomWorkout | undefined;
 
     if (showBuilder || editingId) {
         return (
@@ -200,7 +213,7 @@ function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: 
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-bold text-[var(--text-primary)] truncate">{r.emoji ?? "🏋️"} {r.name}</div>
                                 <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
-                                    {r.exercises.length} exercises · {r.exercises.reduce((a, e) => a + e.sets.length, 0)} sets
+                                    {(r as any).exercises.length} exercises · {(r as any).exercises.reduce((a: number, e: any) => a + (e.sets.length || 1), 0)} sets
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5">
@@ -209,8 +222,16 @@ function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: 
                                     style={{ background: "var(--bg-overlay)" }}>
                                     <Eye className="w-3.5 h-3.5" />
                                 </button>
-                                <button onClick={() => setEditingId(r.id!)}
-                                    className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                                <button 
+                                    onClick={() => {
+                                        if ('updatedAt' in r) {
+                                            setEditingId(r.id!);
+                                        } else {
+                                            // Optional: Alert or handled disabled state
+                                        }
+                                    }}
+                                    disabled={!('updatedAt' in r)}
+                                    className={`p-2 rounded-xl transition-colors ${!('updatedAt' in r) ? 'opacity-30 cursor-not-allowed' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
                                     style={{ background: "var(--bg-overlay)" }}>
                                     <Edit3 className="w-3.5 h-3.5" />
                                 </button>
@@ -228,7 +249,7 @@ function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: 
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                                     className="flex items-center gap-2 pt-2 border-t border-[var(--border-subtle)]">
                                     <span className="text-xs text-[var(--text-muted)] flex-1">Delete "{r.name}"?</span>
-                                    <button onClick={() => handleDelete(r.id!)}
+                                    <button onClick={() => handleDelete(r.id!, !('updatedAt' in r))}
                                         className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 border border-red-500/30 bg-red-500/10">Delete</button>
                                     <button onClick={() => setDeletingId(null)}
                                         className="px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--text-muted)] border border-[var(--border-subtle)]">Cancel</button>
