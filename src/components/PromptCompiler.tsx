@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import {
     getWorkoutLogs, getActivityLogs, getNutritionLogs, getSleepLogs, getReadinessLogs, getBodyMetrics, getOnboarding,
+    getSupplementLogs, getToxinLogs,
     type WorkoutLog, type ActivityLog, type NutritionLog, type SleepLog, type ReadinessLog, type BodyMetric,
+    type SupplementLog, type ToxinLog,
 } from "@/lib/firestore";
 import { Brain, Copy, CheckCircle, Download, Loader2, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 
@@ -20,12 +22,39 @@ function buildPrompt(opts: {
     nutrition: NutritionLog[];
     sleep: SleepLog[];
     readiness: ReadinessLog[];
+    supplements: SupplementLog[];
+    toxins: ToxinLog[];
     weight_kg?: number;
     height_cm?: number;
     bmi?: number;
     userName?: string;
 }): string {
-    const { range, workouts, activities, nutrition, sleep, readiness, weight_kg, height_cm, bmi, userName } = opts;
+    const { range, workouts, activities, nutrition, sleep, readiness, supplements, toxins, weight_kg, height_cm, bmi, userName } = opts;
+
+    const getDateStr = (ts: any) => {
+        if (!ts) return "";
+        const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+        return d.toISOString().split("T")[0];
+    };
+
+    // Frequency helper
+    const getFrequencyData = (logs: any[], dateField = "timestamp") => {
+        if (!logs || !logs.length) return { days: 0, from: "N/A", to: "N/A" };
+        const dates = [...new Set(logs.map(l => getDateStr(l[dateField])).filter(Boolean))].sort() as string[];
+        return {
+            days: dates.length,
+            from: dates[0] || "N/A",
+            to: dates[dates.length - 1] || "N/A"
+        };
+    };
+
+    const workoutFreq = getFrequencyData(workouts);
+    const activityFreq = getFrequencyData(activities);
+    const nutritionFreq = getFrequencyData(nutrition);
+    const sleepFreq = getFrequencyData(sleep, "sleep_start");
+    const readinessFreq = getFrequencyData(readiness);
+    const supplementFreq = getFrequencyData(supplements);
+    const toxinFreq = getFrequencyData(toxins);
 
     // Aggregate stats
     const totalVolume = workouts.reduce((a, w) => a + (w.total_volume_kg || 0), 0);
@@ -61,7 +90,7 @@ function buildPrompt(opts: {
         sleep.reduce((a, s) => a + (s.quality_score || 0), 0) / sleep.length : 0;
 
     // Session dates for spacing analysis
-    const workoutDates = workouts.map(w => w.timestamp?.toDate?.()?.toISOString().split("T")[0] || "").filter(Boolean);
+    const workoutDates = workouts.map(w => getDateStr(w.timestamp)).filter(Boolean);
 
     const lines: string[] = [
         `═══════════════════════════════════════════════════`,
@@ -82,7 +111,7 @@ function buildPrompt(opts: {
         `────────────────────────────────────────────────────`,
         `SECTION 1: TRAINING DATA`,
         `────────────────────────────────────────────────────`,
-        `Total Strength Sessions: ${workouts.length}`,
+        `Total Strength Sessions: ${workouts.length} over ${workoutFreq.days} days`,
         `Total Volume Lifted: ${Math.round(totalVolume).toLocaleString()} kg`,
         `Average Session Volume: ${workouts.length ? Math.round(totalVolume / workouts.length) : 0} kg`,
         `Training Frequency: ${(workouts.length / (range / 7)).toFixed(1)} sessions/week`,
@@ -95,7 +124,7 @@ function buildPrompt(opts: {
         `────────────────────────────────────────────────────`,
         `SECTION 2: CARDIO & ENDURANCE`,
         `────────────────────────────────────────────────────`,
-        `Cardio Sessions: ${activities.length}`,
+        `Cardio Sessions: ${activities.length} over ${activityFreq.days} days`,
         `Total Distance: ${totalCardioKm.toFixed(1)} km`,
         `Total Cardio Time: ${Math.round(totalCardioMin)} min`,
         `Modalities Used:`,
@@ -105,7 +134,7 @@ function buildPrompt(opts: {
         `────────────────────────────────────────────────────`,
         `SECTION 3: NUTRITION DATA`,
         `────────────────────────────────────────────────────`,
-        `Days Logged: ${nutrition.length}`,
+        `Days Logged: ${nutritionFreq.days} (${nutritionFreq.from} to ${nutritionFreq.to})`,
         `Average Daily Calories: ${Math.round(avgCalories)} kcal`,
         `Average Daily Protein: ${Math.round(avgProtein)}g`,
         nutrition.length > 0 ? `Average Daily Carbs: ${Math.round(nutrition.reduce((a, n) => a + (n.carbs_g || 0), 0) / nutrition.length)}g` : "",
@@ -115,7 +144,7 @@ function buildPrompt(opts: {
         `────────────────────────────────────────────────────`,
         `SECTION 4: SLEEP DATA`,
         `────────────────────────────────────────────────────`,
-        `Nights Logged: ${sleep.length}`,
+        `Nights Logged: ${sleepFreq.days} (${sleepFreq.from} to ${sleepFreq.to})`,
         `Average Duration: ${avgSleep.toFixed(1)} hours`,
         `Average Quality Score: ${avgSleepQuality.toFixed(1)}/10`,
         sleep.length === 0 ? "  No sleep data logged." : "",
@@ -123,11 +152,28 @@ function buildPrompt(opts: {
         `────────────────────────────────────────────────────`,
         `SECTION 5: READINESS & HRV`,
         `────────────────────────────────────────────────────`,
-        `Days Logged: ${readiness.length}`,
+        `Days Logged: ${readinessFreq.days} (${readinessFreq.from} to ${readinessFreq.to})`,
         `Average Readiness: ${Math.round(avgReadiness)}%`,
         latestHRV ? `Latest HRV: ${latestHRV}ms` : "HRV: Not logged",
         latestRestHR ? `Latest Resting HR: ${latestRestHR} bpm` : "Resting HR: Not logged",
         readiness.length === 0 ? "  No readiness data logged." : "",
+        ``,
+        `────────────────────────────────────────────────────`,
+        `SECTION 6: SUPPLEMENTS & LOGGED ITEMS`,
+        `────────────────────────────────────────────────────`,
+        `Supplements Logged: ${supplementFreq.days} days (${supplementFreq.from} to ${supplementFreq.to})`,
+        ...Object.entries(supplements.reduce((acc, s) => {
+            acc[s.name] = (acc[s.name] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>)).map(([name, count]) => `  • ${name}: ${count} logs`),
+        supplements.length === 0 ? "  No supplements logged." : "",
+        ``,
+        `Other (Toxins/Logged items): ${toxinFreq.days} days (${toxinFreq.from} to ${toxinFreq.to})`,
+        ...Object.entries(toxins.reduce((acc: Record<string, number>, t) => {
+            acc[t.type] = (acc[t.type] || 0) + t.quantity;
+            return acc;
+        }, {})).map(([type, qty]) => `  • ${type.replace("_", " ")}: ${qty} total logs`),
+        toxins.length === 0 ? "  No toxins logged." : "",
         ``,
         `══════════════════════════════════════════════════`,
         `COACHING QUESTIONS — Please Answer:`,
@@ -135,9 +181,11 @@ function buildPrompt(opts: {
         `1. Based on the training volume and frequency, am I in an optimal range for my goal, or am I overtraining/undertraining?`,
         `2. Are there any muscle group imbalances I should address based on my training distribution?`,
         `3. Is my nutrition (calories + protein) adequate to support my training load? What adjustments should I make?`,
-        `4. What does my sleep data suggest about recovery quality, and how is it impacting my readiness scores?`,
-        `5. If my readiness is frequently below 70%, what are the most likely causes and solutions?`,
-        `6. Give me a specific, structured recommendation for the next 7 days (training split + nutrition target + sleep goal).`,
+        `4. Is my supplement protocol supporting my goals? Are there missing elements based on my activity levels?`,
+        `5. How are my logged 'toxins' or other behavioral items impacting my recovery and readiness?`,
+        `6. What does my sleep data suggest about recovery quality, and how is it impacting my readiness scores?`,
+        `7. If my readiness is frequently below 70%, what are the most likely causes and solutions?`,
+        `8. Give me a specific, structured recommendation for the next 7 days (training split + nutrition/supplement target + sleep goal).`,
         ``,
         `════════════════════════════════════════════════════`,
         `[END OF AXIOSYNC DATA BRIEF]`,
@@ -160,7 +208,7 @@ export default function PromptCompiler() {
     const compile = useCallback(async () => {
         if (!user) return;
         setLoading(true);
-        const [workouts, activities, nutrition, sleep, readiness, metrics, onboarding] = await Promise.all([
+        const [workouts, activities, nutrition, sleep, readiness, metrics, onboarding, supplements, toxins] = await Promise.all([
             getWorkoutLogs(user.uid, range),
             getActivityLogs(user.uid, range),
             getNutritionLogs(user.uid, range),
@@ -168,6 +216,8 @@ export default function PromptCompiler() {
             getReadinessLogs(user.uid, range),
             getBodyMetrics(user.uid, 1),
             getOnboarding(user.uid),
+            getSupplementLogs(user.uid, range),
+            getToxinLogs(user.uid, range),
         ]);
 
         // Biometric resolution: Prefer metric log, fallback to onboarding
@@ -176,7 +226,7 @@ export default function PromptCompiler() {
         const latestBmi = metrics[0]?.bmi || (latestWeight && latestHeight ? (latestWeight / Math.pow(latestHeight / 100, 2)) : undefined);
 
         const text = buildPrompt({
-            range, workouts, activities, nutrition, sleep, readiness,
+            range, workouts, activities, nutrition, sleep, readiness, supplements, toxins,
             weight_kg: latestWeight,
             height_cm: latestHeight,
             bmi: typeof latestBmi === 'number' ? Number(latestBmi.toFixed(1)) : undefined,

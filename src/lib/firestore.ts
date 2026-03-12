@@ -333,6 +333,14 @@ export async function addToxinLog(uid: string, log: Omit<ToxinLog, "id" | "uid" 
     return addDoc(userCol(uid, "logs_toxins"), { uid, ...log, timestamp: Timestamp.now() });
 }
 
+export async function getToxinLogs(uid: string, days = 30): Promise<ToxinLog[]> {
+    if (isDemoMode) return [];
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const q = query(userCol(uid, "logs_toxins"), where("timestamp", ">=", Timestamp.fromDate(since)), orderBy("timestamp", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ToxinLog));
+}
+
 export async function getTodayToxins(uid: string) {
     if (isDemoMode) return { hasSmoking: false, hasAlcohol: false, smokingCount: 0, alcoholUnits: 0 };
     const today = new Date(); today.setHours(0, 0, 0, 0);
