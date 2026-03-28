@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
-import { addNutritionLog } from "@/lib/firestore";
-import { Plus, Utensils, ChevronDown, ChevronUp, CheckCircle, Loader2, Flame, Beef, Wheat, Droplets } from "lucide-react";
+import { addNutritionLog, getTodayNutrition, deleteNutritionLog, NutritionLog } from "@/lib/firestore";
+import { Plus, Utensils, ChevronDown, ChevronUp, CheckCircle, Loader2, Flame, Beef, Wheat, Droplets, Trash2, RefreshCw } from "lucide-react";
 
 // ── Quick-add templates ────────────────────────────────────────────────────────
 
@@ -80,10 +80,8 @@ function MacroBar({ label, grams, color, icon }: { label: string; grams: number;
 export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: number }) {
     const { user } = useAuth();
 
-    const [meals, setMeals] = useState<{
-        name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number;
-        fiber_g: number; sodium_mg: number; sugar_g: number;
-    }[]>([]);
+    const [meals, setMeals] = useState<NutritionLog[]>([]);
+    const [fetching, setFetching] = useState(true);
 
     const [formOpen, setFormOpen] = useState(false);
     const [name, setName] = useState("");
@@ -119,27 +117,62 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
         setFormOpen(true);
     };
 
+    const fetchMeals = useCallback(async () => {
+        if (!user) return;
+        setFetching(true);
+        try {
+            const data = await getTodayNutrition(user.uid);
+            setMeals(data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setFetching(false);
+        }
+    }, [user]);
+
+    // Fetch on mount
+    useEffect(() => { fetchMeals(); }, [fetchMeals]);
+
+    const handleDelete = async (logId?: string) => {
+        if (!user || !logId) return;
+        try {
+            await deleteNutritionLog(user.uid, logId);
+            setMeals(prev => prev.filter(m => m.id !== logId));
+        } catch (e) {
+            console.error("Failed to delete log", e);
+        }
+    };
+
     const handleSave = useCallback(async () => {
         if (!user || !calories) return;
         setSaving(true);
-        const meal = {
-            name: name || "Meal",
+        const mealData = {
+            meal_name: name || "Meal",
             calories: parseFloat(calories) || 0,
             protein_g: parseFloat(protein) || 0,
             carbs_g: parseFloat(carbs) || 0,
             fat_g: parseFloat(fat) || 0,
-            fiber_g: parseFloat(fiber) || 0,
-            sodium_mg: parseFloat(sodium) || 0,
-            sugar_g: parseFloat(sugar) || 0,
+            micros: {
+                fiber_g: parseFloat(fiber) || 0,
+                sodium_mg: parseFloat(sodium) || 0,
+                sugar_g: parseFloat(sugar) || 0,
+            }
         };
-        await addNutritionLog(user.uid, { meal_name: meal.name, ...meal });
-        setMeals(prev => [...prev, meal]);
-        setName(""); setCalories(""); setProtein(""); setCarbs("");
-        setFat(""); setFiber(""); setSodium(""); setSugar("");
-        setFormOpen(false);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
-        setSaving(false);
+        try {
+            const ref = await addNutritionLog(user.uid, mealData);
+            if (ref) {
+                setMeals(prev => [{ id: ref.id, uid: user.uid, timestamp: new Date() as any, ...mealData }, ...prev]);
+            }
+            setName(""); setCalories(""); setProtein(""); setCarbs("");
+            setFat(""); setFiber(""); setSodium(""); setSugar("");
+            setFormOpen(false);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2500);
+        } catch (e) {
+            console.error("Save failed", e);
+        } finally {
+            setSaving(false);
+        }
     }, [user, name, calories, protein, carbs, fat, fiber, sodium, sugar]);
 
     return (
@@ -155,31 +188,49 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
             </div>
 
             {/* Today's meals list */}
-            {meals.length > 0 && (
-                <div className="space-y-1">
-                    <p className="section-header">Today's Meals</p>
-                    {meals.map((m, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-white/[0.05]"
-                            style={{ background: "var(--bg-overlay)" }}
-                        >
+            <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                    <p className="section-header border-none mb-1">Today's Meals</p>
+                    {fetching && <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--text-muted)]" />}
+                </div>
+                {!fetching && meals.length === 0 && (
+                    <div className="text-center py-6 border border-dashed border-white/10 rounded-2xl text-[var(--text-muted)] text-sm">
+                        No meals logged today.
+                    </div>
+                )}
+                {meals.map((m) => (
+                    <motion.div
+                        key={m.id || Math.random().toString()}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex flex-col gap-2 px-3 py-3 rounded-xl border border-white/[0.05] group"
+                        style={{ background: "var(--bg-overlay)" }}
+                    >
+                        <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
                                 <Utensils className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
-                                <span className="text-sm text-[var(--text-primary)] font-medium">{m.name}</span>
+                                <span className="text-sm text-[var(--text-primary)] font-medium">{m.meal_name}</span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] tabular-nums">
-                                <span className="text-[#22C55E] font-semibold">{m.protein_g}g P</span>
-                                <span className="text-[#3B82F6] font-semibold">{m.carbs_g}g C</span>
-                                <span className="text-[#F59E0B] font-semibold">{m.fat_g}g F</span>
-                                <span className="text-[var(--text-muted)] font-bold">{m.calories}kcal</span>
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] tabular-nums">
+                                    <span className="text-[#22C55E] font-semibold">{m.protein_g}g P</span>
+                                    <span className="text-[#3B82F6] font-semibold">{m.carbs_g}g C</span>
+                                    <span className="text-[#F59E0B] font-semibold">{m.fat_g}g F</span>
+                                    <span className="text-[var(--text-muted)] font-bold bg-white/5 px-1.5 py-0.5 rounded">{m.calories}kcal</span>
+                                </div>
+                                <button
+                                    onClick={() => handleDelete(m.id)}
+                                    className="p-1.5 rounded-md hover:bg-red-500/20 text-red-500/60 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                    title="Delete meal"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                             </div>
-                        </motion.div>
-                    ))}
-                </div>
-            )}
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
 
             {/* Quick-add templates */}
             <div>

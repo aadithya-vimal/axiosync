@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { addBodyMetric, getBodyMetrics, BodyMetric, getRecentActivities, getRecentWorkouts } from "@/lib/firestore";
 import { format, startOfWeek, addDays, isSameDay, subDays } from "date-fns";
 import { Flame, Clock, Award, Edit2 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function BodyMetrics() {
     const { user } = useAuth();
@@ -77,8 +77,10 @@ export default function BodyMetrics() {
         if (metrics.length === 0) return [];
         return metrics.map(m => ({
             date: format(m.timestamp.toDate(), "MMM dd"),
-            shortDate: format(m.timestamp.toDate(), "dd"),
+            shortDate: format(m.timestamp.toDate(), "dd MMM"),
+            dayNum: format(m.timestamp.toDate(), "dd"),
             weight: m.weight_kg,
+            height: m.height_cm,
         }));
     }, [metrics]);
 
@@ -194,7 +196,7 @@ export default function BodyMetrics() {
                     <div className="card p-5 pt-6 pb-2">
                         <div className="flex justify-between items-start mb-5">
                             <div>
-                                <div className="text-sm text-[var(--text-muted)] font-medium mb-1">Current</div>
+                                <div className="text-sm text-[var(--text-muted)] font-medium mb-1">Current Weight</div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{currentWeight.toFixed(1)}</span>
                                     <span className="text-xl font-bold text-[var(--text-muted)]">kg</span>
@@ -202,44 +204,65 @@ export default function BodyMetrics() {
                             </div>
                             <div className="text-right space-y-1.5">
                                 <div className="flex justify-between gap-5 text-sm">
-                                    <span className="text-[var(--text-muted)] font-medium">Heaviest</span>
+                                    <span className="text-[var(--text-muted)] font-medium">Highest</span>
                                     <span className="font-bold stat-num text-[var(--text-primary)]">{heaviest.toFixed(1)}</span>
                                 </div>
                                 <div className="flex justify-between gap-5 text-sm">
-                                    <span className="text-[var(--text-muted)] font-medium">Lightest</span>
+                                    <span className="text-[var(--text-muted)] font-medium">Lowest</span>
                                     <span className="font-bold stat-num text-[var(--text-primary)]">{lightest.toFixed(1)}</span>
                                 </div>
                             </div>
                         </div>
 
                         {weightData.length > 0 && (
-                            <div className="h-44 w-full relative">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={weightData.slice(-7)} margin={{ top: 24, right: 10, left: -20, bottom: 0 }}>
-                                        <XAxis dataKey="shortDate" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 11, fontWeight: 500 }} dy={10} />
-                                        <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} hide />
-                                        <Tooltip
-                                            contentStyle={{ background: "rgba(28,28,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "6px 12px", fontSize: 12, backdropFilter: "blur(12px)" }}
-                                            labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
-                                            itemStyle={{ color: "#0A84FF", fontWeight: 700 }}
-                                        />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="weight"
-                                            stroke="#0A84FF"
-                                            strokeWidth={2.5}
-                                            dot={false}
-                                            activeDot={{ r: 5, fill: "#0A84FF", stroke: "white", strokeWidth: 2 }}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                                {/* Weight badge */}
-                                <div className="absolute top-[14%] left-1/2 -translate-x-1/2">
-                                    <div className="px-3 py-1 rounded-full text-sm font-bold text-[var(--text-primary)] shadow-lg" style={{ background: "rgba(10,132,255,0.25)", backdropFilter: "blur(8px)", border: "1px solid rgba(10,132,255,0.3)" }}>
-                                        {currentWeight.toFixed(1)} kg
+                            <div className="space-y-4">
+                                {/* Weight chart */}
+                                <div>
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Weight (kg) — last {Math.min(weightData.length, 30)} entries</div>
+                                    <div className="h-40 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={weightData.slice(-30)} margin={{ top: 8, right: 8, left: -28, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                                                <XAxis dataKey="dayNum" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10, fontWeight: 500 }} dy={8} interval="preserveStartEnd" />
+                                                <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} />
+                                                <Tooltip
+                                                    contentStyle={{ background: "rgba(18,18,26,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "6px 12px", fontSize: 12 }}
+                                                    labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
+                                                    itemStyle={{ color: "#0A84FF", fontWeight: 700 }}
+                                                    formatter={(v: any) => [`${v} kg`, "Weight"]}
+                                                />
+                                                <Line type="monotone" dataKey="weight" stroke="#0A84FF" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#0A84FF", stroke: "white", strokeWidth: 2 }} />
+                                            </LineChart>
+                                        </ResponsiveContainer>
                                     </div>
                                 </div>
+
+                                {/* Height chart — only if height varies or there are multiple entries */}
+                                {weightData.length > 1 && (
+                                    <div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Height (cm) — logged history</div>
+                                        <div className="h-32 w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <LineChart data={weightData.slice(-30)} margin={{ top: 8, right: 8, left: -28, bottom: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                                                    <XAxis dataKey="dayNum" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} dy={8} interval="preserveStartEnd" />
+                                                    <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} />
+                                                    <Tooltip
+                                                        contentStyle={{ background: "rgba(18,18,26,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "6px 12px", fontSize: 12 }}
+                                                        labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
+                                                        itemStyle={{ color: "#30D158", fontWeight: 700 }}
+                                                        formatter={(v: any) => [`${v} cm`, "Height"]}
+                                                    />
+                                                    <Line type="monotone" dataKey="height" stroke="#30D158" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#30D158", stroke: "white", strokeWidth: 2 }} />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+                        )}
+                        {weightData.length === 0 && (
+                            <p className="text-xs text-[var(--text-muted)] text-center py-4">No entries yet. Log your weight to see trends.</p>
                         )}
                     </div>
                 )}

@@ -210,7 +210,7 @@ export default function SettingsSection({
 
     return (
         <motion.div key="settings" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="space-y-5 pb-32 px-1">
-            <h1 className="text-3xl font-bold text-[var(--text-primary)] pt-2 tracking-tight">Protocols</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] pt-1 tracking-tight">Profile</h1>
 
             {/* ── Profile Card ── */}
             <div className="card p-5 flex items-center gap-4">
@@ -320,16 +320,17 @@ export default function SettingsSection({
             </motion.button>
 
             {/* ── Danger Zone ── */}
-            <div className="pt-10">
-                <div className="flex flex-col items-center justify-center text-center gap-3">
-                    <p className="text-xs text-[var(--text-muted)]">Need to start fresh or leave?</p>
-                    <button
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="text-xs font-semibold text-[var(--text-muted)] hover:text-red-400 transition-colors uppercase tracking-widest"
-                    >
-                        Delete Account Data
-                    </button>
-                </div>
+            <div className="space-y-2 pt-2">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] px-0.5 mb-1">Danger Zone</div>
+                <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full card p-4 flex items-center justify-center gap-3 text-red-400 font-semibold hover:bg-red-500/[0.06] transition-colors border-red-500/20"
+                >
+                    <AlertTriangle className="w-5 h-5" />
+                    Delete All Data
+                </motion.button>
             </div>
 
             {/* ── Delete Confirmation Modal ── */}

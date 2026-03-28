@@ -21,6 +21,9 @@ function generateInsights(opts: {
     lastCardioKm?: number;
     weightKg?: number;
     heightCm?: number;
+    todayCalories?: number;
+    todayProteinG?: number;
+    calTarget?: number;
 }): Insight[] {
     const {
         readinessPct = 70,
@@ -30,6 +33,9 @@ function generateInsights(opts: {
         lastCardioKm = 0,
         weightKg,
         heightCm,
+        todayCalories = 0,
+        todayProteinG = 0,
+        calTarget = 2500,
     } = opts;
 
     const insights: Insight[] = [];
@@ -124,7 +130,37 @@ function generateInsights(opts: {
         }
     }
 
-    return insights.slice(0, 3);
+    // Nutrition insight
+    if (todayCalories > 0) {
+        const calPct = Math.round((todayCalories / calTarget) * 100);
+        if (calPct < 50) {
+            insights.push({
+                id: "nutrition_low",
+                category: "nutrition",
+                text: `You've only logged ${todayCalories} kcal today — ${calPct}% of your ${calTarget} kcal target. Under-fuelling impairs muscle protein synthesis and recovery. Prioritize a protein-rich meal or shake now.`,
+                emoji: "🥗",
+                color: "#FF9F0A",
+            });
+        } else if (calPct >= 90 && calPct <= 115) {
+            insights.push({
+                id: "nutrition_on_track",
+                category: "nutrition",
+                text: `Nutrition on point — ${todayCalories} kcal logged (${calPct}% of target). Today's protein: ${todayProteinG}g. Consistent fuelling accelerates body composition change.`,
+                emoji: "✅",
+                color: "#30D158",
+            });
+        } else if (calPct > 115) {
+            insights.push({
+                id: "nutrition_over",
+                category: "nutrition",
+                text: `You've exceeded your calorie target by ${todayCalories - calTarget} kcal today. If cutting, consider lighter snacks for the rest of the day. If bulking, this is fine.`,
+                emoji: "⚠️",
+                color: "#FF453A",
+            });
+        }
+    }
+
+    return insights.slice(0, 4);
 }
 
 const CATEGORY_CONFIG = {
@@ -142,6 +178,9 @@ interface Props {
     lastCardioKm?: number;
     weightKg?: number;
     heightCm?: number;
+    todayCalories?: number;
+    todayProteinG?: number;
+    calTarget?: number;
 }
 
 export default function AIInsightsFeed(props: Props) {
@@ -152,9 +191,9 @@ export default function AIInsightsFeed(props: Props) {
     useEffect(() => {
         setInsights(generateInsights(props));
     }, [
-        props.readinessPct,
-        props.daysSinceWorkout, props.totalVolumeToday, props.streakDays, props.lastCardioKm,
-        props.weightKg, props.heightCm
+        props.readinessPct, props.daysSinceWorkout, props.totalVolumeToday,
+        props.streakDays, props.lastCardioKm, props.weightKg, props.heightCm,
+        props.todayCalories, props.todayProteinG, props.calTarget
     ]);
 
     const handleRefresh = () => {

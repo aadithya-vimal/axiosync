@@ -50,15 +50,17 @@ export default function OnboardingFlow({ onComplete }: Props) {
     const handleFinish = async () => {
         if (!user) return;
         setSaving(true);
-        await upsertOnboarding(user.uid, {
+        const payload: any = {
             completed: true,
-            age: age ? parseInt(age) : undefined,
-            height_cm: height ? parseInt(height) : undefined,
-            weight_kg: weight ? parseFloat(weight) : undefined,
-            gender: gender || undefined,
-            primaryGoal: (goal as any) || undefined,
             targetMuscles: muscles,
-        });
+        };
+        if (age) payload.age = parseInt(age);
+        if (height) payload.height_cm = parseInt(height);
+        if (weight) payload.weight_kg = parseFloat(weight);
+        if (gender) payload.gender = gender;
+        if (goal) payload.primaryGoal = goal;
+
+        await upsertOnboarding(user.uid, payload);
         onComplete();
     };
 

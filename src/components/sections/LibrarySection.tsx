@@ -195,7 +195,7 @@ function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: 
                     color: "white",
                 }}
             >
-                <Plus className="w-4 h-4" /> Initialize Protocol
+                <Plus className="w-4 h-4" /> Create Workout
             </motion.button>
 
             {routines.length === 0 ? (
@@ -300,14 +300,14 @@ export default function LibrarySection() {
                 <div className="w-10 h-10 rounded-2xl bg-teal-500/20 flex items-center justify-center">
                     <Library className="w-5 h-5 text-teal-400" />
                 </div>
-                <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Arsenal</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">Library</h1>
             </div>
 
             {/* Tabs */}
             <div className="flex gap-2">
                 {[
-                    { id: "directory", label: "Field Manual", icon: BookOpen },
-                    { id: "routines", label: "Assigned Protocols", icon: Layers },
+                    { id: "directory", label: "Exercise Library", icon: BookOpen },
+                    { id: "routines", label: "My Workouts", icon: Layers },
                 ].map(t => (
                     <button key={t.id}
                         onClick={() => setTab(t.id as any)}

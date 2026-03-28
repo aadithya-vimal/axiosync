@@ -22,9 +22,10 @@ import LogSection from "@/components/sections/LogSection";
 import SettingsSection from "@/components/sections/SettingsSection";
 import DiscoverSection from "@/components/sections/DiscoverSection";
 import LibrarySection from "@/components/sections/LibrarySection";
+import ToolsSection from "@/components/sections/ToolsSection";
 
 import {
-  Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library, Moon, Sun
+  Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library, Moon, Sun, Wrench
 } from "lucide-react";
 
 const BodyAnalytics = dynamic(() => import("@/components/BodyAnalytics"), {
@@ -39,16 +40,17 @@ const BodyAnalytics = dynamic(() => import("@/components/BodyAnalytics"), {
   ),
 });
 
-type Section = "training" | "discover" | "body" | "library" | "analytics" | "log" | "settings";
+type Section = "training" | "discover" | "body" | "library" | "analytics" | "log" | "settings" | "tools";
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "training", label: "Operations", icon: Timer },
-  { id: "discover", label: "Intelligence", icon: Compass },
-  { id: "body", label: "Biometrics", icon: Accessibility },
-  { id: "library", label: "Arsenal", icon: Library },
-  { id: "analytics", label: "Briefing", icon: BarChart3 },
-  { id: "log", label: "Archive", icon: BookOpen },
-  { id: "settings", label: "Protocols", icon: User },
+  { id: "training", label: "Workouts", icon: Timer },
+  { id: "tools", label: "Tools", icon: Wrench },
+  { id: "discover", label: "Discover", icon: Compass },
+  { id: "body", label: "Body", icon: Accessibility },
+  { id: "library", label: "Library", icon: Library },
+  { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "log", label: "Log", icon: BookOpen },
+  { id: "settings", label: "Profile", icon: User },
 ];
 
 const pageVariants = {
@@ -73,6 +75,8 @@ export default function DashboardPage() {
   const [streakDays, setStreakDays] = useState(0);
   const [latestMetric, setLatestMetric] = useState<any>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [todayCalories, setTodayCalories] = useState(0);
+  const [todayProteinG, setTodayProteinG] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -81,7 +85,11 @@ export default function DashboardPage() {
   const refreshBodyState = useCallback(async () => {
     if (!user) return;
     const n = await getTodayNutrition(user.uid);
-    setNutrientAura(n.reduce((a, b) => a + b.calories, 0) >= 1000);
+    const totalCal = n.reduce((a, b) => a + (b.calories || 0), 0);
+    const totalProt = n.reduce((a, b) => a + (b.protein_g || 0), 0);
+    setNutrientAura(totalCal >= 1000);
+    setTodayCalories(Math.round(totalCal));
+    setTodayProteinG(Math.round(totalProt));
   }, [user]);
 
   useEffect(() => {
@@ -138,8 +146,23 @@ export default function DashboardPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-base)" }}>
-        <div className="w-8 h-8 rounded-full border-2 border-blue-500/40 animate-spin" style={{ borderTopColor: "transparent" }} />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: "var(--bg-base)" }}>
+        {/* Animated App Icon */}
+        <motion.div 
+          className="relative w-20 h-20 rounded-[20px] overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.3)] ring-1 ring-white/10"
+          animate={{ scale: [0.95, 1.05, 0.95], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <img src="/icon.png" alt="Loading" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        </motion.div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="font-extrabold text-xl tracking-tight">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Axio</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">sync</span>
+          </span>
+          <span className="text-xs text-[var(--text-muted)]">Loading your data…</span>
+        </div>
       </div>
     );
   }
@@ -155,11 +178,19 @@ export default function DashboardPage() {
             streakDays={streakDays}
             latestMetric={latestMetric}
             dataLoaded={dataLoaded}
+            todayCalories={todayCalories}
+            todayProteinG={todayProteinG}
+            calTarget={onboardingData?.calorieTarget || 2500}
           />
         )}
 
         {section === "discover" && <DiscoverSection />}
         {section === "library" && <LibrarySection />}
+        {section === "tools" && (
+          <motion.div key="tools" variants={pageVariants} initial="initial" animate="enter" exit="exit">
+            <ToolsSection />
+          </motion.div>
+        )}
 
         {section === "analytics" && (
           <motion.div key="analytics" variants={pageVariants} initial="initial" animate="enter" exit="exit">
@@ -204,7 +235,8 @@ export default function DashboardPage() {
         {/* ── Desktop Sidebar ── */}
         <nav className="hidden sm:flex flex-col w-60 shrink-0 h-screen sticky top-0 p-4 bg-[var(--bg-elevated)] border-r border-[var(--border-subtle)]">
           <div className="flex items-center justify-between px-2 mb-8 mt-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
+              <img src="/icon.png" alt="Axiosync Logo" className="w-8 h-8 rounded-[10px] object-cover border border-[var(--border-subtle)]" />
               <span className="font-extrabold text-2xl tracking-tight">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Axio</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">sync</span>
@@ -263,29 +295,59 @@ export default function DashboardPage() {
           )}
         </nav>
 
-        {/* ── Mobile Top Nav (For Theme Toggle) ── */}
-        <div className="sm:hidden fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-[var(--bg-base)] to-transparent pointer-events-none">
-          <span className="font-extrabold text-xl tracking-tight pointer-events-auto">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Axio</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">sync</span>
-          </span>
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-muted)] shadow-sm pointer-events-auto"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+        {/* ── Mobile Top Bar ── */}
+        <div className="sm:hidden fixed top-0 left-0 right-0 z-50" style={{
+          background: "rgba(8,8,12,0.72)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <div className="flex justify-between items-center px-5 py-3.5">
+            <div className="flex items-center gap-2.5">
+              {/* App Logo */}
+              <div className="relative w-8 h-8 rounded-[10px] flex-shrink-0 border border-white/10 overflow-hidden shadow-[0_0_12px_rgba(99,102,241,0.3)]">
+                <img src="/icon.png" alt="Logo" className="w-full h-full object-cover" />
+              </div>
+              <span className="font-extrabold text-[17px] tracking-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Axio</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">sync</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] transition-colors"
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+              </button>
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full ring-1 ring-white/10" />
+              ) : (
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "linear-gradient(135deg,#3B82F6,#7C3AED)", color: "white" }}>
+                  {user?.displayName?.[0]?.toUpperCase() || "A"}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Main Content ── */}
-        <main className="flex-1 overflow-y-auto no-scrollbar relative z-10 w-full px-4 sm:px-8 pt-24 sm:pt-6 pb-28 sm:pb-8 max-w-[1000px] mx-auto overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto no-scrollbar relative z-10 w-full px-4 sm:px-8 pt-[62px] sm:pt-6 pb-[88px] sm:pb-12 max-w-[1000px] mx-auto overflow-x-hidden">
           <SectionContent />
         </main>
 
         {/* ── Mobile Bottom Nav ── */}
         <div className="mobile-nav sm:hidden">
           <div
-            className="mx-1 mb-2 px-1 pt-2 pb-1.5 rounded-[24px] border border-[var(--border-strong)] flex items-center justify-between overflow-hidden gap-0.5 shadow-lg bg-[var(--bg-overlay)]/90 backdrop-blur-xl"
+            className="mx-3 mb-3 rounded-[28px] flex items-center overflow-hidden"
+            style={{
+              background: "rgba(12,12,18,0.88)",
+              backdropFilter: "blur(40px) saturate(200%)",
+              WebkitBackdropFilter: "blur(40px) saturate(200%)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset",
+            }}
           >
             {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
               const isActive = section === id;
@@ -293,20 +355,34 @@ export default function DashboardPage() {
                 <motion.button
                   key={id}
                   onClick={() => setSection(id)}
-                  whileTap={{ scale: 0.88 }}
-                  className={`flex flex-1 flex-col items-center justify-center gap-1 min-w-0 py-1 transition-colors ${isActive ? "text-[var(--accent-blue)]" : "text-[var(--text-muted)]"}`}
+                  whileTap={{ scale: 0.82 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className="flex flex-1 flex-col items-center justify-center gap-1 py-3 min-w-0 relative"
+                  style={{ minHeight: 56 }}
                 >
-                  <div className="relative flex justify-center w-full">
-                    {isActive && (
-                      <motion.div
-                        layoutId="mobile-indicator"
-                        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[var(--accent-blue)]"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <Icon className={`w-5 h-5 mt-1 shrink-0 ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
+                  {/* Active pill background */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="mobile-pill"
+                      className="absolute inset-x-1.5 inset-y-1.5 rounded-[18px]"
+                      style={{
+                        background: "linear-gradient(135deg, rgba(59,130,246,0.22), rgba(124,58,237,0.18))",
+                        border: "1px solid rgba(99,102,241,0.25)",
+                        boxShadow: "0 0 20px rgba(59,130,246,0.15)",
+                      }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <div className="relative">
+                    <Icon
+                      className={`w-[22px] h-[22px] transition-all duration-200 ${
+                        isActive ? "text-blue-400 stroke-[2.2]" : "text-zinc-500 stroke-[1.7]"
+                      }`}
+                    />
                   </div>
-                  <span className={`text-[9px] w-full text-center truncate px-0.5 ${isActive ? "font-semibold" : "font-medium"}`}>{label}</span>
+                  <span className={`text-[9.5px] tracking-tight transition-all duration-200 relative ${
+                    isActive ? "text-blue-400 font-bold" : "text-zinc-600 font-medium"
+                  }`}>{label}</span>
                 </motion.button>
               );
             })}

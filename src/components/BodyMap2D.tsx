@@ -1,128 +1,97 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { BodyComponent } from "reactjs-human-body";
-import type { MuscleGroup } from "@/lib/WorkoutEngine";
+import { useMemo } from "react";
+import dynamic from "next/dynamic";
+import { MuscleGroup } from "@/lib/WorkoutEngine";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
-interface AnatomyMapProps {
-    activeMuscles?: MuscleGroup[];
-    onMuscleClick?: (muscle: MuscleGroup) => void;
-    className?: string;
-}
+// Dynamically import to prevent SSR issues with SVG window refs
+const BodyModel = dynamic(() => import("react-body-highlighter"), { ssr: false });
 
-const MUSCLE_COLORS: Record<string, string> = {
-    chest: "#3B82F6",
-    back: "#A855F7",
-    shoulders: "#06B6D4",
-    biceps: "#F97316",
-    triceps: "#EAB308",
-    forearms: "#84CC16",
-    core: "#F59E0B",
-    glutes: "#EF4444",
-    quads: "#22C55E",
-    hamstrings: "#10B981",
-    calves: "#14B8A6",
-};
-
-export default function AnatomyMap({ activeMuscles = [], onMuscleClick, className = "" }: AnatomyMapProps) {
-    const { theme, systemTheme } = useTheme();
-    const isDark = (theme === "system" ? systemTheme : theme) === "dark";
-
-    // Build partsInput for reactjs-human-body
-    const partsInput: Record<string, { show: boolean; selected: boolean }> = {
-        head: { show: true, selected: false },
-        leftShoulder: { show: true, selected: false },
-        rightShoulder: { show: true, selected: false },
-        leftArm: { show: true, selected: false },
-        rightArm: { show: true, selected: false },
-        chest: { show: true, selected: false },
-        stomach: { show: true, selected: false },
-        leftLeg: { show: true, selected: false },
-        rightLeg: { show: true, selected: false },
-        leftHand: { show: true, selected: false },
-        rightHand: { show: true, selected: false },
-        leftFoot: { show: true, selected: false },
-        rightFoot: { show: true, selected: false },
-    };
-
-    // Convert Axiosync muscle names to reactjs-human-body part IDs
-    const mapping: Record<string, string[]> = {
+export default function BodyMap2D({
+    targetMuscles = [],
+    activeMuscle,
+    onSelect
+}: {
+    targetMuscles?: MuscleGroup[];
+    activeMuscle?: MuscleGroup | null;
+    onSelect?: (m: MuscleGroup) => void;
+}) {
+    // Map our local MuscleGroup system to react-body-highlighter strings
+    const MUSCLE_MAP: Record<string, string[]> = {
         chest: ["chest"],
-        back: ["chest", "stomach"],
-        shoulders: ["leftShoulder", "rightShoulder"],
-        biceps: ["leftArm", "rightArm"],
-        triceps: ["leftArm", "rightArm"],
-        forearms: ["leftHand", "rightHand"],
-        core: ["stomach"],
-        glutes: ["leftLeg", "rightLeg"],
-        quads: ["leftLeg", "rightLeg"],
-        hamstrings: ["leftLeg", "rightLeg"],
-        calves: ["leftFoot", "rightFoot"],
-        full_body: ["leftShoulder", "rightShoulder", "leftArm", "rightArm", "chest", "stomach", "leftLeg", "rightLeg", "leftHand", "rightHand", "leftFoot", "rightFoot"]
+        back: ["upper-back", "lower-back", "trapezius"],
+        shoulders: ["front-deltoids", "back-deltoids"],
+        core: ["abs", "obliques"],
+        quads: ["quadriceps"],
+        glutes: ["gluteal"],
+        hamstrings: ["hamstring"],
+        calves: ["calves"],
+        biceps: ["biceps"],
+        triceps: ["triceps"],
+        cardio: ["chest"], // Cardio doesn't have a distinct muscle, highlight chest (heart)
+        full_body: ["chest", "upper-back", "lower-back", "trapezius", "front-deltoids", "back-deltoids", "abs", "obliques", "quadriceps", "gluteal", "hamstring", "calves", "biceps", "triceps"]
     };
 
-    activeMuscles.forEach(muscle => {
-        const parts = mapping[muscle] || [];
-        parts.forEach(p => {
-            if (partsInput[p]) {
-                partsInput[p] = { show: true, selected: true };
-            }
+    const REVERSE_MAP: Record<string, MuscleGroup> = {
+        "chest": "chest",
+        "upper-back": "back",
+        "lower-back": "back",
+        "trapezius": "back",
+        "front-deltoids": "shoulders",
+        "back-deltoids": "shoulders",
+        "abs": "core",
+        "obliques": "core",
+        "quadriceps": "quads",
+        "gluteal": "glutes",
+        "hamstring": "hamstrings",
+        "calves": "calves",
+        "biceps": "biceps",
+        "triceps": "triceps",
+    };
+
+    const exerciseData: any[] = useMemo(() => {
+        let allMuscles: string[] = [];
+        
+        targetMuscles.forEach(tm => {
+            if (MUSCLE_MAP[tm]) allMuscles.push(...MUSCLE_MAP[tm]);
         });
-    });
+        
+        if (activeMuscle && MUSCLE_MAP[activeMuscle]) {
+            allMuscles.push(...MUSCLE_MAP[activeMuscle]);
+        }
+        
+        return [{ name: "Target Focus", muscles: Array.from(new Set(allMuscles)) }];
+    }, [targetMuscles, activeMuscle]);
+
+    const handleClick = ({ muscle }: { muscle: string }) => {
+        if (!onSelect) return;
+        const mapped = REVERSE_MAP[muscle];
+        if (mapped) onSelect(mapped);
+    };
 
     return (
-        <div className={`relative flex flex-col items-center w-full md:w-full md:max-w-[500px] ${className}`}>
-            <style>{`
-                .human-body svg.leftShoulder.selected path, .human-body svg.rightShoulder.selected path { fill: ${MUSCLE_COLORS.shoulders} !important; opacity: 1 !important; }
-                .human-body svg.chest.selected path { fill: ${MUSCLE_COLORS.chest} !important; opacity: 1 !important; }
-                .human-body svg.leftArm.selected path, .human-body svg.rightArm.selected path { 
-                    fill: ${activeMuscles.includes('biceps') ? MUSCLE_COLORS.biceps : activeMuscles.includes('triceps') ? MUSCLE_COLORS.triceps : "#d68a80"} !important; 
-                    opacity: 1 !important; 
-                }
-                .human-body svg.stomach.selected path { fill: ${MUSCLE_COLORS.core} !important; opacity: 1 !important; }
-                .human-body svg.leftLeg.selected path, .human-body svg.rightLeg.selected path { 
-                    fill: ${activeMuscles.includes('quads') ? MUSCLE_COLORS.quads : activeMuscles.includes('hamstrings') ? MUSCLE_COLORS.hamstrings : activeMuscles.includes('glutes') ? MUSCLE_COLORS.glutes : "#d68a80"} !important; 
-                    opacity: 1 !important; 
-                }
-                .human-body svg.leftFoot.selected path, .human-body svg.rightFoot.selected path { fill: ${MUSCLE_COLORS.calves} !important; opacity: 1 !important; }
-                .human-body svg.leftHand.selected path, .human-body svg.rightHand.selected path { fill: ${MUSCLE_COLORS.forearms} !important; opacity: 1 !important; }
-                .human-body svg:not(.selected) path { fill: var(--border-strong) !important; opacity: 0.5 !important; }
-                .human-body svg.head path { fill: var(--border-strong) !important; opacity: 0.3 !important; }
-                
-                /* BodyMap 207x500 box constraints */
-                .map-scaler {
-                    width: 207px;
-                    height: 500px;
-                    display: block;
-                    margin: 0 auto;
-                }
-            `}</style>
-            <div className="relative w-full aspect-[2/3] md:aspect-auto md:h-[650px] rounded-[2rem] overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border-subtle)] shadow-sm flex items-center justify-center p-2">
-                <div className="map-scaler origin-center scale-[1.0] sm:scale-[1.1] md:scale-[1.1] lg:scale-[1.3] [&_.human-body]:!m-0">
-                    <BodyComponent
-                        key={JSON.stringify(activeMuscles)}
-                        partsInput={partsInput as any}
-                    />
-                </div>
+        <div className="w-full flex justify-center gap-4 py-8 pointer-events-auto">
+            <div className="w-[140px] sm:w-[160px] cursor-pointer">
+                <BodyModel
+                    data={exerciseData}
+                    style={{ width: "100%", height: "auto" }}
+                    bodyColor="var(--bg-elevated)"
+                    highlightedColors={["#3B82F6", "#8B5CF6"]} // Use blue and purple highlights
+                    type="anterior"
+                    onClick={handleClick}
+                />
             </div>
-
-            {activeMuscles.length > 0 && (
-                <div className="mt-4 flex flex-wrap justify-center gap-1.5 max-w-[280px]">
-                    {activeMuscles.slice(0, 6).map(m => (
-                        <span
-                            key={m}
-                            className="text-[10px] px-2.5 py-1 rounded-full font-bold capitalize"
-                            style={{
-                                background: `${MUSCLE_COLORS[m] ?? "#3B82F6"}15`,
-                                color: MUSCLE_COLORS[m] ?? "#3B82F6",
-                            }}
-                        >
-                            {m.replace(/_/g, " ")}
-                        </span>
-                    ))}
-                </div>
-            )}
+            <div className="w-[140px] sm:w-[160px] cursor-pointer">
+                <BodyModel
+                    data={exerciseData}
+                    style={{ width: "100%", height: "auto" }}
+                    bodyColor="var(--bg-elevated)"
+                    highlightedColors={["#3B82F6", "#8B5CF6"]}
+                    type="posterior"
+                    onClick={handleClick}
+                />
+            </div>
+            {/* Note: In future versions, female SVGs will need to be provided as a custom render map since the base package defaults to standard anatomic */}
         </div>
     );
 }

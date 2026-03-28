@@ -70,6 +70,9 @@ export interface NutritionLog {
     carbs_g: number;
     fat_g: number;
     micros?: {
+        fiber_g?: number;
+        sodium_mg?: number;
+        sugar_g?: number;
         vitamin_d?: number;
         magnesium?: number;
         iron?: number;
@@ -324,6 +327,11 @@ export async function getNutritionLogs(uid: string, days = 30): Promise<Nutritio
     const q = query(userCol(uid, "logs_nutrition"), where("timestamp", ">=", Timestamp.fromDate(since)), orderBy("timestamp", "desc"));
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as NutritionLog));
+}
+
+export async function deleteNutritionLog(uid: string, id: string): Promise<void> {
+    if (isDemoMode) return;
+    await deleteDoc(doc(db, "users", uid, "logs_nutrition", id));
 }
 
 // ─── TOXINS ────────────────────────────────────────────────────────────────────
@@ -613,7 +621,12 @@ export async function deleteCustomWorkout(uid: string, id: string): Promise<void
 // ─── ACCOUNT DELETION ────────────────────────────────────────────────────────
 export async function deleteAllUserData(uid: string) {
     if (isDemoMode) return;
-    const cols = ["workouts", "activities", "nutrition", "supplements", "toxins", "sleep", "readiness", "body_metrics", "ai_insights", "custom_workouts"];
+    const cols = [
+        "logs_workout", "logs_activity", "logs_nutrition",
+        "logs_supplements", "logs_toxins", "logs_sleep",
+        "logs_readiness", "body_metrics", "ai_insights",
+        "custom_workouts", "saved_plans",
+    ];
     for (const col of cols) {
         const q = query(userCol(uid, col));
         const snap = await getDocs(q);
@@ -622,6 +635,6 @@ export async function deleteAllUserData(uid: string) {
         }
     }
     // Delete base docs
-    try { await deleteDoc(doc(db, "users", uid, "profile", "main")); } catch (e) { }
-    try { await deleteDoc(doc(db, "users", uid, "onboarding", "main")); } catch (e) { }
+    try { await deleteDoc(doc(db, "users", uid, "profile", "main")); } catch (_) { }
+    try { await deleteDoc(doc(db, "users", uid, "onboarding", "main")); } catch (_) { }
 }

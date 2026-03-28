@@ -834,10 +834,10 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
                         </div>
 
                         {/* Anatomy preview + exercise list */}
-                        <div className="flex flex-col md:flex-row gap-4 items-start">
-                            {/* SVG anatomy mini-map */}
-                            <div className="w-full md:w-1/3 aspect-[3/4] max-h-[300px] flex items-center justify-center">
-                                <AnatomyMap activeMuscles={generated.musclesWorked} className="scale-100 h-full" />
+                        <div className="flex flex-col md:flex-row gap-4 items-start relative z-10">
+                            {/* SVG anatomy mini-map (react-body-highlighter) */}
+                            <div className="w-full md:w-1/3 min-h-[260px] max-h-[400px] flex items-center justify-center relative overflow-hidden pointer-events-none rounded-2xl bg-[#0F172A]/50 border border-white/5">
+                                <AnatomyMap targetMuscles={generated.musclesWorked} />
                             </div>
 
                             {/* Exercise list */}

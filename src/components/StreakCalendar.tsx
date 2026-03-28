@@ -132,8 +132,8 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
             <div className="flex flex-col gap-2 w-full max-w-sm mx-auto sm:max-w-md">
                 {/* Day Header */}
                 <div className="grid grid-cols-7 text-center mb-1">
-                    {["S", "M", "T", "W", "T", "F", "S"].map(d => (
-                        <div key={d} className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-tighter">
+                    {["S", "M", "T", "W", "T", "F", "S"].map((d, idx) => (
+                        <div key={`day-${idx}`} className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-tighter">
                             {d}
                         </div>
                     ))}

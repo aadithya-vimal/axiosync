@@ -11,19 +11,26 @@ export const metadata: Metadata = {
   description: "AI-driven health companion with 3D body visualization, workout & activity tracking, and on-device AI insights. Developed by Aadithya Vimal.",
   keywords: ["health", "AI", "fitness", "3D body map", "workout tracker", "nutrition", "circadian", "offline"],
   authors: [{ name: "Aadithya Vimal" }],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Axiosync"
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
   themeColor: "#000000",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased text-zinc-900 dark:text-[var(--text-primary)] selection:bg-fuchsia-500/30`} suppressHydrationWarning style={{ fontFamily: "Inter, system-ui, sans-serif", backgroundColor: "var(--bg-base)" }}>
+      <body className={`${inter.variable} font-sans antialiased text-[var(--text-primary)] selection:bg-fuchsia-500/30`} suppressHydrationWarning style={{ fontFamily: "Inter, system-ui, sans-serif", backgroundColor: "var(--bg-base)" }}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {/* Global Ambient Background */}
           <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1] opacity-50 dark:opacity-100">

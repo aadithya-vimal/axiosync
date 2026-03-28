@@ -28,6 +28,9 @@ export default function TrainingSection({
     streakDays,
     dataLoaded,
     latestMetric,
+    todayCalories = 0,
+    todayProteinG = 0,
+    calTarget = 2500,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
@@ -35,6 +38,9 @@ export default function TrainingSection({
     streakDays: number;
     latestMetric: any;
     dataLoaded: boolean;
+    todayCalories?: number;
+    todayProteinG?: number;
+    calTarget?: number;
 }) {
     const [subView, setSubView] = useState<"home" | "strength" | "cardio">("home");
     const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
@@ -57,7 +63,7 @@ export default function TrainingSection({
         return (
             <div className="pb-32">
                 <button onClick={() => setSubView("home")} className="flex items-center gap-2 text-[#0A84FF] text-sm font-semibold mb-5 hover:opacity-80 transition-opacity">
-                    ← Back to Dashboard
+                    ← Back
                 </button>
                 <WorkoutTracker />
             </div>
@@ -68,7 +74,7 @@ export default function TrainingSection({
         return (
             <div className="pb-32">
                 <button onClick={() => setSubView("home")} className="flex items-center gap-2 text-[#FF9F0A] text-sm font-semibold mb-5 hover:opacity-80 transition-opacity">
-                    ← Back to Dashboard
+                    ← Back
                 </button>
                 <CardioTracker />
             </div>
@@ -80,7 +86,7 @@ export default function TrainingSection({
             variants={pageVariants} initial="initial" animate="enter" exit="exit"
             className="space-y-4 pb-32"
         >
-            <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight px-1 pt-2">Operations</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight px-1 pt-2">Workouts</h1>
 
             {/* ── AI Insights Feed ── */}
             {dataLoaded && (
@@ -93,108 +99,143 @@ export default function TrainingSection({
                         lastCardioKm={lastCardioKm}
                         weightKg={latestMetric?.weight_kg}
                         heightCm={latestMetric?.height_cm}
+                        todayCalories={todayCalories}
+                        todayProteinG={todayProteinG}
+                        calTarget={calTarget}
                     />
                 </div>
             )}
             {!dataLoaded && <Skeleton className="h-40" />}
 
-            {/* ── Bento Row 1: Readiness + Streak ── */}
-            <div className="grid grid-cols-2 gap-3">
-                {/* Readiness Bento */}
-                <motion.div
-                    className="card p-4 flex flex-col gap-2 relative overflow-hidden"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                >
-                    <div
-                        className="absolute inset-0 opacity-10 pointer-events-none"
-                        style={{ background: `radial-gradient(circle at 80% 20%, ${scoreColor}, transparent 60%)` }}
-                    />
-                    <div className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-widest">Readiness</div>
-                    {dataLoaded ? (
-                        <>
-                            <div className="text-4xl font-bold stat-num" style={{ color: scoreColor }}>{readinessPct}</div>
-                            <div className="text-xs text-[var(--text-muted)]">
-                                {readinessPct >= 80 ? "Peak — go hard" : readinessPct >= 60 ? "Good — train steady" : "Low — recover"}
-                            </div>
-                            <div className="w-full h-1 bg-white/[0.06] rounded-full mt-1">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${readinessPct}%` }}
-                                    transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
-                                    className="h-full rounded-full"
-                                    style={{ background: scoreColor, boxShadow: `0 0 8px ${scoreColor}60` }}
-                                />
-                            </div>
-                        </>
-                    ) : <Skeleton className="h-12" />}
-                </motion.div>
+            {/* ── Hero Readiness Card (full-width, mobile-first) ── */}
+            <motion.div
+                className="relative overflow-hidden rounded-[24px] p-5 shadow-2xl"
+                style={{
+                    transformPerspective: 1000,
+                    background: `linear-gradient(135deg, ${scoreColor}14 0%, ${scoreColor}06 50%, rgba(8,8,12,0.6) 100%)`,
+                    border: `1px solid ${scoreColor}25`,
+                    boxShadow: `0 0 40px ${scoreColor}12, 0 4px 24px rgba(0,0,0,0.4)`,
+                }}
+                whileHover={{ scale: 1.02, rotateX: 5, rotateY: 5, z: 10 }}
+                whileTap={{ scale: 0.99, rotateX: 0, rotateY: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            >
+                {/* Ambient glow blob */}
+                <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full opacity-20 pointer-events-none blur-2xl"
+                    style={{ background: scoreColor }}
+                />
 
-                {/* Streak Bento */}
-                <motion.div
-                    className="card p-4 flex flex-col gap-2 relative overflow-hidden"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                >
-                    <div
-                        className="absolute inset-0 opacity-10 pointer-events-none"
-                        style={{ background: "radial-gradient(circle at 80% 20%, #FF9F0A, transparent 60%)" }}
-                    />
-                    <div className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-widest">Streak</div>
-                    {dataLoaded ? (
-                        <>
-                            <div className="flex items-end gap-1">
-                                <div className="text-4xl font-bold stat-num text-[#FF9F0A]">{streakDays}</div>
-                                <div className="text-sm text-[var(--text-muted)] mb-1">days</div>
-                            </div>
-                            <div className="text-xs text-[var(--text-muted)]">
-                                {streakDays === 0 ? "Start today!" : streakDays < 3 ? "Keep going!" : streakDays < 7 ? "Building momentum" : "🔥 On fire!"}
-                            </div>
-                        </>
-                    ) : <Skeleton className="h-12" />}
-                </motion.div>
-            </div>
+                <div className="flex items-center gap-5">
+                    {/* Animated readiness ring */}
+                    <div className="relative shrink-0">
+                        <svg width="76" height="76" viewBox="0 0 76 76" className="-rotate-90">
+                            <circle cx="38" cy="38" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+                            <motion.circle
+                                cx="38" cy="38" r="30" fill="none"
+                                stroke={scoreColor}
+                                strokeWidth="6"
+                                strokeLinecap="round"
+                                strokeDasharray={`${2 * Math.PI * 30}`}
+                                initial={{ strokeDashoffset: 2 * Math.PI * 30 }}
+                                animate={{ strokeDashoffset: 2 * Math.PI * 30 * (1 - readinessPct / 100) }}
+                                transition={{ duration: 1.1, ease: "easeOut", delay: 0.1 }}
+                                style={{ filter: `drop-shadow(0 0 6px ${scoreColor}90)` }}
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center flex-col">
+                            <span className="text-xl font-bold stat-num" style={{ color: scoreColor }}>
+                                {dataLoaded ? readinessPct : "—"}
+                            </span>
+                            <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest -mt-0.5">Rdy</span>
+                        </div>
+                    </div>
 
-            {/* ── Bento Row 2: Quick Launch Buttons ── */}
+                    {/* Stats column */}
+                    <div className="flex-1 space-y-2">
+                        <div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-0.5">Today's Readiness</div>
+                            <div className="text-base font-semibold text-[var(--text-primary)]">
+                                {dataLoaded
+                                    ? readinessPct >= 80 ? "Peak — go hard 🔥" : readinessPct >= 60 ? "Good — train steady" : "Low — recover first"
+                                    : "Loading…"
+                                }
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <div className="text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-widest">Streak</div>
+                                <div className="text-lg font-bold stat-num text-[#FF9F0A]">
+                                    {dataLoaded ? `${streakDays}d` : "—"}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-widest">Volume</div>
+                                <div className="text-lg font-bold stat-num text-[#30D158]">
+                                    {dataLoaded ? `${Math.round(totalToday)}kg` : "—"}
+                                </div>
+                            </div>
+                            {lastCardioKm > 0 && (
+                                <div>
+                                    <div className="text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-widest">Last Run</div>
+                                    <div className="text-lg font-bold stat-num text-[#0A84FF]">{lastCardioKm.toFixed(1)}km</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* ── Quick Launch Buttons ── */}
             <div className="grid grid-cols-2 gap-3">
                 <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 24 }}
                     onClick={() => setSubView("strength")}
-                    className="card p-5 flex flex-col gap-3 text-left relative overflow-hidden group"
-                    style={{ background: "rgba(10,132,255,0.08)", borderColor: "rgba(10,132,255,0.2)" }}
+                    whileHover={{ scale: 1.03, y: -4, rotateX: 5, rotateY: 5 }}
+                    whileTap={{ scale: 0.96, rotateX: 0, rotateY: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                    className="relative overflow-hidden rounded-[22px] p-5 flex flex-col gap-3 text-left shadow-[0_4px_20px_rgba(10,132,255,0.12)]"
+                    style={{ transformPerspective: 1000, 
+                        background: "linear-gradient(145deg, rgba(10,132,255,0.15) 0%, rgba(10,132,255,0.06) 100%)",
+                        border: "1px solid rgba(10,132,255,0.22)",
+                        minHeight: 110,
+                    }}
                 >
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" style={{ background: "radial-gradient(circle at 50% 0%, #0A84FF, transparent)" }} />
-                    <div className="w-10 h-10 rounded-2xl bg-[#0A84FF]/20 flex items-center justify-center">
+                    <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity pointer-events-none"
+                        style={{ background: "radial-gradient(circle at 30% 0%, rgba(10,132,255,0.14), transparent 60%)" }}
+                    />
+                    <div className="w-11 h-11 rounded-[14px] flex items-center justify-center" style={{ background: "rgba(10,132,255,0.18)", border: "1px solid rgba(10,132,255,0.25)" }}>
                         <Dumbbell className="w-5 h-5 text-[#0A84FF]" />
                     </div>
                     <div>
-                        <div className="font-bold text-[var(--text-primary)] text-base">Power Deployment</div>
+                        <div className="font-bold text-[var(--text-primary)] text-[15px] leading-tight">Strength Training</div>
                         <div className="text-xs text-[var(--text-muted)] mt-0.5">
-                            {daysSince < 99 ? `Last: ${daysSince === 0 ? "today" : `${daysSince}d ago`}` : "No sessions yet"}
+                            {daysSince < 99 ? `Last: ${daysSince === 0 ? "today" : `${daysSince}d ago`}` : "Log sets, reps & weight"}
                         </div>
                     </div>
                 </motion.button>
 
                 <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 24 }}
                     onClick={() => setSubView("cardio")}
-                    className="card p-5 flex flex-col gap-3 text-left relative overflow-hidden group"
-                    style={{ background: "rgba(255,159,10,0.08)", borderColor: "rgba(255,159,10,0.2)" }}
+                    whileHover={{ scale: 1.03, y: -4, rotateX: 5, rotateY: -5 }}
+                    whileTap={{ scale: 0.96, rotateX: 0, rotateY: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                    className="relative overflow-hidden rounded-[22px] p-5 flex flex-col gap-3 text-left shadow-[0_4px_20px_rgba(255,159,10,0.10)]"
+                    style={{
+                        transformPerspective: 1000,
+                        background: "linear-gradient(145deg, rgba(255,159,10,0.15) 0%, rgba(255,159,10,0.06) 100%)",
+                        border: "1px solid rgba(255,159,10,0.22)",
+                        minHeight: 110,
+                    }}
                 >
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" style={{ background: "radial-gradient(circle at 50% 0%, #FF9F0A, transparent)" }} />
-                    <div className="w-10 h-10 rounded-2xl bg-[#FF9F0A]/20 flex items-center justify-center">
+                    <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity pointer-events-none"
+                        style={{ background: "radial-gradient(circle at 30% 0%, rgba(255,159,10,0.14), transparent 60%)" }}
+                    />
+                    <div className="w-11 h-11 rounded-[14px] flex items-center justify-center" style={{ background: "rgba(255,159,10,0.18)", border: "1px solid rgba(255,159,10,0.25)" }}>
                         <Activity className="w-5 h-5 text-[#FF9F0A]" />
                     </div>
                     <div>
-                        <div className="font-bold text-[var(--text-primary)] text-base">Endurance Protocol</div>
+                        <div className="font-bold text-[var(--text-primary)] text-[15px] leading-tight">Cardio &amp; Endurance</div>
                         <div className="text-xs text-[var(--text-muted)] mt-0.5">
-                            {lastCardioKm > 0 ? `Last: ${lastCardioKm.toFixed(1)}km` : "No sessions yet"}
+                            {lastCardioKm > 0 ? `Last run: ${lastCardioKm.toFixed(1)} km` : "Running, cycling & more"}
                         </div>
                     </div>
                 </motion.button>

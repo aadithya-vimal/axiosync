@@ -85,8 +85,8 @@ export default function WorkoutDetailView({ workout, onClose, onStart }: Props) 
                     <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
                         {/* Muscle Map Section */}
                         <div className="flex flex-col md:flex-row gap-8 items-center bg-white/[0.02] rounded-[24px] p-6 border border-white/[0.05]">
-                            <div className="w-32 h-44 shrink-0 flex items-center justify-center">
-                                <AnatomyMap activeMuscles={muscles} className="scale-110" />
+                            <div className="w-full md:w-[180px] shrink-0 flex items-center justify-center">
+                                <AnatomyMap activeMuscles={muscles} />
                             </div>
                             <div className="flex-1 space-y-3">
                                 <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-2">
