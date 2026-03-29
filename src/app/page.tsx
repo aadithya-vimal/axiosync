@@ -85,49 +85,48 @@ export default function DashboardPage() {
 
   const refreshBodyState = useCallback(async () => {
     if (!user) return;
-    const n = await getTodayNutrition(user.uid);
+    const [n, workouts, activities, readiness, metrics] = await Promise.all([
+      getTodayNutrition(user.uid),
+      getRecentWorkouts(user.uid, 50),
+      getRecentActivities(user.uid, 50),
+      getTodayReadiness(user.uid),
+      getBodyMetrics(user.uid, 1),
+    ]);
+
+    // Nutrition
     const totalCal = n.reduce((a, b) => a + (b.calories || 0), 0);
     const totalProt = n.reduce((a, b) => a + (b.protein_g || 0), 0);
     setNutrientAura(totalCal >= 1000);
     setTodayCalories(Math.round(totalCal));
     setTodayProteinG(Math.round(totalProt));
+
+    // Logs & Metrics
+    setRecentWorkouts(workouts);
+    setRecentActivities(activities);
+    if (readiness) setReadinessPct(readiness.readiness_pct);
+    if (metrics.length > 0) setLatestMetric(metrics[0]);
+
+    // Streak calc
+    const allDays = new Set([
+      ...workouts.map((w: any) => w.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
+      ...activities.map((a: any) => a.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
+    ]);
+    let s = 0;
+    const today = new Date();
+    for (let i = 0; i < 90; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      if (allDays.has(key)) s++;
+      else if (i > 0) break;
+    }
+    setStreakDays(s);
+    setDataLoaded(true);
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      const [onboarding, workouts, activities, readiness, metrics] = await Promise.all([
-        getOnboarding(user.uid),
-        getRecentWorkouts(user.uid, 50),
-        getRecentActivities(user.uid, 50),
-        getTodayReadiness(user.uid),
-        getBodyMetrics(user.uid, 1),
-      ]);
-      if (!onboarding?.completed) setShowOnboarding(true);
-      setOnboardingData(onboarding);
-      setRecentWorkouts(workouts);
-      setRecentActivities(activities);
-      if (readiness) setReadinessPct(readiness.readiness_pct);
-      if (metrics.length > 0) setLatestMetric(metrics[0]);
-
-      // Streak calc
-      const allDays = new Set([
-        ...workouts.map((w: any) => w.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
-        ...activities.map((a: any) => a.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
-      ]);
-      let s = 0;
-      const today = new Date();
-      for (let i = 0; i < 90; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        const key = d.toISOString().split("T")[0];
-        if (allDays.has(key)) s++;
-        else if (i > 0) break;
-      }
-      setStreakDays(s);
-      setDataLoaded(true);
-      refreshBodyState();
-    })();
+    refreshBodyState();
   }, [user, refreshBodyState]);
 
   const handleDelete = useCallback(async (id: string, type: 'workout' | 'activity') => {
@@ -184,6 +183,7 @@ export default function DashboardPage() {
             calTarget={onboardingData?.calorieTarget || 2500}
             initialWorkoutPlan={activeWorkoutPlan}
             onClearWorkoutPlan={() => setActiveWorkoutPlan(null)}
+            onRefresh={refreshBodyState}
           />
         )}
 
@@ -220,6 +220,7 @@ export default function DashboardPage() {
             recentWorkouts={recentWorkouts}
             recentActivities={recentActivities}
             onDelete={handleDelete}
+            onRefresh={refreshBodyState}
           />
         )}
 

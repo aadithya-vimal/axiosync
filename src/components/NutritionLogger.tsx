@@ -77,7 +77,7 @@ function MacroBar({ label, grams, color, icon }: { label: string; grams: number;
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: number }) {
+export default function NutritionLogger({ calTarget = 2500, onRefresh }: { calTarget?: number; onRefresh?: () => Promise<void> }) {
     const { user } = useAuth();
 
     const [meals, setMeals] = useState<NutritionLog[]>([]);
@@ -138,6 +138,7 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
         try {
             await deleteNutritionLog(user.uid, logId);
             setMeals(prev => prev.filter(m => m.id !== logId));
+            if (onRefresh) await onRefresh();
         } catch (e) {
             console.error("Failed to delete log", e);
         }
@@ -167,13 +168,14 @@ export default function NutritionLogger({ calTarget = 2500 }: { calTarget?: numb
             setFat(""); setFiber(""); setSodium(""); setSugar("");
             setFormOpen(false);
             setSaved(true);
+            if (onRefresh) await onRefresh();
             setTimeout(() => setSaved(false), 2500);
         } catch (e) {
             console.error("Save failed", e);
         } finally {
             setSaving(false);
         }
-    }, [user, name, calories, protein, carbs, fat, fiber, sodium, sugar]);
+    }, [user, name, calories, protein, carbs, fat, fiber, sodium, sugar, onRefresh]);
 
     return (
         <div className="space-y-4">

@@ -71,6 +71,11 @@ function buildPrompt(opts: {
     const totalCardioKm = activities.reduce((a, b) => a + (b.distance_km || 0), 0);
     const totalCardioMin = activities.reduce((a, b) => a + b.duration_min, 0);
 
+    // Detailed logs for the last 3 days to provide context without overloading
+    const recentNutrition = nutrition.slice(0, 15);
+    const recentWorkoutsList = workouts.slice(0, 10);
+    const recentActivitiesList = activities.slice(0, 10);
+
     // Muscle group frequency
     const muscleFreq: Record<string, number> = {};
     workouts.forEach(w => {
@@ -109,13 +114,16 @@ function buildPrompt(opts: {
             : "No recent biometric metrics logged.",
         ``,
         `────────────────────────────────────────────────────`,
-        `SECTION 1: TRAINING DATA`,
+        `SECTION 1: TRAINING DATA (STRENGTH)`,
         `────────────────────────────────────────────────────`,
         `Total Strength Sessions: ${workouts.length} over ${workoutFreq.days} days`,
         `Total Volume Lifted: ${Math.round(totalVolume).toLocaleString()} kg`,
         `Average Session Volume: ${workouts.length ? Math.round(totalVolume / workouts.length) : 0} kg`,
         `Training Frequency: ${(workouts.length / (range / 7)).toFixed(1)} sessions/week`,
-        workoutDates.length > 0 ? `Session Dates: ${workoutDates.slice(0, 10).join(", ")}${workoutDates.length > 10 ? "..." : ""}` : "No sessions logged.",
+        ``,
+        `RECENT SESSIONS:`,
+        ...recentWorkoutsList.map(w => `  • ${getDateStr(w.timestamp)}: ${w.name} (${Math.round(w.total_volume_kg || 0)}kg vol)`),
+        recentWorkoutsList.length === 0 ? "  No recent sessions logged." : "",
         ``,
         `Top Muscle Groups (by sets):`,
         ...topMuscles.map(([mg, sets]) => `  • ${mg.charAt(0).toUpperCase() + mg.slice(1)}: ${sets} sets`),
@@ -127,6 +135,11 @@ function buildPrompt(opts: {
         `Cardio Sessions: ${activities.length} over ${activityFreq.days} days`,
         `Total Distance: ${totalCardioKm.toFixed(1)} km`,
         `Total Cardio Time: ${Math.round(totalCardioMin)} min`,
+        ``,
+        `RECENT ACTIVITIES:`,
+        ...recentActivitiesList.map(a => `  • ${getDateStr(a.timestamp)}: ${a.type} — ${a.distance_km ? a.distance_km.toFixed(1) + "km" : a.duration_min + "min"}`),
+        recentActivitiesList.length === 0 ? "  No recent activities logged." : "",
+        ``,
         `Modalities Used:`,
         ...Object.entries(modalityFreq).map(([type, count]) => `  • ${type.charAt(0).toUpperCase() + type.slice(1)}: ${count} sessions`),
         activities.length === 0 ? "  No cardio logged." : "",
@@ -139,7 +152,10 @@ function buildPrompt(opts: {
         `Average Daily Protein: ${Math.round(avgProtein)}g`,
         nutrition.length > 0 ? `Average Daily Carbs: ${Math.round(nutrition.reduce((a, n) => a + (n.carbs_g || 0), 0) / nutrition.length)}g` : "",
         nutrition.length > 0 ? `Average Daily Fat: ${Math.round(nutrition.reduce((a, n) => a + (n.fat_g || 0), 0) / nutrition.length)}g` : "",
-        nutrition.length === 0 ? "  No nutrition data logged." : "",
+        ``,
+        `RECENTLY LOGGED MEALS:`,
+        ...recentNutrition.map(n => `  • ${getDateStr(n.timestamp)}: ${n.meal_name} — ${n.calories}kcal (P:${n.protein_g}g, C:${n.carbs_g}g, F:${n.fat_g}g)`),
+        recentNutrition.length === 0 ? "  No nutrition logs available." : "",
         ``,
         `────────────────────────────────────────────────────`,
         `SECTION 4: SLEEP DATA`,

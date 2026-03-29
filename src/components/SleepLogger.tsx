@@ -7,7 +7,7 @@ import { Timestamp } from "firebase/firestore";
 import { Moon, CheckCircle, Plus, Trash2, Loader2, Clock, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function SleepLogger() {
+export default function SleepLogger({ onRefresh }: { onRefresh?: () => Promise<void> }) {
     const { user } = useAuth();
     const [wakeTime, setWakeTime] = useState("07:00");
     const [sleepTime, setSleepTime] = useState("23:00");
@@ -67,6 +67,7 @@ export default function SleepLogger() {
             };
             await addSleepLog(user.uid, logData);
             setLogged(true);
+            if (onRefresh) await onRefresh();
             fetchLogs();
             setTimeout(() => setLogged(false), 2000);
         } catch (e) {
@@ -81,6 +82,7 @@ export default function SleepLogger() {
         try {
             await deleteSleepLog(user.uid, id);
             setLogs(prev => prev.filter(l => l.id !== id));
+            if (onRefresh) await onRefresh();
         } catch (e) {
             console.error(e);
         }

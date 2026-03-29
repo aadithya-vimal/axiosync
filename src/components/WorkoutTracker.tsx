@@ -467,9 +467,11 @@ function RestView({
 function CompleteView({
     session,
     onClose,
+    onRefresh,
 }: {
     session: SessionState;
     onClose: () => void;
+    onRefresh?: () => Promise<void>;
 }) {
     const totalVolume = calcTotalVolume(session.sessionLogs);
     const completedSets = session.sessionLogs.reduce((a, ex) => a + ex.sets.filter(s => s.completed).length, 0);
@@ -493,6 +495,7 @@ function CompleteView({
                 notes: `Completed via Axiosync Workout Engine`,
             });
             setSaved(true);
+            if (onRefresh) await onRefresh();
         } catch (e) {
             console.error("Failed to save workout", e);
         } finally {
@@ -905,10 +908,12 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
 
 export default function WorkoutTracker({
     initialPlan,
-    onClearPlan
+    onClearPlan,
+    onRefresh
 }: {
     initialPlan?: WorkoutPlan;
     onClearPlan?: () => void;
+    onRefresh?: () => Promise<void>;
 } = {}) {
     const [engineState, setEngineState] = useState<EngineState>(initialPlan ? "active" : "browse");
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
@@ -1083,7 +1088,7 @@ export default function WorkoutTracker({
     }
 
     if (engineState === "complete" && session) {
-        return <CompleteView session={session} onClose={handleClose} />;
+        return <CompleteView session={session} onClose={handleClose} onRefresh={onRefresh} />;
     }
 
     if (engineState === "preview" && selectedPlan) {

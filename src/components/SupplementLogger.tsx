@@ -49,7 +49,7 @@ const QUICK_SUPPLEMENTS: SupplementEntry[] = [
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function SupplementLogger() {
+export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Promise<void> }) {
     const { user } = useAuth();
     const [todayLogs, setTodayLogs] = useState<SupplementLog[]>([]);
     const [fetching, setFetching] = useState(true);
@@ -89,6 +89,7 @@ export default function SupplementLogger() {
             if (ref) {
                 setTodayLogs(prev => [{ id: ref.id, uid: user.uid, timestamp: new Date() as any, ...s }, ...prev]);
                 setSaved(s.name);
+                if (onRefresh) await onRefresh();
                 setTimeout(() => setSaved(""), 2500);
             }
         } catch (e) {
@@ -96,7 +97,7 @@ export default function SupplementLogger() {
         } finally {
             setSaving(false);
         }
-    }, [user]);
+    }, [user, onRefresh]);
 
     const handleSave = useCallback(async () => {
         if (!user || !name) return;
@@ -126,6 +127,7 @@ export default function SupplementLogger() {
                 }
                 setTodayLogs(prev => [{ id: ref.id, uid: user.uid, timestamp: new Date() as any, ...entry }, ...prev]);
                 setSaved(name);
+                if (onRefresh) await onRefresh();
                 setTimeout(() => setSaved(""), 2500);
             }
         } catch (e) {
@@ -135,13 +137,14 @@ export default function SupplementLogger() {
             setShowForm(false);
             setName(""); setAmountG(""); setNotes(""); setEditingId(null);
         }
-    }, [user, name, selectedCategory, amountG, notes, editingId]);
+    }, [user, name, selectedCategory, amountG, notes, editingId, onRefresh]);
 
     const handleDelete = async (id: string) => {
         if (!user) return;
         try {
             await deleteSupplementLog(user.uid, id);
             setTodayLogs(prev => prev.filter(l => l.id !== id));
+            if (onRefresh) await onRefresh();
         } catch (e) {
             console.error("Delete failed:", e);
         }

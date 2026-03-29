@@ -16,10 +16,12 @@ export default function LogSection({
     recentWorkouts,
     recentActivities,
     onDelete,
+    onRefresh,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
     onDelete?: (id: string, type: 'workout' | 'activity') => Promise<void>;
+    onRefresh?: () => Promise<void>;
 }) {
     return (
         <motion.div key="log" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="space-y-5 pb-32">
@@ -31,16 +33,16 @@ export default function LogSection({
             {/* Nutrition Logger */}
             <div className="card p-5">
                 <h3 className="font-semibold text-[var(--text-primary)] mb-4">Nutrition</h3>
-                <NutritionLogger />
+                <NutritionLogger onRefresh={onRefresh} />
             </div>
 
             {/* Toxins + Sleep */}
             <div className="card divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
                 <div className="p-5">
-                    <SupplementLogger />
+                    <SupplementLogger onRefresh={onRefresh} />
                 </div>
                 <div className="p-5">
-                    <SleepLogger />
+                    <SleepLogger onRefresh={onRefresh} />
                 </div>
             </div>
         </motion.div>

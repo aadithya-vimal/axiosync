@@ -33,6 +33,7 @@ export default function TrainingSection({
     calTarget = 2500,
     initialWorkoutPlan,
     onClearWorkoutPlan,
+    onRefresh,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
@@ -45,6 +46,7 @@ export default function TrainingSection({
     calTarget?: number;
     initialWorkoutPlan?: any;
     onClearWorkoutPlan?: () => void;
+    onRefresh?: () => Promise<void>;
 }) {
     const [subView, setSubView] = useState<"home" | "strength" | "cardio">("home");
     const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
@@ -106,6 +108,7 @@ export default function TrainingSection({
                 <WorkoutTracker
                     initialPlan={activeWorkoutPlan}
                     onClearPlan={onClearWorkoutPlan}
+                    onRefresh={onRefresh}
                 />
             </div>
         );
@@ -117,7 +120,7 @@ export default function TrainingSection({
                 <button onClick={() => setSubView("home")} className="flex items-center gap-2 text-[#FF9F0A] text-sm font-semibold mb-5 hover:opacity-80 transition-opacity">
                     ← Back
                 </button>
-                <CardioTracker />
+                <CardioTracker onRefresh={onRefresh} />
             </div>
         );
     }
