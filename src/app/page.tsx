@@ -77,6 +77,7 @@ export default function DashboardPage() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [todayCalories, setTodayCalories] = useState(0);
   const [todayProteinG, setTodayProteinG] = useState(0);
+  const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -181,11 +182,18 @@ export default function DashboardPage() {
             todayCalories={todayCalories}
             todayProteinG={todayProteinG}
             calTarget={onboardingData?.calorieTarget || 2500}
+            initialWorkoutPlan={activeWorkoutPlan}
+            onClearWorkoutPlan={() => setActiveWorkoutPlan(null)}
           />
         )}
 
         {section === "discover" && <DiscoverSection />}
-        {section === "library" && <LibrarySection />}
+        {section === "library" && (
+          <LibrarySection onStartWorkout={(w: any) => {
+            setActiveWorkoutPlan(w);
+            setSection("training");
+          }} />
+        )}
         {section === "tools" && (
           <motion.div key="tools" variants={pageVariants} initial="initial" animate="enter" exit="exit">
             <ToolsSection />
@@ -296,7 +304,7 @@ export default function DashboardPage() {
         </nav>
 
         {/* ── Mobile Top Bar ── */}
-        <div className="sm:hidden fixed top-0 left-0 right-0 z-50" style={{
+        <div className="sm:hidden fixed top-0 left-0 right-0 z-[1000]" style={{
           background: "rgba(8,8,12,0.72)",
           backdropFilter: "blur(24px) saturate(180%)",
           WebkitBackdropFilter: "blur(24px) saturate(180%)",

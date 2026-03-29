@@ -336,7 +336,7 @@ export default function SettingsSection({
             {/* ── Delete Confirmation Modal ── */}
             <AnimatePresence>
                 {showDeleteConfirm && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-md">
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-md">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}

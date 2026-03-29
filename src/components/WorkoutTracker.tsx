@@ -214,8 +214,8 @@ function ActiveExercise({
         <div className="flex flex-col h-full min-h-screen bg-black pb-safe">
             {/* ── Discard Confirmation Modal ── */}
             {showDiscardModal && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center pb-8 px-4" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
-                    <div className="card w-full max-w-sm p-6 space-y-4 text-center">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}>
+                    <div className="card w-full max-w-sm p-6 space-y-4 text-center shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10">
                         <div className="w-12 h-12 rounded-2xl bg-[#FF453A]/15 flex items-center justify-center mx-auto">
                             <AlertTriangle className="w-6 h-6 text-[#FF453A]" />
                         </div>
@@ -903,12 +903,38 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
 
 // ── Main WorkoutTracker ───────────────────────────────────────────────────────
 
-export default function WorkoutTracker() {
-    const [engineState, setEngineState] = useState<EngineState>("browse");
+export default function WorkoutTracker({
+    initialPlan,
+    onClearPlan
+}: {
+    initialPlan?: WorkoutPlan;
+    onClearPlan?: () => void;
+} = {}) {
+    const [engineState, setEngineState] = useState<EngineState>(initialPlan ? "active" : "browse");
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
     const [session, setSession] = useState<SessionState | null>(null);
     const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [activeTab, setActiveTab] = useState<"generate" | "strength" | "hiit" | "core" | "cardio" | "all">("all");
+
+    // Initialize from initialPlan if given
+    useEffect(() => {
+        if (initialPlan && !session) {
+            const logs: ExerciseLog[] = initialPlan.exercises.map(ex => ({
+                exerciseId: ex.id || String(Math.random()),
+                name: ex.name,
+                sets: Array.from({ length: ex.sets }, () => ({ reps: typeof ex.reps === "number" ? ex.reps : 12, weightKg: ex.weightKg ?? 0, completed: false })),
+            }));
+            setSession({
+                plan: initialPlan,
+                exerciseIndex: 0,
+                setIndex: 0,
+                sessionLogs: logs,
+                startedAt: new Date(),
+                elapsed: 0,
+            });
+            setEngineState("active");
+        }
+    }, [initialPlan]);
 
     // ── Elapsed session timer ──
     useEffect(() => {
@@ -1014,7 +1040,8 @@ export default function WorkoutTracker() {
         setSession(null);
         setSelectedPlan(null);
         setEngineState("browse");
-    }, []);
+        if (onClearPlan) onClearPlan();
+    }, [onClearPlan]);
 
     // ── Browse view ──
     const filteredPlans = WORKOUT_PLANS.filter(p => activeTab === "all" || p.category === activeTab);

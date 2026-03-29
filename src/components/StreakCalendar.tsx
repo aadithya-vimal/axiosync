@@ -241,7 +241,7 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
             {/* Details Overlay */}
             <AnimatePresence>
                 {selectedDate && (
-                    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="fixed inset-0 z-[2100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

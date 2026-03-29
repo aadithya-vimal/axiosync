@@ -386,6 +386,20 @@ export async function getSleepLogs(uid: string, days = 30): Promise<SleepLog[]> 
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SleepLog));
 }
 
+export async function getTodaySleepLogs(uid: string): Promise<SleepLog[]> {
+    if (isDemoMode) return [];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    // Sleep usually starts the night before, so we look for logs where sleep_end (wake time) is today
+    const q = query(userCol(uid, "logs_sleep"), where("sleep_end", ">=", Timestamp.fromDate(today)), orderBy("sleep_end", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SleepLog));
+}
+
+export async function deleteSleepLog(uid: string, id: string): Promise<void> {
+    if (isDemoMode) return;
+    await deleteDoc(doc(db, "users", uid, "logs_sleep", id));
+}
+
 // ─── ACTIVITY ─────────────────────────────────────────────────────────────────
 
 export async function addActivityLog(uid: string, log: Omit<ActivityLog, "id" | "uid" | "timestamp">) {

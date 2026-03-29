@@ -271,7 +271,7 @@ function MyRoutinesTab({ onStartWorkout, onViewDetail }: { onStartWorkout?: (w: 
 
 // ── Main LibrarySection ───────────────────────────────────────────────────────
 
-export default function LibrarySection() {
+export default function LibrarySection({ onStartWorkout }: { onStartWorkout?: (w: any) => void } = {}) {
     const [tab, setTab] = useState<"directory" | "routines">("directory");
     const [searchQuery, setSearchQuery] = useState("");
     const [muscleFilter, setMuscleFilter] = useState<string>("all");
@@ -410,7 +410,7 @@ export default function LibrarySection() {
                     </motion.div>
                 ) : (
                     <motion.div key="routines" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <MyRoutinesTab onViewDetail={setViewingWorkout} />
+                        <MyRoutinesTab onStartWorkout={onStartWorkout} onViewDetail={setViewingWorkout} />
                     </motion.div>
                 )}
             </AnimatePresence>

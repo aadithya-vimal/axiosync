@@ -80,7 +80,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
     );
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center px-6">
+        <div className="fixed inset-0 z-[2000] bg-black flex items-center justify-center px-6">
             {/* Ambient orbs */}
             <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ background: "radial-gradient(circle, #0A84FF, transparent)" }} />
             <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full opacity-8 blur-3xl pointer-events-none" style={{ background: "radial-gradient(circle, #30D158, transparent)" }} />

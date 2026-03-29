@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Dumbbell, Activity, Eye } from "lucide-react";
 import WorkoutTracker from "@/components/WorkoutTracker";
@@ -31,6 +31,8 @@ export default function TrainingSection({
     todayCalories = 0,
     todayProteinG = 0,
     calTarget = 2500,
+    initialWorkoutPlan,
+    onClearWorkoutPlan,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
@@ -41,10 +43,43 @@ export default function TrainingSection({
     todayCalories?: number;
     todayProteinG?: number;
     calTarget?: number;
+    initialWorkoutPlan?: any;
+    onClearWorkoutPlan?: () => void;
 }) {
     const [subView, setSubView] = useState<"home" | "strength" | "cardio">("home");
     const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
     const [showDetail, setShowDetail] = useState(false);
+
+    const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<any>(null);
+
+    // Auto-switch to strength tab if an initial plan is loaded
+    useEffect(() => {
+        if (initialWorkoutPlan) {
+            let plan = { ...initialWorkoutPlan };
+            // If it's a CustomWorkout (exercises have sets as array), normalize it
+            if (plan.exercises && plan.exercises.length > 0 && Array.isArray(plan.exercises[0].sets)) {
+                plan = {
+                    ...plan,
+                    exercises: plan.exercises.map((ex: any) => ({
+                        ...ex,
+                        sets: ex.sets.length,
+                        reps: ex.sets[0]?.reps || (ex.sets[0]?.time_s ? `${ex.sets[0].time_s}s` : "12"),
+                        restSeconds: ex.sets[0]?.restSeconds || 60,
+                        // Ensure required WorkoutPlan fields
+                        id: ex.exerciseId || Math.random().toString(),
+                        imageUrl: ex.imageUrl || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
+                        instructions: ex.instructions || ex.notes || "No instructions provided.",
+                        muscleGroup: ex.muscleGroup || "full_body",
+                        equipment: ex.modality || "Any",
+                    }))
+                };
+            }
+            setActiveWorkoutPlan(plan);
+            setSubView("strength");
+        } else {
+            setActiveWorkoutPlan(null);
+        }
+    }, [initialWorkoutPlan]);
 
     // Workout recency
     const lastWorkoutTs = recentWorkouts[0]?.timestamp?.toDate?.();
@@ -62,10 +97,16 @@ export default function TrainingSection({
     if (subView === "strength") {
         return (
             <div className="pb-32">
-                <button onClick={() => setSubView("home")} className="flex items-center gap-2 text-[#0A84FF] text-sm font-semibold mb-5 hover:opacity-80 transition-opacity">
+                <button onClick={() => {
+                    setSubView("home");
+                    onClearWorkoutPlan?.();
+                }} className="flex items-center gap-2 text-[#0A84FF] text-sm font-semibold mb-5 hover:opacity-80 transition-opacity">
                     ← Back
                 </button>
-                <WorkoutTracker />
+                <WorkoutTracker
+                    initialPlan={activeWorkoutPlan}
+                    onClearPlan={onClearWorkoutPlan}
+                />
             </div>
         );
     }
