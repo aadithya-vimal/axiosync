@@ -8,10 +8,39 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 
 export const metadata: Metadata = {
   title: "Axiosync — Proactive Health Companion",
-  description: "AI-driven health companion with 3D body visualization, workout & activity tracking, and on-device AI insights. Developed by Aadithya Vimal.",
-  keywords: ["health", "AI", "fitness", "3D body map", "workout tracker", "nutrition", "circadian", "offline"],
+  description: "AI-driven health companion with 3D body visualization, workout & activity tracking, and on-device AI insights. Monitor your circadian rhythm, nutrition, and supplements in one unified dashboard.",
+  keywords: ["health", "AI", "fitness", "3D body map", "workout tracker", "nutrition", "circadian", "supplements", "proactive health", "Aadithya Vimal"],
   authors: [{ name: "Aadithya Vimal" }],
+  creator: "Aadithya Vimal",
+  publisher: "Aadithya Vimal",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
+  openGraph: {
+    title: "Axiosync — Proactive Health Companion",
+    description: "Your AI-powered health dashboard for 3D body tracking, nutrition, and supplement logging.",
+    url: "https://axiosync.vercel.app",
+    siteName: "Axiosync",
+    images: [
+      {
+        url: "/body-realistic.png",
+        width: 1200,
+        height: 630,
+        alt: "Axiosync 3D Body Visualization",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Axiosync — Proactive Health Companion",
+    description: "AI-driven health companion with 3D body visualization and proactive insights.",
+    images: ["/body-realistic.png"],
+    creator: "@aadithyavimal",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

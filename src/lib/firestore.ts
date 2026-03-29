@@ -525,6 +525,10 @@ export async function getSupplementLogs(uid: string, days = 30): Promise<Supplem
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SupplementLog));
 }
 
+export async function deleteSupplementLog(uid: string, id: string): Promise<void> {
+    await deleteDoc(doc(db, "users", uid, "logs_supplements", id));
+}
+
 // ─── AI INSIGHTS ──────────────────────────────────────────────────────────────
 
 export async function cacheInsight(uid: string, query_hash: string, query: string, response: string) {
