@@ -275,12 +275,29 @@ export async function getProfile(uid: string): Promise<UserProfile | null> {
 export async function upsertOnboarding(uid: string, data: Partial<UserOnboarding>) {
     if (isDemoMode) return;
     const ref = doc(db, "users", uid, "onboarding", "main");
-    await setDoc(ref, { uid, ...data }, { merge: true });
+    
+    // Check if weight or height are provided in this update
+    if (data.weight_kg || data.height_cm) {
+        const snap = await getDoc(ref);
+        const existing = snap.data() as UserOnboarding | undefined;
+        
+        const newWeight = data.weight_kg || existing?.weight_kg;
+        const newHeight = data.height_cm || existing?.height_cm;
 
-    // Also populate body metrics if height and weight are provided
-    if (data.height_cm && data.weight_kg) {
-        await addBodyMetric(uid, data.weight_kg, data.height_cm);
+        // If we have both values now, check if we should create a log
+        if (newWeight && newHeight) {
+            const hasChanged = !existing || 
+                              (data.weight_kg && data.weight_kg !== existing.weight_kg) || 
+                              (data.height_cm && data.height_cm !== existing.height_cm);
+
+            if (hasChanged) {
+                // If it's the very first log or a value changed, record it
+                await addBodyMetric(uid, newWeight, newHeight, false);
+            }
+        }
     }
+
+    await setDoc(ref, { uid, ...data }, { merge: true });
 }
 
 export async function getOnboarding(uid: string): Promise<UserOnboarding | null> {
@@ -291,12 +308,22 @@ export async function getOnboarding(uid: string): Promise<UserOnboarding | null>
 
 // ─── BODY METRICS ─────────────────────────────────────────────────────────────
 
-export async function addBodyMetric(uid: string, weight_kg: number, height_cm: number) {
+export async function addBodyMetric(uid: string, weight_kg: number, height_cm: number, syncProfile = true) {
     if (isDemoMode) return;
     const { bmi, category } = calcBMI(weight_kg, height_cm);
-    return addDoc(userCol(uid, "body_metrics"), {
+    
+    // 1. Add to historical logs
+    const docRef = await addDoc(userCol(uid, "body_metrics"), {
         uid, weight_kg, height_cm, bmi, bmi_category: category, timestamp: Timestamp.now(),
     });
+
+    // 2. Sync to profile (onboarding) so the "Current Weight" is always correct everywhere
+    if (syncProfile) {
+        const profileRef = doc(db, "users", uid, "onboarding", "main");
+        await setDoc(profileRef, { weight_kg, height_cm }, { merge: true });
+    }
+
+    return docRef;
 }
 
 export async function getBodyMetrics(uid: string, count = 30): Promise<BodyMetric[]> {

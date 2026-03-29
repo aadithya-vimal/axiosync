@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { addBodyMetric, getBodyMetrics, BodyMetric, getRecentActivities, getRecentWorkouts } from "@/lib/firestore";
+import { addBodyMetric, getBodyMetrics, BodyMetric, getRecentActivities, getRecentWorkouts, getOnboarding } from "@/lib/firestore";
 import { format, startOfWeek, addDays, isSameDay, subDays } from "date-fns";
-import { Flame, Clock, Award, Edit2 } from "lucide-react";
+import { Flame, Clock, Award, Edit2, Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function BodyMetrics() {
@@ -12,6 +12,7 @@ export default function BodyMetrics() {
     const [metrics, setMetrics] = useState<BodyMetric[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
     const [workouts, setWorkouts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const [loggingWeight, setLoggingWeight] = useState(false);
     const [weight, setWeight] = useState(70);
@@ -19,15 +20,43 @@ export default function BodyMetrics() {
 
     useEffect(() => {
         if (!user) return;
-        getBodyMetrics(user.uid, 30).then((data) => {
-            setMetrics(data.reverse());
-            if (data.length > 0) {
-                setWeight(data[data.length - 1].weight_kg);
-                setHeight(data[data.length - 1].height_cm);
+        
+        const loadData = async () => {
+            setLoading(true);
+            try {
+                let data = await getBodyMetrics(user.uid, 30);
+                
+                // ── Auto-recovery for first log ──
+                if (data.length === 0) {
+                    const ob = await getOnboarding(user.uid);
+                    if (ob?.weight_kg && ob?.height_cm) {
+                        // Create the missing first log
+                        await addBodyMetric(user.uid, ob.weight_kg, ob.height_cm, false);
+                        data = await getBodyMetrics(user.uid, 1);
+                    }
+                }
+
+                setMetrics(data.reverse());
+                if (data.length > 0) {
+                    const latest = data[data.length - 1];
+                    setWeight(latest.weight_kg);
+                    setHeight(latest.height_cm);
+                }
+
+                const [actData, workData] = await Promise.all([
+                    getRecentActivities(user.uid, 50),
+                    getRecentWorkouts(user.uid, 50)
+                ]);
+                setActivities(actData);
+                setWorkouts(workData);
+            } catch (e) {
+                console.error("Error loading metrics:", e);
+            } finally {
+                setLoading(false);
             }
-        });
-        getRecentActivities(user.uid, 50).then(setActivities);
-        getRecentWorkouts(user.uid, 50).then(setWorkouts);
+        };
+
+        loadData();
     }, [user, loggingWeight]);
 
     const handleSaveMetric = async () => {
@@ -75,13 +104,16 @@ export default function BodyMetrics() {
 
     const weightData = useMemo(() => {
         if (metrics.length === 0) return [];
-        return metrics.map(m => ({
-            date: format(m.timestamp.toDate(), "MMM dd"),
-            shortDate: format(m.timestamp.toDate(), "dd MMM"),
-            dayNum: format(m.timestamp.toDate(), "dd"),
-            weight: m.weight_kg,
-            height: m.height_cm,
-        }));
+        return metrics.map(m => {
+            const date = m.timestamp.toDate();
+            return {
+                date: format(date, "MMM dd, HH:mm"),
+                shortDate: format(date, "dd MMM"),
+                timeLabel: format(date, "HH:mm"),
+                weight: m.weight_kg,
+                height: m.height_cm,
+            };
+        });
     }, [metrics]);
 
     const currentWeight = metrics.length > 0 ? metrics[metrics.length - 1].weight_kg : 0;
@@ -101,6 +133,15 @@ export default function BodyMetrics() {
         { label: "Kcal", value: stats.kcal, icon: Flame, color: "#FF9F0A", bg: "rgba(255,159,10,0.12)" },
         { label: "Minutes", value: stats.mins, icon: Clock, color: "#0A84FF", bg: "rgba(10,132,255,0.12)" },
     ];
+
+    if (loading && metrics.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="w-8 h-8 animate-spin text-[#0A84FF]" />
+                <p className="text-sm text-[var(--text-muted)]">Synchronizing biometrics…</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 pb-32">
@@ -180,11 +221,11 @@ export default function BodyMetrics() {
                         <div className="flex gap-4">
                             <div className="flex-1">
                                 <label className="label">Weight (kg)</label>
-                                <input type="number" step="0.1" value={weight} onChange={e => setWeight(parseFloat(e.target.value) || 0)} className="field" />
+                                <input type="number" step="0.01" value={weight} onChange={e => setWeight(parseFloat(e.target.value) || 0)} className="field" />
                             </div>
                             <div className="flex-1">
                                 <label className="label">Height (cm)</label>
-                                <input type="number" value={height} onChange={e => setHeight(parseFloat(e.target.value) || 0)} className="field" />
+                                <input type="number" step="0.1" value={height} onChange={e => setHeight(parseFloat(e.target.value) || 0)} className="field" />
                             </div>
                         </div>
                         <div className="flex gap-2">
@@ -198,18 +239,18 @@ export default function BodyMetrics() {
                             <div>
                                 <div className="text-sm text-[var(--text-muted)] font-medium mb-1">Current Weight</div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{currentWeight.toFixed(1)}</span>
+                                    <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{currentWeight.toFixed(2)}</span>
                                     <span className="text-xl font-bold text-[var(--text-muted)]">kg</span>
                                 </div>
                             </div>
                             <div className="text-right space-y-1.5">
                                 <div className="flex justify-between gap-5 text-sm">
                                     <span className="text-[var(--text-muted)] font-medium">Highest</span>
-                                    <span className="font-bold stat-num text-[var(--text-primary)]">{heaviest.toFixed(1)}</span>
+                                    <span className="font-bold stat-num text-[var(--text-primary)]">{heaviest.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between gap-5 text-sm">
                                     <span className="text-[var(--text-muted)] font-medium">Lowest</span>
-                                    <span className="font-bold stat-num text-[var(--text-primary)]">{lightest.toFixed(1)}</span>
+                                    <span className="font-bold stat-num text-[var(--text-primary)]">{lightest.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
@@ -223,37 +264,37 @@ export default function BodyMetrics() {
                                         <ResponsiveContainer width="100%" height="100%">
                                             <LineChart data={weightData.slice(-30)} margin={{ top: 8, right: 8, left: -28, bottom: 0 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                                <XAxis dataKey="dayNum" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10, fontWeight: 500 }} dy={8} interval="preserveStartEnd" />
+                                                <XAxis dataKey="timeLabel" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10, fontWeight: 500 }} dy={8} interval="preserveStartEnd" />
                                                 <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} />
                                                 <Tooltip
                                                     contentStyle={{ background: "rgba(18,18,26,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "6px 12px", fontSize: 12 }}
                                                     labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
                                                     itemStyle={{ color: "#0A84FF", fontWeight: 700 }}
-                                                    formatter={(v: any) => [`${v} kg`, "Weight"]}
+                                                    formatter={(v: any) => [`${v.toFixed(2)} kg`, "Weight"]}
                                                 />
-                                                <Line type="monotone" dataKey="weight" stroke="#0A84FF" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#0A84FF", stroke: "white", strokeWidth: 2 }} />
+                                                <Line type="monotone" dataKey="weight" stroke="#0A84FF" strokeWidth={2.5} dot={{ r: 4, fill: "#0A84FF", strokeWidth: 0 }} activeDot={{ r: 6, fill: "#0A84FF", stroke: "white", strokeWidth: 2 }} />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
 
                                 {/* Height chart — only if height varies or there are multiple entries */}
-                                {weightData.length > 1 && (
+                                {weightData.length > 0 && (
                                     <div>
                                         <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Height (cm) — logged history</div>
                                         <div className="h-32 w-full">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <LineChart data={weightData.slice(-30)} margin={{ top: 8, right: 8, left: -28, bottom: 0 }}>
                                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                                    <XAxis dataKey="dayNum" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} dy={8} interval="preserveStartEnd" />
+                                                    <XAxis dataKey="timeLabel" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} dy={8} interval="preserveStartEnd" />
                                                     <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} />
                                                     <Tooltip
                                                         contentStyle={{ background: "rgba(18,18,26,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "6px 12px", fontSize: 12 }}
                                                         labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
                                                         itemStyle={{ color: "#30D158", fontWeight: 700 }}
-                                                        formatter={(v: any) => [`${v} cm`, "Height"]}
+                                                        formatter={(v: any) => [`${v.toFixed(2)} cm`, "Height"]}
                                                     />
-                                                    <Line type="monotone" dataKey="height" stroke="#30D158" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#30D158", stroke: "white", strokeWidth: 2 }} />
+                                                    <Line type="monotone" dataKey="height" stroke="#30D158" strokeWidth={2.5} dot={{ r: 4, fill: "#30D158", strokeWidth: 0 }} activeDot={{ r: 6, fill: "#30D158", stroke: "white", strokeWidth: 2 }} />
                                                 </LineChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -267,6 +308,41 @@ export default function BodyMetrics() {
                     </div>
                 )}
             </div>
+
+            {/* Historical body log table */}
+            {metrics.length > 0 && (
+                <div className="card p-5">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Historical Log</h3>
+                        <span className="text-[10px] text-[var(--text-muted)]">{metrics.length} entries</span>
+                    </div>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
+                        {[...metrics].reverse().map((m, i) => (
+                            <div key={m.id || i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition-colors">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-[var(--text-primary)]">
+                                        {format(m.timestamp.toDate(), "MMM dd, yyyy")}
+                                    </span>
+                                    <span className="text-[10px] text-[var(--text-muted)]">
+                                        {format(m.timestamp.toDate(), "EEEE, h:mm a")}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right">
+                                        <div className="text-xs font-bold text-[var(--text-primary)] stat-num">{m.weight_kg.toFixed(2)} <span className="text-[10px] text-[var(--text-muted)]">kg</span></div>
+                                        <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter font-semibold">Weight</div>
+                                    </div>
+                                    <div className="w-px h-6 bg-white/10" />
+                                    <div className="text-right min-w-[50px]">
+                                        <div className="text-xs font-bold text-[var(--text-primary)] stat-num">{m.height_cm.toFixed(2)} <span className="text-[10px] text-[var(--text-muted)]">cm</span></div>
+                                        <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter font-semibold">Height</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* BMI Section */}
             <div>
@@ -282,7 +358,7 @@ export default function BodyMetrics() {
 
                 <div className="card p-6">
                     <div className="flex justify-between items-center mb-8">
-                        <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{bmi.toFixed(1)}</span>
+                        <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{bmi.toFixed(2)}</span>
                         <div
                             className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold"
                             style={{ color: bmiCategory.color, background: `${bmiCategory.color}18`, borderColor: `${bmiCategory.color}40` }}
@@ -312,7 +388,7 @@ export default function BodyMetrics() {
                     <div className="border-t border-white/[0.06] pt-4 flex justify-between items-center">
                         <span className="text-[var(--text-muted)] font-medium">Height</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-lg font-bold stat-num text-[var(--text-primary)]">{height}</span>
+                            <span className="text-lg font-bold stat-num text-[var(--text-primary)]">{height.toFixed(2)}</span>
                             <span className="text-[var(--text-muted)] font-bold">cm</span>
                         </div>
                     </div>

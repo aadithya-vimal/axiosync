@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Dumbbell, CalendarDays } from "lucide-react";
+import { Activity, Dumbbell, CalendarDays, LineChart as ChartIcon, Accessibility } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Timestamp } from "firebase/firestore";
 import type { MuscleGroup } from "@/lib/WorkoutEngine";
+import BodyMetrics from "./BodyMetrics";
 
 // Import using dynamic to prevent SSR issues
 const BodyModel = dynamic(() => import("react-body-highlighter"), { ssr: false });
@@ -28,7 +29,6 @@ const MUSCLE_BUTTONS: { id: MuscleGroup; label: string; color: string }[] = [
     { id: "calves",     label: "Calves",     color: "#14B8A6" },
 ];
 
-// Map MuscleGroup → react-body-highlighter muscle name
 const MUSCLE_MAP: Record<string, string[]> = {
     chest:      ["chest"],
     back:       ["upper-back", "lower-back", "trapezius"],
@@ -41,6 +41,7 @@ const MUSCLE_MAP: Record<string, string[]> = {
     biceps:     ["biceps"],
     triceps:    ["triceps"],
 };
+
 const REVERSE_MAP: Record<string, MuscleGroup> = {
     "chest": "chest", "upper-back": "back", "lower-back": "back", "trapezius": "back",
     "front-deltoids": "shoulders", "back-deltoids": "shoulders",
@@ -49,10 +50,10 @@ const REVERSE_MAP: Record<string, MuscleGroup> = {
     "calves": "calves", "biceps": "biceps", "triceps": "triceps",
 };
 
-export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
+export default function BodyAnalytics({ recentWorkouts, nutrientAura }: BodyAnalyticsProps) {
+    const [view, setView] = useState<"anatomy" | "metrics">("anatomy");
     const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | null>(null);
 
-    // Derive recently-worked muscles for passive highlighting
     const recentMuscles = useMemo<MuscleGroup[]>(() => {
         const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
         const seen = new Set<MuscleGroup>();
@@ -69,7 +70,6 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
 
     const activeMuscles: MuscleGroup[] = selectedMuscle ? [selectedMuscle] : recentMuscles;
 
-    // Build data array for react-body-highlighter
     const bodyData: any[] = useMemo(() => {
         let muscles: string[] = [];
         activeMuscles.forEach(m => {
@@ -100,129 +100,172 @@ export default function BodyAnalytics({ recentWorkouts }: BodyAnalyticsProps) {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div>
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Biometric Analytics</h2>
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                    {selectedMuscle
-                        ? `Showing ${selectedMuscle} training history (last 7 days)`
-                        : "Tap a muscle group or click on the body map to filter history."}
-                </p>
+            {/* View Toggle */}
+            <div className="flex bg-white/[0.04] p-1 rounded-2xl border border-white/[0.06] w-fit mx-auto sm:mx-0">
+                <button
+                    onClick={() => setView("anatomy")}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${view === "anatomy" ? "bg-white/[0.08] text-white shadow-lg" : "text-[var(--text-muted)] hover:text-white"}`}
+                >
+                    <Accessibility className="w-4 h-4" />
+                    Anatomy
+                </button>
+                <button
+                    onClick={() => setView("metrics")}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${view === "metrics" ? "bg-white/[0.08] text-white shadow-lg" : "text-[var(--text-muted)] hover:text-white"}`}
+                >
+                    <ChartIcon className="w-4 h-4" />
+                    Metrics
+                </button>
             </div>
 
-            {/* Muscle selector chips */}
-            <div className="flex flex-wrap gap-2">
-                {MUSCLE_BUTTONS.map(m => {
-                    const isWorked = recentMuscles.includes(m.id);
-                    const isSelected = selectedMuscle === m.id;
-                    return (
-                        <motion.button
-                            key={m.id}
-                            whileTap={{ scale: 0.93 }}
-                            onClick={() => setSelectedMuscle(prev => prev === m.id ? null : m.id)}
-                            className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200"
-                            style={
-                                isSelected
-                                    ? { background: `${m.color}28`, border: `1.5px solid ${m.color}`, color: m.color }
-                                    : isWorked
-                                        ? { background: `${m.color}12`, border: `1px solid ${m.color}40`, color: m.color, opacity: 0.85 }
-                                        : { background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--text-muted)" }
-                            }
-                        >
-                            {isWorked && !isSelected && <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5" style={{ background: m.color }} />}
-                            {m.label}
-                        </motion.button>
-                    );
-                })}
-                {selectedMuscle && (
-                    <button
-                        onClick={() => setSelectedMuscle(null)}
-                        className="px-3 py-1.5 rounded-full text-xs font-semibold text-zinc-400 border border-white/10 hover:border-white/20 transition-colors"
-                    >
-                        ✕ Clear
-                    </button>
-                )}
-            </div>
-
-            {/* Body map — LARGE, dual view */}
-            <div className="w-full rounded-3xl border border-white/[0.06] bg-[#0F172A]/60 p-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-8">
-                <div>
-                    <p className="text-center text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-2">Front</p>
-                    <div className="w-[220px] sm:w-[260px]">
-                        <BodyModel
-                            data={bodyData}
-                            style={{ width: "100%", height: "auto" }}
-                            bodyColor="#1e293b"
-                            highlightedColors={["#3B82F6", "#8B5CF6"]}
-                            type="anterior"
-                            onClick={handleBodyClick}
-                        />
-                    </div>
-                </div>
-                <div>
-                    <p className="text-center text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-2">Back</p>
-                    <div className="w-[220px] sm:w-[260px]">
-                        <BodyModel
-                            data={bodyData}
-                            style={{ width: "100%", height: "auto" }}
-                            bodyColor="#1e293b"
-                            highlightedColors={["#3B82F6", "#8B5CF6"]}
-                            type="posterior"
-                            onClick={handleBodyClick}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Training history */}
             <AnimatePresence mode="wait">
-                {selectedMuscle ? (
-                    <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
-                        <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] px-1">
-                            {selectedMuscle.charAt(0).toUpperCase() + selectedMuscle.slice(1)} — Recent Sessions
-                        </p>
-                        {history.length === 0 ? (
-                            <div className="rounded-2xl p-6 text-center" style={{ background: "var(--bg-elevated)", border: "1px dashed var(--border-subtle)" }}>
-                                <Activity className="w-7 h-7 text-[var(--text-muted)] mx-auto mb-2" />
-                                <p className="text-xs text-[var(--text-muted)]">No {selectedMuscle} work logged in the last 7 days.</p>
-                            </div>
-                        ) : (
-                            history.slice(0, 4).map((w, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, x: 8 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.06 }}
-                                    className="rounded-2xl p-3"
-                                    style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}
+                {view === "anatomy" ? (
+                    <motion.div
+                        key="anatomy"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-6"
+                    >
+                        {/* Anatomy Header */}
+                        <div>
+                            <h2 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Anatomy Analysis</h2>
+                            <p className="text-sm text-[var(--text-muted)] mt-1">
+                                {selectedMuscle
+                                    ? `Showing ${selectedMuscle} training history (last 7 days)`
+                                    : "Tap a muscle group or click on the body map to filter history."}
+                            </p>
+                        </div>
+
+                        {/* Muscle selector chips */}
+                        <div className="flex flex-wrap gap-2">
+                            {MUSCLE_BUTTONS.map(m => {
+                                const isWorked = recentMuscles.includes(m.id);
+                                const isSelected = selectedMuscle === m.id;
+                                return (
+                                    <motion.button
+                                        key={m.id}
+                                        whileTap={{ scale: 0.93 }}
+                                        onClick={() => setSelectedMuscle(prev => prev === m.id ? null : m.id)}
+                                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200"
+                                        style={
+                                            isSelected
+                                                ? { background: `${m.color}28`, border: `1.5px solid ${m.color}`, color: m.color }
+                                                : isWorked
+                                                    ? { background: `${m.color}12`, border: `1px solid ${m.color}40`, color: m.color, opacity: 0.85 }
+                                                    : { background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--text-muted)" }
+                                        }
+                                    >
+                                        {isWorked && !isSelected && <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5" style={{ background: m.color }} />}
+                                        {m.label}
+                                    </motion.button>
+                                );
+                            })}
+                            {selectedMuscle && (
+                                <button
+                                    onClick={() => setSelectedMuscle(null)}
+                                    className="px-3 py-1.5 rounded-full text-xs font-semibold text-zinc-400 border border-white/10 hover:border-white/20 transition-colors"
                                 >
-                                    <div className="flex items-center justify-between mb-1.5">
-                                        <div className="flex items-center gap-2">
-                                            <Dumbbell className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                                            <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{w.name}</span>
+                                    ✕ Clear
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Body map — LARGE, dual view */}
+                        <div className="w-full rounded-3xl border border-white/[0.06] bg-[#0F172A]/60 p-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-8">
+                            <div className="relative">
+                                <p className="text-center text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-2">Front</p>
+                                {nutrientAura && (
+                                    <motion.div 
+                                        animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }}
+                                        transition={{ duration: 4, repeat: Infinity }}
+                                        className="absolute inset-0 bg-blue-500/10 blur-[40px] rounded-full pointer-events-none" 
+                                    />
+                                )}
+                                <div className="w-[220px] sm:w-[260px] relative z-10">
+                                    <BodyModel
+                                        data={bodyData}
+                                        style={{ width: "100%", height: "auto" }}
+                                        bodyColor="#1e293b"
+                                        highlightedColors={["#3B82F6", "#8B5CF6"]}
+                                        type="anterior"
+                                        onClick={handleBodyClick}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-center text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-2">Back</p>
+                                <div className="w-[220px] sm:w-[260px]">
+                                    <BodyModel
+                                        data={bodyData}
+                                        style={{ width: "100%", height: "auto" }}
+                                        bodyColor="#1e293b"
+                                        highlightedColors={["#3B82F6", "#8B5CF6"]}
+                                        type="posterior"
+                                        onClick={handleBodyClick}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Training history */}
+                        <div className="min-h-[100px]">
+                            {selectedMuscle ? (
+                                <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] px-1">
+                                        {selectedMuscle.charAt(0).toUpperCase() + selectedMuscle.slice(1)} — Recent Sessions
+                                    </p>
+                                    {history.length === 0 ? (
+                                        <div className="rounded-2xl p-6 text-center" style={{ background: "var(--bg-elevated)", border: "1px dashed var(--border-subtle)" }}>
+                                            <Activity className="w-7 h-7 text-[var(--text-muted)] mx-auto mb-2" />
+                                            <p className="text-xs text-[var(--text-muted)]">No {selectedMuscle} work logged in the last 7 days.</p>
                                         </div>
-                                        <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
-                                            <CalendarDays className="w-3 h-3" />
-                                            {w.timestamp.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                                        </div>
-                                    </div>
-                                    <div className="text-[10px] text-[var(--text-muted)]">
-                                        {w.exercises?.filter((ex: any) => (ex.muscleGroup || "").toLowerCase().includes(selectedMuscle))
-                                            .slice(0, 3)
-                                            .map((ex: any, j: number) => (
-                                                <span key={j} className="mr-2">{ex.name} ({ex.sets?.length || 0}×)</span>
-                                            ))}
-                                    </div>
+                                    ) : (
+                                        history.slice(0, 4).map((w, i) => (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ opacity: 0, x: 8 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: i * 0.06 }}
+                                                className="rounded-2xl p-3"
+                                                style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}
+                                            >
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <Dumbbell className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                                                        <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{w.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+                                                        <CalendarDays className="w-3 h-3" />
+                                                        {w.timestamp.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                                    </div>
+                                                </div>
+                                                <div className="text-[10px] text-[var(--text-muted)]">
+                                                    {w.exercises?.filter((ex: any) => (ex.muscleGroup || "").toLowerCase().includes(selectedMuscle))
+                                                        .slice(0, 3)
+                                                        .map((ex: any, j: number) => (
+                                                            <span key={j} className="mr-2">{ex.name} ({ex.sets?.length || 0}×)</span>
+                                                        ))}
+                                                </div>
+                                            </motion.div>
+                                        ))
+                                    )}
                                 </motion.div>
-                            ))
-                        )}
+                            ) : (
+                                <div className="rounded-2xl p-5 text-center" style={{ background: "var(--bg-elevated)", border: "1px dashed var(--border-subtle)" }}>
+                                    <p className="text-xs text-[var(--text-muted)]">Select a muscle group above or tap on the body map to view your training history.</p>
+                                </div>
+                            )}
+                        </div>
                     </motion.div>
                 ) : (
-                    <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="rounded-2xl p-5 text-center"
-                        style={{ background: "var(--bg-elevated)", border: "1px dashed var(--border-subtle)" }}
+                    <motion.div
+                        key="metrics"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
                     >
-                        <p className="text-xs text-[var(--text-muted)]">Select a muscle group above or tap on the body map to view your training history.</p>
+                        <BodyMetrics />
                     </motion.div>
                 )}
             </AnimatePresence>
