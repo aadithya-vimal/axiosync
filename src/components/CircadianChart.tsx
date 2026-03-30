@@ -122,8 +122,26 @@ export default function CircadianChart() {
                             itemStyle={{ color: "#e2e8f0", fontSize: 12 }}
                         />
                         <ReferenceLine y={8} stroke="#22c55e" strokeDasharray="3 3" strokeOpacity={0.4} />
-                        <Area type="monotone" dataKey="sleep" stroke="#6366f1" fill="url(#sleepGrad)" strokeWidth={2} name="Sleep (h)" />
-                        <Area type="monotone" dataKey="debt" stroke="#ef4444" fill="url(#debtGrad)" strokeWidth={1.5} name="Debt (h)" />
+                        <Area 
+                            type="monotone" 
+                            dataKey="sleep" 
+                            stroke="#6366f1" 
+                            fill="url(#sleepGrad)" 
+                            strokeWidth={3} 
+                            dot={{ fill: '#6366f1', stroke: '#000', strokeWidth: 2, r: 3 }} 
+                            activeDot={{ r: 5, stroke: '#000', strokeWidth: 2 }}
+                            name="Sleep (h)" 
+                        />
+                        <Area 
+                            type="monotone" 
+                            dataKey="debt" 
+                            stroke="#ef4444" 
+                            fill="url(#debtGrad)" 
+                            strokeWidth={2} 
+                            dot={{ fill: '#ef4444', stroke: '#000', strokeWidth: 2, r: 3 }} 
+                            activeDot={{ r: 5, stroke: '#000', strokeWidth: 2 }}
+                            name="Debt (h)" 
+                        />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

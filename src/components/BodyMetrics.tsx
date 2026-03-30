@@ -142,16 +142,30 @@ export default function BodyMetrics() {
                         <span className="text-3xl font-bold stat-num text-[var(--text-primary)]">{currentWeight.toFixed(1)}</span>
                         <span className="text-lg font-bold text-[var(--text-muted)]">kg</span>
                     </div>
-                    <div className="mt-4 h-24">
+                    <div className="mt-4 h-28">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={weightData}>
+                            <AreaChart data={weightData} margin={{ top: 10, right: 10, bottom: 0, left: 10 }}>
                                 <defs>
                                     <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#0A84FF" stopOpacity={0.3}/>
                                         <stop offset="95%" stopColor="#0A84FF" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
-                                <Area type="monotone" dataKey="weight" stroke="#0A84FF" fillOpacity={1} fill="url(#colorWeight)" strokeWidth={2} />
+                                <Tooltip 
+                                    contentStyle={{ background: "#12121a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "10px" }}
+                                    itemStyle={{ color: "#0A84FF" }}
+                                    labelStyle={{ color: "var(--text-muted)" }}
+                                />
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="weight" 
+                                    stroke="#0A84FF" 
+                                    fillOpacity={1} 
+                                    fill="url(#colorWeight)" 
+                                    strokeWidth={3} 
+                                    dot={{ fill: '#0A84FF', stroke: '#000', strokeWidth: 2, r: 4 }}
+                                    activeDot={{ r: 6, stroke: '#000', strokeWidth: 2 }}
+                                />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>

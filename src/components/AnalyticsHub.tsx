@@ -153,7 +153,15 @@ function ReadinessTab({ readinessLogs, onRefresh }: { readinessLogs: ReadinessLo
                             <Tooltip content={<GlassTooltip />} />
                             <ReferenceLine y={80} stroke="#30D158" strokeDasharray="3 3" strokeOpacity={0.3} />
                             <ReferenceLine y={60} stroke="#FF9F0A" strokeDasharray="3 3" strokeOpacity={0.3} />
-                            <Line type="monotone" dataKey="score" stroke={scoreColor} strokeWidth={2.5} dot={false} name="Readiness" />
+                            <Line 
+                                type="monotone" 
+                                dataKey="score" 
+                                stroke={scoreColor} 
+                                strokeWidth={3} 
+                                dot={{ fill: scoreColor, stroke: '#000', strokeWidth: 2, r: 4 }} 
+                                activeDot={{ r: 6, stroke: '#000', strokeWidth: 2 }}
+                                name="Readiness" 
+                            />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
