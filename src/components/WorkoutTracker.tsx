@@ -8,7 +8,7 @@ import {
     Sparkles, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { addWorkoutLog, saveUserPlan, getProfile } from "@/lib/firestore";
+import { addWorkoutLog, saveUserPlan, getProfile, getOnboarding } from "@/lib/firestore";
 import { WORKOUT_PLANS, WorkoutPlan, Exercise } from "@/lib/workoutData";
 import {
     generateWorkout, FOCUS_OPTIONS, GOAL_OPTIONS, ALL_EQUIPMENT,
