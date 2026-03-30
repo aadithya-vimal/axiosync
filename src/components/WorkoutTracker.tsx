@@ -962,11 +962,13 @@ function WorkoutGenerator({ onStart }: { onStart: (plan: WorkoutPlan) => void })
 export default function WorkoutTracker({
     initialPlan,
     onClearPlan,
-    onRefresh
+    onRefresh,
+    onStateChange
 }: {
     initialPlan?: WorkoutPlan;
     onClearPlan?: () => void;
     onRefresh?: () => Promise<void>;
+    onStateChange?: (state: EngineState) => void;
 } = {}) {
     const { user } = useAuth();
     const [engineState, setEngineState] = useState<EngineState>(initialPlan ? "active" : "browse");
@@ -976,12 +978,16 @@ export default function WorkoutTracker({
     const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [activeTab, setActiveTab] = useState<"generate" | "strength" | "hiit" | "core" | "cardio" | "all">("all");
 
+    // Notify parent of state change
+    useEffect(() => {
+        if (onStateChange) onStateChange(engineState);
+    }, [engineState, onStateChange]);
+
     // Fetch user weight
     useEffect(() => {
         if (user) {
-            getProfile(user.uid).then(p => {
-                if (p?.goals?.weight_kg) setUserWeight(p.goals.weight_kg);
-                else if ((p as any)?.weight_kg) setUserWeight((p as any).weight_kg);
+            getOnboarding(user.uid).then(p => {
+                if (p?.weight_kg) setUserWeight(p.weight_kg);
             });
         }
     }, [user]);

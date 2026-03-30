@@ -34,6 +34,7 @@ export default function TrainingSection({
     initialWorkoutPlan,
     onClearWorkoutPlan,
     onRefresh,
+    onWorkoutStateChange,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
@@ -47,6 +48,7 @@ export default function TrainingSection({
     initialWorkoutPlan?: any;
     onClearWorkoutPlan?: () => void;
     onRefresh?: () => Promise<void>;
+    onWorkoutStateChange?: (state: string) => void;
 }) {
     const [subView, setSubView] = useState<"home" | "strength" | "cardio">("home");
     const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
@@ -111,6 +113,7 @@ export default function TrainingSection({
                     initialPlan={activeWorkoutPlan}
                     onClearPlan={onClearWorkoutPlan}
                     onRefresh={onRefresh}
+                    onStateChange={onWorkoutStateChange}
                 />
             </div>
         );

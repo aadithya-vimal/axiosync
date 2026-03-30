@@ -80,6 +80,29 @@ export default function DashboardPage() {
   const [todayCalories, setTodayCalories] = useState(0);
   const [todayProteinG, setTodayProteinG] = useState(0);
   const [activeWorkoutPlan, setActiveWorkoutPlan] = useState<any>(null);
+  const [workoutActive, setWorkoutWorkoutActive] = useState(false);
+
+  // Prevent accidental tab closure
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (workoutActive) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [workoutActive]);
+
+  const confirmSwitch = useCallback((newSection: Section) => {
+    if (workoutActive) {
+      if (confirm("Workout in progress. Switching tabs will exit the session. Continue?")) {
+        setSection(newSection);
+      }
+    } else {
+      setSection(newSection);
+    }
+  }, [workoutActive]);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -186,6 +209,7 @@ export default function DashboardPage() {
             initialWorkoutPlan={activeWorkoutPlan}
             onClearWorkoutPlan={() => setActiveWorkoutPlan(null)}
             onRefresh={refreshBodyState}
+            onWorkoutStateChange={(s) => setWorkoutWorkoutActive(s === "active" || s === "rest")}
           />
         )}
 
@@ -274,7 +298,7 @@ export default function DashboardPage() {
               return (
                 <motion.button
                   key={id}
-                  onClick={() => setSection(id)}
+                  onClick={() => confirmSwitch(id)}
                   whileHover={{ backgroundColor: "var(--border-subtle)" }}
                   whileTap={{ scale: 0.97 }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl font-medium transition-colors duration-200 text-left relative overflow-hidden ${isActive ? "bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]" : "text-[var(--text-muted)]"}`}
@@ -371,7 +395,7 @@ export default function DashboardPage() {
               return (
                 <motion.button
                   key={id}
-                  onClick={() => setSection(id)}
+                  onClick={() => confirmSwitch(id)}
                   whileTap={{ scale: 0.82 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   className="flex flex-1 flex-col items-center justify-center gap-1 py-3 min-w-0 relative"
