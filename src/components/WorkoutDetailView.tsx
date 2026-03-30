@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Target, Dumbbell, Flame, CheckCircle2, ChevronRight, Info, Eye } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -41,7 +42,26 @@ export default function WorkoutDetailView({ workout, onClose, onStart }: Props) 
         ? (workout.createdAt.toDate?.() || new Date(workout.createdAt)).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
         : null;
 
-    const muscles = workout?.muscle_groups || workout?.targetMuscles || [];
+    const muscles = useMemo(() => {
+        if (workout?.muscle_groups && workout.muscle_groups.length > 0) return workout.muscle_groups;
+        if (workout?.targetMuscles && workout.targetMuscles.length > 0) return workout.targetMuscles;
+        
+        // Derive from exercises
+        const extracted = new Set<string>();
+        workout?.exercises?.forEach((ex: any) => {
+            let mg = ex.muscleGroup || ex.exercise?.muscleGroup;
+            
+            // If missing, try to find in database by name
+            if (!mg && ex.name) {
+                const found = EXERCISE_DATABASE.find(dbEx => dbEx.name.toLowerCase() === ex.name.toLowerCase());
+                if (found) mg = found.muscleGroup;
+            }
+            
+            if (mg) extracted.add(mg);
+        });
+        return Array.from(extracted);
+    }, [workout]);
+
     const exercises = workout?.exercises || [];
 
     return (
@@ -85,7 +105,7 @@ export default function WorkoutDetailView({ workout, onClose, onStart }: Props) 
                             {/* Muscle Map Section */}
                             <div className="flex flex-col md:flex-row gap-8 items-center bg-white/[0.02] rounded-[24px] p-6 border border-white/[0.05]">
                                 <div className="w-full md:w-[180px] shrink-0 flex items-center justify-center">
-                                    <AnatomyMap activeMuscles={muscles} />
+                                    <AnatomyMap targetMuscles={muscles} />
                                 </div>
                                 <div className="flex-1 space-y-3">
                                     <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-2">

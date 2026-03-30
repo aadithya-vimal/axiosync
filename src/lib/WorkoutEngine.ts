@@ -720,10 +720,21 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
     const computedSets = Math.max(1, Math.round(scheme.sets * intensityConfig.setsMultiplier));
 
     // Filter exercises by equipment AND difficulty
-    const eligible = EXERCISE_DATABASE.filter(ex =>
-        ex.equipment.some(eq => availableEquipment.includes(eq)) &&
-        ex.difficulty <= effectiveDifficultyMax
-    );
+    const eligible = EXERCISE_DATABASE.filter(ex => {
+        // Must have all required equipment. 
+        // We handle some alternatives (bench/chair, dumbbell/kettlebell) as interchangeable for logic.
+        const hasAllEquipment = ex.equipment.every(req => {
+            if (availableEquipment.includes(req)) return true;
+            if (req === "resistance_band" && availableEquipment.includes("bands")) return true;
+            if (req === "bands" && availableEquipment.includes("resistance_band")) return true;
+            if (req === "bench" && availableEquipment.includes("chair")) return true;
+            if (req === "chair" && availableEquipment.includes("bench")) return true;
+            if (req === "dumbbell" && availableEquipment.includes("kettlebell")) return true;
+            if (req === "kettlebell" && availableEquipment.includes("dumbbell")) return true;
+            return false;
+        });
+        return hasAllEquipment && ex.difficulty <= effectiveDifficultyMax;
+    });
 
     // Style dictates modality
     const modalFilter = styleConfig.modalFilter;

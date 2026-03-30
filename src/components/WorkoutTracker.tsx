@@ -31,6 +31,7 @@ interface SetLog {
 interface ExerciseLog {
     exerciseId: string;
     name: string;
+    muscleGroup: string;
     sets: SetLog[];
 }
 
@@ -489,8 +490,10 @@ function CompleteView({
                 duration_min: Math.round(session.elapsed / 60),
                 exercises: session.sessionLogs.map(log => ({
                     name: log.name,
+                    muscleGroup: log.muscleGroup,
                     sets: log.sets.filter(s => s.completed).map(s => ({ reps: s.reps, weight_kg: s.weightKg })),
                 })),
+                muscle_groups: Array.from(new Set(session.sessionLogs.map(l => l.muscleGroup))),
                 total_volume_kg: totalVolume,
                 notes: `Completed via Axiosync Workout Engine`,
             });
@@ -927,6 +930,7 @@ export default function WorkoutTracker({
             const logs: ExerciseLog[] = initialPlan.exercises.map(ex => ({
                 exerciseId: ex.id || String(Math.random()),
                 name: ex.name,
+                muscleGroup: ex.muscleGroup,
                 sets: Array.from({ length: ex.sets }, () => ({ reps: typeof ex.reps === "number" ? ex.reps : 12, weightKg: ex.weightKg ?? 0, completed: false })),
             }));
             setSession({
@@ -958,6 +962,7 @@ export default function WorkoutTracker({
         const logs: ExerciseLog[] = plan.exercises.map(ex => ({
             exerciseId: ex.id,
             name: ex.name,
+            muscleGroup: ex.muscleGroup,
             sets: Array.from({ length: ex.sets }, () => ({ reps: typeof ex.reps === "number" ? ex.reps : 12, weightKg: ex.weightKg ?? 0, completed: false })),
         }));
         setSession({

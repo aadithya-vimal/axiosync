@@ -19,15 +19,31 @@ export default function BodyMap2D({
     // Map our local MuscleGroup system to react-body-highlighter strings
     const MUSCLE_MAP: Record<string, string[]> = {
         chest: ["chest"],
+        upper_chest: ["chest"],
         back: ["upper-back", "lower-back", "trapezius"],
+        lats: ["upper-back"],
+        rhomboids: ["upper-back"],
+        traps: ["trapezius"],
+        lower_back: ["lower-back"],
         shoulders: ["front-deltoids", "back-deltoids"],
+        front_delts: ["front-deltoids"],
+        rear_delts: ["back-deltoids"],
         core: ["abs", "obliques"],
+        obliques: ["obliques"],
+        lower_abs: ["abs"],
+        upper_abs: ["abs"],
         quads: ["quadriceps"],
+        adductors: ["adductor"],
+        hip_flexors: ["quadriceps"],
         glutes: ["gluteal"],
         hamstrings: ["hamstring"],
         calves: ["calves"],
         biceps: ["biceps"],
         triceps: ["triceps"],
+        forearms: ["forearm"],
+        grip: ["forearm"],
+        arms: ["biceps", "triceps", "forearm"],
+        neck: ["trapezius"],
         cardio: ["chest"], // Cardio doesn't have a distinct muscle, highlight chest (heart)
         full_body: ["chest", "upper-back", "lower-back", "trapezius", "front-deltoids", "back-deltoids", "abs", "obliques", "quadriceps", "gluteal", "hamstring", "calves", "biceps", "triceps"]
     };
@@ -47,6 +63,8 @@ export default function BodyMap2D({
         "calves": "calves",
         "biceps": "biceps",
         "triceps": "triceps",
+        "forearm": "forearms",
+        "adductor": "adductors",
     };
 
     const exerciseData: any[] = useMemo(() => {
