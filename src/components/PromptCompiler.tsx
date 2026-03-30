@@ -60,10 +60,18 @@ function buildPrompt(opts: {
     const totalVolume = workouts.reduce((a, w) => a + (w.total_volume_kg || 0), 0);
     const avgSleep = sleep.length ?
         sleep.reduce((a, s) => a + (s.duration_hours || 0), 0) / sleep.length : 0;
+    
+    // Fix: divide by number of days logged, not number of meal logs
+    const loggedDaysCount = nutritionFreq.days || 1;
     const avgCalories = nutrition.length ?
-        nutrition.reduce((a, n) => a + (n.calories || 0), 0) / nutrition.length : 0;
+        nutrition.reduce((a, n) => a + (n.calories || 0), 0) / loggedDaysCount : 0;
     const avgProtein = nutrition.length ?
-        nutrition.reduce((a, n) => a + (n.protein_g || 0), 0) / nutrition.length : 0;
+        nutrition.reduce((a, n) => a + (n.protein_g || 0), 0) / loggedDaysCount : 0;
+    const avgCarbs = nutrition.length ?
+        nutrition.reduce((a, n) => a + (n.carbs_g || 0), 0) / loggedDaysCount : 0;
+    const avgFat = nutrition.length ?
+        nutrition.reduce((a, n) => a + (n.fat_g || 0), 0) / loggedDaysCount : 0;
+
     const avgReadiness = readiness.length ?
         readiness.reduce((a, r) => a + r.readiness_pct, 0) / readiness.length : 0;
     const latestHRV = readiness[0]?.hrv_ms;

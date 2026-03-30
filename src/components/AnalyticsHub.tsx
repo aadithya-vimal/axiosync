@@ -206,8 +206,16 @@ function TrainingTab({ workouts }: { workouts: WorkoutLog[]; }) {
     const volumeData = Object.entries(volumeByDay).map(([date, vol]) => ({ date, vol: Math.round(vol) })).reverse();
 
     const muscleData: Record<string, number> = {};
+    const MG_MAP: Record<string, string> = {
+        "chest": "Chest", "back": "Back", "shoulders": "Shoulders", 
+        "biceps": "Arms", "triceps": "Arms", "quads": "Legs", 
+        "hamstrings": "Legs", "glutes": "Legs", "calves": "Legs", 
+        "core": "Core", "full_body": "Full Body", "cardio": "Cardio"
+    };
+
     workouts.forEach(w => w.exercises?.forEach(ex => {
-        const mg = (ex as any).muscleGroup || "other";
+        const rawMg = (ex as any).muscleGroup || "other";
+        const mg = MG_MAP[rawMg] || "Other";
         muscleData[mg] = (muscleData[mg] || 0) + (ex.sets?.length || 0);
     }));
     const muscleChartData = Object.entries(muscleData).map(([name, sets]) => ({ name, sets })).sort((a, b) => b.sets - a.sets);

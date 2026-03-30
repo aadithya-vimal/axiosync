@@ -254,7 +254,12 @@ export const EXERCISE_DATABASE: Exercise[] = [
   { id: "yoga_flow_plank_115", name: "Yoga/Flow Plank", muscleGroup: "core", secondaryMuscles: ["shoulders","obliques"], equipment: ["floor"], difficulty: 1, isCompound: true, modality: "mobility", instructions: "Perform the Plank using the Yoga/Flow variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 65 },
   { id: "close_grip_stance_plank_116", name: "Close-Grip/Stance Plank", muscleGroup: "core", secondaryMuscles: ["shoulders","obliques"], equipment: ["floor"], difficulty: 2, isCompound: true, modality: "isometric", instructions: "Perform the Plank using the Close-Grip/Stance variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 45 },
   { id: "wide_grip_stance_plank_117", name: "Wide-Grip/Stance Plank", muscleGroup: "core", secondaryMuscles: ["shoulders","obliques"], equipment: ["floor"], difficulty: 1, isCompound: true, modality: "isometric", instructions: "Perform the Plank using the Wide-Grip/Stance variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 45 },
-  { id: "standard_row_118", name: "Row", muscleGroup: "back", secondaryMuscles: ["biceps","rear_delts"], equipment: ["dumbbell"], difficulty: 1, isCompound: true, modality: "strength", instructions: "Perform the Row using the Standard variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "standard_row_118", name: "Dumbbell Row", muscleGroup: "back", secondaryMuscles: ["biceps", "rear_delts"], equipment: ["dumbbell"], difficulty: 1, isCompound: true, modality: "strength", instructions: "Perform the Row using the Standard variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "inverted_row_table", name: "Table Inverted Row", muscleGroup: "back", secondaryMuscles: ["biceps", "core"], equipment: ["chair", "bench"], difficulty: 2, isCompound: true, modality: "strength", instructions: "Lie under a sturdy table, grab the edge, and pull your chest up.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "doorway_row", name: "Doorway Row", muscleGroup: "back", secondaryMuscles: ["biceps"], equipment: ["bodyweight"], difficulty: 1, isCompound: true, modality: "strength", instructions: "Stand in a doorway, grab the frame, and lean back, then pull yourself forward.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "towel_row_floor", name: "Towel Floor Row", muscleGroup: "back", secondaryMuscles: ["biceps", "core"], equipment: ["towel", "floor"], difficulty: 2, isCompound: true, modality: "strength", instructions: "Sit on the floor, loop a towel around your feet, and pull while resisting with your legs.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "superman_row", name: "Superman Row", muscleGroup: "back", secondaryMuscles: ["lower_back", "rear_delts"], equipment: ["bodyweight"], difficulty: 1, isCompound: false, modality: "strength", instructions: "Lie face down, lift chest and legs, and pull elbows back as if rowing.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "backpack_row", name: "Backpack Row", muscleGroup: "back", secondaryMuscles: ["biceps"], equipment: ["backpack"], difficulty: 1, isCompound: true, modality: "strength", instructions: "Bend over and row a weighted backpack towards your hip.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
   { id: "tempo__3_1_3__row_119", name: "Tempo (3-1-3) Row", muscleGroup: "back", secondaryMuscles: ["biceps","rear_delts"], equipment: ["dumbbell"], difficulty: 2, isCompound: true, modality: "strength", instructions: "Perform the Row using the Tempo (3-1-3) variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 15 },
   { id: "explosive_row_120", name: "Explosive Row", muscleGroup: "back", secondaryMuscles: ["biceps","rear_delts"], equipment: ["dumbbell"], difficulty: 2, isCompound: true, modality: "plyometric", instructions: "Perform the Row using the Explosive variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
   { id: "isometric_hold_row_121", name: "Isometric Hold Row", muscleGroup: "back", secondaryMuscles: ["biceps","rear_delts"], equipment: ["dumbbell"], difficulty: 2, isCompound: true, modality: "isometric", instructions: "Perform the Row using the Isometric Hold variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 30 },
@@ -750,10 +755,31 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
         effectiveModalFilter.includes(ex.modality)
     );
 
-    // Compounds first, then isolation
-    const compounds = shuffle(working_candidates.filter(e => e.isCompound));
-    const isolations = shuffle(working_candidates.filter(e => !e.isCompound));
-    const workingExercises = [...compounds, ...isolations].slice(0, exerciseCount);
+    let workingExercises: Exercise[] = [];
+
+    if (focus === "full body") {
+        // Balanced selection: 1 Pull, 1 Push, 1 Legs, 1 Core, then fill rest with compounds
+        const pull = shuffle(working_candidates.filter(e => ["back", "biceps"].includes(e.muscleGroup)));
+        const push = shuffle(working_candidates.filter(e => ["chest", "shoulders", "triceps"].includes(e.muscleGroup)));
+        const legs = shuffle(working_candidates.filter(e => ["quads", "hamstrings", "glutes"].includes(e.muscleGroup)));
+        const core = shuffle(working_candidates.filter(e => ["core", "obliques"].includes(e.muscleGroup)));
+
+        if (pull[0]) workingExercises.push(pull[0]);
+        if (push[0]) workingExercises.push(push[0]);
+        if (legs[0]) workingExercises.push(legs[0]);
+        if (core[0]) workingExercises.push(core[0]);
+
+        const remaining = shuffle(working_candidates.filter(e => !workingExercises.includes(e)));
+        workingExercises = [...workingExercises, ...remaining].slice(0, exerciseCount);
+        
+        // Ensure priority: compound movements first
+        workingExercises.sort((a, b) => (b.isCompound ? 1 : 0) - (a.isCompound ? 1 : 0));
+    } else {
+        // Compounds first, then isolation
+        const compounds = shuffle(working_candidates.filter(e => e.isCompound));
+        const isolations = shuffle(working_candidates.filter(e => !e.isCompound));
+        workingExercises = [...compounds, ...isolations].slice(0, exerciseCount);
+    }
 
     // Warmup: 2-3 mobility/low-difficulty exercises
     const warmupCandidates = shuffle(eligible.filter(ex =>
@@ -763,12 +789,15 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
     const warmupCount = duration <= 15 ? 1 : duration <= 30 ? 2 : 3;
     const warmupExercises = warmupCandidates.slice(0, warmupCount);
 
-    const buildSet = (ex: Exercise, is_warmup: boolean): GeneratedSet => {
+    const buildSet = (ex: Exercise, is_warmup: boolean, setIndex: number): GeneratedSet => {
         const isDuration = !!ex.duration_s;
+        // Simple progressive overload: slightly increase RPE/intensity for later sets
+        const rpeBoost = !is_warmup ? Math.min(1, Math.floor(setIndex / 2)) : 0;
+        
         return {
             reps: isDuration ? `${ex.duration_s}s` : scheme.reps,
             restSeconds: is_warmup ? 30 : computedRest,
-            rpe: is_warmup ? 5 : scheme.rpe,
+            rpe: is_warmup ? 5 : Math.min(10, scheme.rpe + rpeBoost),
             weightKg: 0,
             isWarmup: is_warmup,
         };
@@ -776,12 +805,12 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
 
     const warmup: GeneratedExercise[] = warmupExercises.map(ex => ({
         exercise: ex,
-        sets: [buildSet(ex, true)],
+        sets: [buildSet(ex, true, 0)],
     }));
 
     const working: GeneratedExercise[] = workingExercises.map(ex => ({
         exercise: ex,
-        sets: Array.from({ length: computedSets }, () => buildSet(ex, false)),
+        sets: Array.from({ length: computedSets }, (_, i) => buildSet(ex, false, i)),
     }));
 
     const musclesWorked: MuscleGroup[] = Array.from(new Set([

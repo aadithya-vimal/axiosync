@@ -8,7 +8,7 @@ import {
     Sparkles, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { addWorkoutLog, saveUserPlan } from "@/lib/firestore";
+import { addWorkoutLog, saveUserPlan, getProfile } from "@/lib/firestore";
 import { WORKOUT_PLANS, WorkoutPlan, Exercise } from "@/lib/workoutData";
 import {
     generateWorkout, FOCUS_OPTIONS, GOAL_OPTIONS, ALL_EQUIPMENT,
@@ -42,6 +42,7 @@ interface SessionState {
     sessionLogs: ExerciseLog[];
     startedAt: Date;
     elapsed: number; // seconds
+    userWeight: number; // For BW volume calculation
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -52,9 +53,13 @@ function formatTime(s: number): string {
     return `${m}:${sec}`;
 }
 
-function calcTotalVolume(logs: ExerciseLog[]): number {
+function calcTotalVolume(logs: ExerciseLog[], userWeight: number): number {
     return logs.reduce((total, ex) =>
-        total + ex.sets.reduce((s, set) => s + (set.completed ? set.reps * set.weightKg : 0), 0),
+        total + ex.sets.reduce((s, set) => {
+            if (!set.completed) return s;
+            const weightUsed = set.weightKg === 0 ? userWeight * 0.6 : set.weightKg;
+            return s + (set.reps * weightUsed);
+        }, 0),
         0
     );
 }
@@ -358,7 +363,7 @@ function ActiveExercise({
                                 <span className="text-[var(--text-muted)]">Set {i + 1}</span>
                                 <span className="text-[var(--text-primary)] font-semibold stat-num">
                                     {s.reps} reps {s.weightKg > 0 ? `× ${s.weightKg}kg` : "(BW)"}
-                                    <span className="text-[var(--text-muted)] ml-2">= {(s.reps * s.weightKg).toFixed(0)}kg vol</span>
+                                    <span className="text-[var(--text-muted)] ml-2">= {(s.reps * (s.weightKg === 0 ? session.userWeight * 0.6 : s.weightKg)).toFixed(0)}kg vol</span>
                                 </span>
                             </div>
                         ))}
@@ -511,7 +516,7 @@ function CompleteView({
     onClose: () => void;
     onRefresh?: () => Promise<void>;
 }) {
-    const totalVolume = calcTotalVolume(session.sessionLogs);
+    const totalVolume = calcTotalVolume(session.sessionLogs, session.userWeight);
     const completedSets = session.sessionLogs.reduce((a, ex) => a + ex.sets.filter(s => s.completed).length, 0);
     const totalSets = session.plan.exercises.reduce((a, ex) => a + ex.sets, 0);
     const { user } = useAuth();
@@ -530,11 +535,14 @@ function CompleteView({
                 exercises: session.sessionLogs.map(log => ({
                     name: log.name,
                     muscleGroup: log.muscleGroup,
-                    sets: log.sets.filter(s => s.completed).map(s => ({ reps: s.reps, weight_kg: s.weightKg })),
+                    sets: log.sets.filter(s => s.completed).map(s => ({ 
+                        reps: s.reps, 
+                        weight_kg: s.weightKg === 0 ? session.userWeight * 0.6 : s.weightKg 
+                    })),
                 })),
                 muscle_groups: Array.from(new Set(session.sessionLogs.map(l => l.muscleGroup))),
                 total_volume_kg: totalVolume,
-                notes: `Completed via Axiosync Workout Engine`,
+                notes: `Completed via Axiosync Workout Engine (Bodyweight adjusted)`,
             });
             setSaved(true);
             if (onRefresh) await onRefresh();
@@ -577,12 +585,15 @@ function CompleteView({
             <div className="card divide-y divide-white/[0.06] text-left w-full max-w-xs mb-6">
                 {session.sessionLogs.filter(l => l.sets.some(s => s.completed)).map(log => {
                     const completedSets = log.sets.filter(s => s.completed);
-                    const vol = completedSets.reduce((a, s) => a + s.reps * s.weightKg, 0);
+                    const vol = completedSets.reduce((a, s) => {
+                        const w = s.weightKg === 0 ? session.userWeight * 0.6 : s.weightKg;
+                        return a + s.reps * w;
+                    }, 0);
                     return (
                         <div key={log.exerciseId} className="flex items-center justify-between p-3">
                             <div className="text-sm font-medium text-[var(--text-primary)]">{log.name}</div>
                             <div className="text-xs text-[var(--text-muted)] stat-num">
-                                {completedSets.length} sets{vol > 0 ? ` · ${vol.toFixed(0)}kg` : ""}
+                                {completedSets.length} sets · {vol.toFixed(0)}kg
                             </div>
                         </div>
                     );
@@ -957,11 +968,23 @@ export default function WorkoutTracker({
     onClearPlan?: () => void;
     onRefresh?: () => Promise<void>;
 } = {}) {
+    const { user } = useAuth();
     const [engineState, setEngineState] = useState<EngineState>(initialPlan ? "active" : "browse");
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
     const [session, setSession] = useState<SessionState | null>(null);
+    const [userWeight, setUserWeight] = useState(75); // Default
     const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [activeTab, setActiveTab] = useState<"generate" | "strength" | "hiit" | "core" | "cardio" | "all">("all");
+
+    // Fetch user weight
+    useEffect(() => {
+        if (user) {
+            getProfile(user.uid).then(p => {
+                if (p?.goals?.weight_kg) setUserWeight(p.goals.weight_kg);
+                else if ((p as any)?.weight_kg) setUserWeight((p as any).weight_kg);
+            });
+        }
+    }, [user]);
 
     // Initialize from initialPlan if given
     useEffect(() => {
@@ -979,10 +1002,11 @@ export default function WorkoutTracker({
                 sessionLogs: logs,
                 startedAt: new Date(),
                 elapsed: 0,
+                userWeight,
             });
             setEngineState("active");
         }
-    }, [initialPlan]);
+    }, [initialPlan, userWeight]);
 
     // ── Elapsed session timer ──
     useEffect(() => {
@@ -1013,9 +1037,10 @@ export default function WorkoutTracker({
             sessionLogs: logs,
             startedAt: new Date(),
             elapsed: 0,
+            userWeight,
         });
         setEngineState("active");
-    }, []);
+    }, [userWeight]);
 
     // ── Complete a set ──
     const handleSetComplete = useCallback((reps: number, weightKg: number) => {
