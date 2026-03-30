@@ -34,7 +34,10 @@ function buildPrompt(opts: {
     const getDateStr = (ts: any) => {
         if (!ts) return "";
         const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-        return d.toISOString().split("T")[0];
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
     };
 
     // Frequency helper
@@ -85,10 +88,17 @@ function buildPrompt(opts: {
     const recentActivitiesList = activities.slice(0, 10);
 
     // Muscle group frequency
+    const MG_DISPLAY_MAP: Record<string, string> = {
+        "chest": "Chest", "back": "Back", "shoulders": "Shoulders", 
+        "biceps": "Arms", "triceps": "Arms", "quads": "Legs", 
+        "hamstrings": "Legs", "glutes": "Legs", "calves": "Legs", 
+        "core": "Core", "obliques": "Core", "full_body": "Full Body"
+    };
     const muscleFreq: Record<string, number> = {};
     workouts.forEach(w => {
         w.exercises?.forEach((ex: any) => {
-            const mg = ex.muscleGroup || "unknown";
+            const rawMg = ex.muscleGroup || "unknown";
+            const mg = MG_DISPLAY_MAP[rawMg] || (rawMg.charAt(0).toUpperCase() + rawMg.slice(1));
             muscleFreq[mg] = (muscleFreq[mg] || 0) + (ex.sets?.length || 0);
         });
     });
@@ -164,8 +174,8 @@ function buildPrompt(opts: {
         `Days Logged: ${nutritionFreq.days} (${nutritionFreq.from} to ${nutritionFreq.to})`,
         `Average Daily Calories: ${Math.round(avgCalories)} kcal`,
         `Average Daily Protein: ${Math.round(avgProtein)}g`,
-        nutrition.length > 0 ? `Average Daily Carbs: ${Math.round(nutrition.reduce((a, n) => a + (n.carbs_g || 0), 0) / nutrition.length)}g` : "",
-        nutrition.length > 0 ? `Average Daily Fat: ${Math.round(nutrition.reduce((a, n) => a + (n.fat_g || 0), 0) / nutrition.length)}g` : "",
+        nutrition.length > 0 ? `Average Daily Carbs: ${Math.round(nutrition.reduce((a, n) => a + (n.carbs_g || 0), 0) / loggedDaysCount)}g` : "",
+        nutrition.length > 0 ? `Average Daily Fat: ${Math.round(nutrition.reduce((a, n) => a + (n.fat_g || 0), 0) / loggedDaysCount)}g` : "",
         ``,
         `RECENTLY LOGGED MEALS:`,
         ...recentNutrition.map(n => `  • ${getDateStr(n.timestamp)}: ${n.meal_name} — ${n.calories}kcal (P:${n.protein_g}g, C:${n.carbs_g}g, F:${n.fat_g}g)`),
