@@ -24,6 +24,7 @@ function generateInsights(opts: {
     todayCalories?: number;
     todayProteinG?: number;
     calTarget?: number;
+    todayWorkoutNames?: string[];
 }): Insight[] {
     const {
         readinessPct = 70,
@@ -36,6 +37,7 @@ function generateInsights(opts: {
         todayCalories = 0,
         todayProteinG = 0,
         calTarget = 2500,
+        todayWorkoutNames = [],
     } = opts;
 
     const insights: Insight[] = [];
@@ -69,10 +71,11 @@ function generateInsights(opts: {
 
     // Training insight
     if (daysSinceWorkout === 0 && totalVolumeToday > 0) {
+        const nameList = todayWorkoutNames.length > 0 ? `the ${todayWorkoutNames.join(", ")} session` : "your session";
         insights.push({
             id: "trained_today",
             category: "training",
-            text: `You've already logged ${Math.round(totalVolumeToday).toLocaleString()}kg volume today. Remember: growth happens during recovery, not the session itself. Prioritize protein intake and sleep tonight.`,
+            text: `You've completed ${nameList} today, logging ${Math.round(totalVolumeToday).toLocaleString()}kg volume. Remember: growth happens during recovery, not the session itself. Prioritize protein intake and sleep tonight.`,
             emoji: "💪",
             color: "#FF9F0A",
         });
@@ -181,6 +184,7 @@ interface Props {
     todayCalories?: number;
     todayProteinG?: number;
     calTarget?: number;
+    todayWorkoutNames?: string[];
 }
 
 export default function AIInsightsFeed(props: Props) {
@@ -193,7 +197,7 @@ export default function AIInsightsFeed(props: Props) {
     }, [
         props.readinessPct, props.daysSinceWorkout, props.totalVolumeToday,
         props.streakDays, props.lastCardioKm, props.weightKg, props.heightCm,
-        props.todayCalories, props.todayProteinG, props.calTarget
+        props.todayCalories, props.todayProteinG, props.calTarget, props.todayWorkoutNames
     ]);
 
     const handleRefresh = () => {

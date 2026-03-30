@@ -89,10 +89,12 @@ export default function TrainingSection({
         ? Math.floor((Date.now() - lastWorkoutTs.getTime()) / 86400000)
         : 99;
     const lastCardioKm = recentActivities[0]?.distance_km || 0;
-    const totalToday = recentWorkouts.filter(w => {
+    const todayWorkouts = recentWorkouts.filter(w => {
         const d = w.timestamp?.toDate?.();
         return d && new Date().toDateString() === d.toDateString();
-    }).reduce((a: number, w: any) => a + (w.total_volume_kg || 0), 0);
+    });
+    const todayWorkoutNames = todayWorkouts.map(w => w.name);
+    const totalToday = todayWorkouts.reduce((a: number, w: any) => a + (w.total_volume_kg || 0), 0);
 
     const scoreColor = readinessPct >= 80 ? "#30D158" : readinessPct >= 60 ? "#FF9F0A" : "#FF453A";
 
@@ -146,6 +148,7 @@ export default function TrainingSection({
                         todayCalories={todayCalories}
                         todayProteinG={todayProteinG}
                         calTarget={calTarget}
+                        todayWorkoutNames={todayWorkoutNames}
                     />
                 </div>
             )}

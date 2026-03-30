@@ -405,26 +405,42 @@ function RestView({
     onSkip: () => void;
 }) {
     const [remaining, setRemaining] = useState(restSeconds);
+    const endTimeRef = useRef<number>(0);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [isPaused, setIsPaused] = useState(false);
+    const [pausedAt, setPausedAt] = useState<number | null>(null);
 
     useEffect(() => {
+        endTimeRef.current = Date.now() + restSeconds * 1000;
         setRemaining(restSeconds);
     }, [restSeconds]);
 
     useEffect(() => {
         if (isPaused) {
+            if (!pausedAt) setPausedAt(Date.now());
             if (timerRef.current) clearInterval(timerRef.current);
             return;
         }
+
+        if (pausedAt) {
+            const pauseDuration = Date.now() - pausedAt;
+            endTimeRef.current += pauseDuration;
+            setPausedAt(null);
+        }
+
         timerRef.current = setInterval(() => {
-            setRemaining(r => {
-                if (r <= 1) { clearInterval(timerRef.current!); onDone(); return 0; }
-                return r - 1;
-            });
-        }, 1000);
+            const now = Date.now();
+            const left = Math.max(0, Math.ceil((endTimeRef.current - now) / 1000));
+            setRemaining(left);
+            if (left <= 0) {
+                clearInterval(timerRef.current!);
+            }
+        }, 200);
+
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [isPaused, onDone]);
+    }, [isPaused, pausedAt]);
+
+    const isFinished = remaining <= 0;
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-black px-6 pb-safe text-center">
@@ -432,15 +448,18 @@ function RestView({
 
             {/* Countdown ring */}
             <div className="relative mb-6">
-                <RestRing remaining={remaining} total={restSeconds} color={planColor} />
+                <RestRing remaining={remaining} total={restSeconds} color={isFinished ? "#22C55E" : planColor} />
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-4xl font-bold stat-num text-[var(--text-primary)]">{remaining}</span>
-                    <span className="text-xs text-[var(--text-muted)]">seconds</span>
+                    <span className="text-4xl font-bold stat-num text-[var(--text-primary)]">
+                        {isFinished ? <CheckCircle className="w-10 h-10 text-[#22C55E]" /> : remaining}
+                    </span>
+                    {!isFinished && <span className="text-xs text-[var(--text-muted)]">seconds</span>}
+                    {isFinished && <span className="text-xs text-[#22C55E] font-bold mt-1 uppercase tracking-tighter">Ready!</span>}
                 </div>
             </div>
 
             {/* Next up */}
-            <div className="card p-4 w-full max-w-xs mb-8 text-left">
+            <div className="card p-4 w-full max-w-xs mb-8 text-left border-white/10" style={{ borderLeft: `4px solid ${planColor}` }}>
                 <div className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-semibold mb-2">
                     {nextSetNum ? `Next — Set ${nextSetNum}` : "Up Next"}
                 </div>
@@ -456,16 +475,26 @@ function RestView({
             </div>
 
             {/* Controls */}
-            <div className="flex gap-3 w-full max-w-xs">
+            <div className="flex flex-col gap-3 w-full max-w-xs">
                 <button
-                    onClick={() => setIsPaused(p => !p)}
-                    className="btn btn-ghost flex-1"
+                    onClick={onDone}
+                    className="btn w-full py-4 text-base font-bold shadow-xl transition-all"
+                    style={{
+                        background: isFinished ? "#22C55E" : planColor,
+                        boxShadow: `0 8px 24px ${isFinished ? "rgba(34,197,94,0.3)" : planColor + "30"}`
+                    }}
                 >
-                    {isPaused ? <><Play className="w-4 h-4" fill="currentColor" /> Resume</> : <><Pause className="w-4 h-4" /> Pause</>}
+                    {isFinished ? "Start Next Set" : "Skip Rest"} <Play className="w-4 h-4 ml-1" fill="currentColor" />
                 </button>
-                <button onClick={onSkip} className="btn btn-primary flex-1">
-                    Skip Rest <SkipForward className="w-4 h-4" />
-                </button>
+                
+                {!isFinished && (
+                    <button
+                        onClick={() => setIsPaused(p => !p)}
+                        className="btn btn-ghost w-full"
+                    >
+                        {isPaused ? <><Play className="w-4 h-4 mr-2" fill="currentColor" /> Resume Timer</> : <><Pause className="w-4 h-4 mr-2" /> Pause Timer</>}
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -958,14 +987,16 @@ export default function WorkoutTracker({
     // ── Elapsed session timer ──
     useEffect(() => {
         if (engineState === "active" || engineState === "rest") {
+            const startTime = Date.now() - (session?.elapsed || 0) * 1000;
             elapsedRef.current = setInterval(() => {
-                setSession(s => s ? { ...s, elapsed: s.elapsed + 1 } : s);
+                const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
+                setSession(s => s ? { ...s, elapsed: currentElapsed } : s);
             }, 1000);
         } else {
             if (elapsedRef.current) clearInterval(elapsedRef.current);
         }
         return () => { if (elapsedRef.current) clearInterval(elapsedRef.current); };
-    }, [engineState]);
+    }, [engineState, session?.elapsed]);
 
     // ── Start workout ──
     const startWorkout = useCallback((plan: WorkoutPlan) => {

@@ -122,7 +122,13 @@ function buildPrompt(opts: {
         `Training Frequency: ${(workouts.length / (range / 7)).toFixed(1)} sessions/week`,
         ``,
         `RECENT SESSIONS:`,
-        ...recentWorkoutsList.map(w => `  • ${getDateStr(w.timestamp)}: ${w.name} (${Math.round(w.total_volume_kg || 0)}kg vol)`),
+        ...recentWorkoutsList.map(w => {
+            const exInfo = w.exercises?.map((ex: any) => {
+                const setsStr = ex.sets?.map((s: any) => `${s.reps}${s.weight_kg ? "x" + s.weight_kg + "kg" : " reps"}`).join(", ");
+                return `    - ${ex.name}: ${setsStr}`;
+            }).join("\n") || "    - No details";
+            return `  • ${getDateStr(w.timestamp)}: ${w.name} (${Math.round(w.total_volume_kg || 0)}kg vol)\n${exInfo}`;
+        }),
         recentWorkoutsList.length === 0 ? "  No recent sessions logged." : "",
         ``,
         `Top Muscle Groups (by sets):`,
