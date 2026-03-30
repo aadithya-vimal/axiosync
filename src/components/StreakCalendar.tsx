@@ -15,7 +15,10 @@ interface Props {
 function getDateKey(ts: any): string {
     if (!ts) return "";
     const d = ts?.toDate?.() || new Date(ts);
-    return d.toISOString().split("T")[0];
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 const MONTHS = [
@@ -65,7 +68,7 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
     const { monthActiveDays, monthIntensity } = useMemo(() => {
         let active = 0, intensity = 0;
         for (let d = 1; d <= monthDays; d++) {
-            const key = new Date(selectedYear, selectedMonth, d).toISOString().split("T")[0];
+            const key = getDateKey(new Date(selectedYear, selectedMonth, d));
             const entries = activityMap[key];
             if (entries) {
                 active++;
@@ -82,7 +85,7 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
         for (let i = 0; i < checkDays; i++) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
-            const key = d.toISOString().split("T")[0];
+            const key = getDateKey(d);
             if (activityMap[key]) {
                 temp++;
             } else {
@@ -92,13 +95,13 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
             longest = Math.max(longest, temp);
         }
         if (cur === 0) {
-            const yesterdayKey = new Date(today.getTime() - 86400000).toISOString().split("T")[0];
+            const yesterdayKey = getDateKey(today.getTime() - 86400000);
             if (activityMap[yesterdayKey]) {
                 let yTemp = 0;
                 for (let i = 1; i < checkDays; i++) {
                     const d = new Date(today);
                     d.setDate(today.getDate() - i);
-                    const key = d.toISOString().split("T")[0];
+                    const key = getDateKey(d);
                     if (activityMap[key]) yTemp++; else break;
                 }
                 cur = yTemp;
@@ -124,7 +127,7 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
         }
         for (let d = 1; d <= monthDays; d++) {
             const date = new Date(selectedYear, selectedMonth, d);
-            const key = date.toISOString().split("T")[0];
+            const key = getDateKey(date);
             gridDays.push({ d, key, count: activityMap[key]?.count || 0, items: activityMap[key]?.items || [] });
         }
 
