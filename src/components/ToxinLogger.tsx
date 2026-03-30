@@ -12,6 +12,7 @@ export default function ToxinLogger({ onUpdate }: { onUpdate?: () => void }) {
     const [selected, setSelected] = useState<ToxinType>("smoking");
     const [quantity, setQuantity] = useState(1);
     const [logged, setLogged] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [todaySummary, setTodaySummary] = useState({ hasSmoking: false, hasAlcohol: false, smokingCount: 0, alcoholUnits: 0 });
 
     useEffect(() => {
@@ -20,15 +21,20 @@ export default function ToxinLogger({ onUpdate }: { onUpdate?: () => void }) {
     }, [user, logged]);
 
     const handleLog = async () => {
-        if (!user) return;
-        await addToxinLog(user.uid, {
-            type: selected,
-            quantity,
-            unit: selected === "smoking" ? "cigarettes" : "units",
-        });
-        setLogged(true);
-        onUpdate?.();
-        setTimeout(() => setLogged(false), 1500);
+        if (!user || saving) return;
+        setSaving(true);
+        try {
+            await addToxinLog(user.uid, {
+                type: selected,
+                quantity,
+                unit: selected === "smoking" ? "cigarettes" : "units",
+            });
+            setLogged(true);
+            onUpdate?.();
+            setTimeout(() => setLogged(false), 1500);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const risk = (count: number, threshold: number) =>

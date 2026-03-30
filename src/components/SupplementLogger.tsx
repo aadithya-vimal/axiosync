@@ -82,7 +82,7 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
     }, [fetchLogs]);
 
     const handleQuickAdd = useCallback(async (s: SupplementEntry) => {
-        if (!user) return;
+        if (!user || saving) return;
         setSaving(true);
         try {
             const ref = await addSupplementLog(user.uid, s);
@@ -97,10 +97,10 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
         } finally {
             setSaving(false);
         }
-    }, [user, onRefresh]);
+    }, [user, saving, onRefresh]);
 
     const handleSave = useCallback(async () => {
-        if (!user || !name) return;
+        if (!user || !name || saving) return;
         setSaving(true);
         
         // If editing, we delete the old one first

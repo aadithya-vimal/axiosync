@@ -179,7 +179,7 @@ export default function CardioTracker({ onRefresh }: { onRefresh?: () => Promise
     const totalZoneMins = zones.reduce((a, b) => a + b, 0);
 
     const handleSave = useCallback(async () => {
-        if (!user || !durationMin) return;
+        if (!user || !durationMin || saving) return;
         setSaving(true);
         try {
             await addActivityLog(user.uid, {

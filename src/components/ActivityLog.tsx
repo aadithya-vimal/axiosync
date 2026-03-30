@@ -45,7 +45,7 @@ export default function ActivityLogger() {
     }, [user, saved]);
 
     const handleSave = async () => {
-        if (!user) return;
+        if (!user || saving) return;
         setSaving(true);
         const cfg = ACTIVITY_CONFIG[form.type];
         const payload: Omit<ActivityLog, "id" | "uid" | "timestamp"> = {

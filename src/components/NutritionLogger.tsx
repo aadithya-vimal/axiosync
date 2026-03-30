@@ -145,7 +145,7 @@ export default function NutritionLogger({ calTarget = 2500, onRefresh }: { calTa
     };
 
     const handleSave = useCallback(async () => {
-        if (!user || !calories) return;
+        if (!user || !calories || saving) return;
         setSaving(true);
         const mealData = {
             meal_name: name || "Meal",

@@ -480,9 +480,11 @@ function CompleteView({
     const { user } = useAuth();
     const [saved, setSaved] = useState(false);
     const [saving, setSaving] = useState(false);
+    const hasSaved = useRef(false);
 
     const handleSave = async () => {
-        if (!user || saved) return;
+        if (!user || saved || hasSaved.current) return;
+        hasSaved.current = true;
         setSaving(true);
         try {
             await addWorkoutLog(user.uid, {

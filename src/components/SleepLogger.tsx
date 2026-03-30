@@ -43,7 +43,7 @@ export default function SleepLogger({ onRefresh }: { onRefresh?: () => Promise<v
     })();
 
     const handleLog = async () => {
-        if (!user) return;
+        if (!user || saving) return;
         setSaving(true);
         const today = new Date();
         const [wH, wM] = wakeTime.split(":").map(Number);
