@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Target, Dumbbell, Flame, CheckCircle2, ChevronRight, Info, Eye } from "lucide-react";
+import { EXERCISE_DATABASE } from "@/lib/WorkoutEngine";
 import dynamic from "next/dynamic";
 import { Timestamp } from "firebase/firestore";
 

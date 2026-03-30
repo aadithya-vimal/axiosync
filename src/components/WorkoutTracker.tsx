@@ -197,19 +197,27 @@ function ActiveExercise({
     const plan = session.plan;
     const ex: Exercise = plan.exercises[session.exerciseIndex];
     const currentLog = session.sessionLogs[session.exerciseIndex];
-    const [reps, setReps] = useState(typeof ex.reps === "number" ? ex.reps : parseInt(ex.reps as string) || 12);
+
+    const initialReps = ex ? (typeof ex.reps === "number" ? ex.reps : parseInt(ex.reps as string) || 12) : 12;
+    const initialWeight = ex ? (ex.weightKg ?? 0) : 0;
+
+    const [reps, setReps] = useState(initialReps);
     const [showDiscardModal, setShowDiscardModal] = useState(false);
-    const [weight, setWeight] = useState(ex.weightKg ?? 0);
+    const [weight, setWeight] = useState(initialWeight);
 
     // Update when exercise changes
     useEffect(() => {
-        setReps(typeof ex.reps === "number" ? ex.reps : parseInt(ex.reps as string) || 12);
-        setWeight(ex.weightKg ?? 0);
+        if (ex) {
+            setReps(typeof ex.reps === "number" ? ex.reps : parseInt(ex.reps as string) || 12);
+            setWeight(ex.weightKg ?? 0);
+        }
     }, [ex]);
+
+    if (!ex) return <div className="flex items-center justify-center h-screen text-white">Exercise data missing</div>;
 
     const totalSets = ex.sets;
     const currentSet = session.setIndex + 1;
-    const progressPct = ((session.exerciseIndex * ex.sets + session.setIndex) / (plan.exercises.reduce((a, e) => a + e.sets, 0))) * 100;
+    const progressPct = ((session.exerciseIndex * ex.sets + session.setIndex) / (plan.exercises.reduce((a, e) => a + (e.sets || 0), 0))) * 100;
 
     return (
         <div className="flex flex-col h-full min-h-screen bg-black pb-safe">
@@ -1078,6 +1086,8 @@ export default function WorkoutTracker({
 
     if (engineState === "rest" && session) {
         const ex = session.plan.exercises[session.exerciseIndex];
+        if (!ex) return <div className="flex items-center justify-center h-screen text-white">Exercise data missing</div>;
+
         const isNewExercise = session.setIndex === 0 && session.exerciseIndex > 0;
         const prevEx = isNewExercise ? session.plan.exercises[session.exerciseIndex - 1] : null;
         const restSecs = (prevEx || ex).restSeconds;
