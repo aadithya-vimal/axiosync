@@ -1,17 +1,23 @@
-"use client";
-
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { addBodyMetric, getBodyMetrics, BodyMetric, getRecentActivities, getRecentWorkouts, getOnboarding } from "@/lib/firestore";
-import { format, startOfWeek, addDays, isSameDay, subDays } from "date-fns";
-import { Flame, Clock, Award, Edit2, Loader2 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { 
+    addBodyMetric, getBodyMetrics, BodyMetric, 
+    getRecentActivities, getRecentWorkouts, getOnboarding,
+    getSleepLogs, getNutritionLogs, getSupplementLogs,
+    SleepLog, NutritionLog, SupplementLog
+} from "@/lib/firestore";
+import { format, startOfWeek, addDays, isSameDay, subDays, startOfDay } from "date-fns";
+import { Flame, Clock, Award, Edit2, Loader2, Moon, Utensils, Pill } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, BarChart, Bar } from "recharts";
 
 export default function BodyMetrics() {
     const { user } = useAuth();
     const [metrics, setMetrics] = useState<BodyMetric[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
     const [workouts, setWorkouts] = useState<any[]>([]);
+    const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([]);
+    const [nutritionLogs, setNutritionLogs] = useState<NutritionLog[]>([]);
+    const [supplementLogs, setSupplementLogs] = useState<SupplementLog[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [loggingWeight, setLoggingWeight] = useState(false);
@@ -24,31 +30,36 @@ export default function BodyMetrics() {
         const loadData = async () => {
             setLoading(true);
             try {
-                let data = await getBodyMetrics(user.uid, 30);
+                const [metricsData, actData, workData, sleepData, nutritionData, supplementData] = await Promise.all([
+                    getBodyMetrics(user.uid, 30),
+                    getRecentActivities(user.uid, 50),
+                    getRecentWorkouts(user.uid, 50),
+                    getSleepLogs(user.uid, 7),
+                    getNutritionLogs(user.uid, 7),
+                    getSupplementLogs(user.uid, 7)
+                ]);
                 
-                // ── Auto-recovery for first log ──
-                if (data.length === 0) {
+                let finalMetrics = metricsData;
+                if (finalMetrics.length === 0) {
                     const ob = await getOnboarding(user.uid);
                     if (ob?.weight_kg && ob?.height_cm) {
-                        // Create the missing first log
                         await addBodyMetric(user.uid, ob.weight_kg, ob.height_cm, false);
-                        data = await getBodyMetrics(user.uid, 1);
+                        finalMetrics = await getBodyMetrics(user.uid, 1);
                     }
                 }
 
-                setMetrics(data.reverse());
-                if (data.length > 0) {
-                    const latest = data[data.length - 1];
+                setMetrics(finalMetrics.reverse());
+                if (finalMetrics.length > 0) {
+                    const latest = finalMetrics[finalMetrics.length - 1];
                     setWeight(latest.weight_kg);
                     setHeight(latest.height_cm);
                 }
 
-                const [actData, workData] = await Promise.all([
-                    getRecentActivities(user.uid, 50),
-                    getRecentWorkouts(user.uid, 50)
-                ]);
                 setActivities(actData);
                 setWorkouts(workData);
+                setSleepLogs(sleepData.reverse());
+                setNutritionLogs(nutritionData.reverse());
+                setSupplementLogs(supplementData.reverse());
             } catch (e) {
                 console.error("Error loading metrics:", e);
             } finally {
@@ -65,76 +76,46 @@ export default function BodyMetrics() {
         setLoggingWeight(false);
     };
 
-    const stats = useMemo(() => {
-        const today = new Date();
-        const todaysWorkouts = workouts.filter(w => isSameDay(w.timestamp.toDate(), today));
-        const todaysActivities = activities.filter(a => isSameDay(a.timestamp.toDate(), today));
-        let kcal = 0, mins = 0;
-        todaysWorkouts.forEach(w => { mins += w.duration_min; kcal += (w.duration_min * 6); });
-        todaysActivities.forEach(a => { mins += a.duration_min; kcal += (a.calories_burned || 0); });
-        return { workoutCount: todaysWorkouts.length + todaysActivities.length, kcal: Math.round(kcal), mins };
-    }, [workouts, activities]);
-
-    const streakInfo = useMemo(() => {
-        const today = new Date();
-        const activeDates = new Set([
-            ...workouts.map(w => format(w.timestamp.toDate(), "yyyy-MM-dd")),
-            ...activities.map(a => format(a.timestamp.toDate(), "yyyy-MM-dd"))
-        ]);
-        let streak = 0;
-        let currTarget = today;
-        if (activeDates.has(format(currTarget, "yyyy-MM-dd"))) {
-            streak++;
-            currTarget = subDays(currTarget, 1);
-        } else {
-            currTarget = subDays(currTarget, 1);
-            if (activeDates.has(format(currTarget, "yyyy-MM-dd"))) {
-                streak++;
-                currTarget = subDays(currTarget, 1);
-            }
-        }
-        while (activeDates.has(format(currTarget, "yyyy-MM-dd")) && streak > 0) {
-            streak++;
-            currTarget = subDays(currTarget, 1);
-        }
-        const weekStart = startOfWeek(today, { weekStartsOn: 0 });
-        const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
-        return { streak, weekDays, activeDates };
-    }, [workouts, activities]);
-
     const weightData = useMemo(() => {
-        if (metrics.length === 0) return [];
-        return metrics.map(m => {
-            const date = m.timestamp.toDate();
-            return {
-                date: format(date, "MMM dd, HH:mm"),
-                shortDate: format(date, "dd MMM"),
-                timeLabel: format(date, "HH:mm"),
-                weight: m.weight_kg,
-                height: m.height_cm,
-            };
-        });
+        return metrics.map(m => ({
+            date: format(m.timestamp.toDate(), "MMM dd"),
+            weight: m.weight_kg,
+            height: m.height_cm,
+        }));
     }, [metrics]);
 
+    const sleepData = useMemo(() => {
+        return sleepLogs.map(s => ({
+            date: format(s.sleep_start.toDate(), "MMM dd"),
+            hours: s.duration_hours,
+            quality: s.quality_score,
+        }));
+    }, [sleepLogs]);
+
+    const nutritionData = useMemo(() => {
+        const days: Record<string, { calories: number; protein: number }> = {};
+        nutritionLogs.forEach(n => {
+            const d = format(n.timestamp.toDate(), "MMM dd");
+            if (!days[d]) days[d] = { calories: 0, protein: 0 };
+            days[d].calories += n.calories;
+            days[d].protein += n.protein_g;
+        });
+        return Object.entries(days).map(([date, vals]) => ({ date, ...vals }));
+    }, [nutritionLogs]);
+
+    const supplementData = useMemo(() => {
+        const days: Record<string, number> = {};
+        supplementLogs.forEach(s => {
+            const d = format(s.timestamp.toDate(), "MMM dd");
+            days[d] = (days[d] || 0) + 1;
+        });
+        return Object.entries(days).map(([date, count]) => ({ date, count }));
+    }, [supplementLogs]);
+
     const currentWeight = metrics.length > 0 ? metrics[metrics.length - 1].weight_kg : 0;
-    const heaviest = metrics.length > 0 ? Math.max(...metrics.map(m => m.weight_kg)) : 0;
-    const lightest = metrics.length > 0 ? Math.min(...metrics.map(m => m.weight_kg)) : 0;
-
     const bmi = height > 0 ? currentWeight / Math.pow(height / 100, 2) : 0;
-    const bmiCategory =
-        bmi < 18.5 ? { label: "Underweight", color: "#0A84FF" } :
-            bmi < 25 ? { label: "Normal", color: "#30D158" } :
-                bmi < 30 ? { label: "Overweight", color: "#FF9F0A" } :
-                    { label: "Obese", color: "#FF453A" };
-    const pointerLeft = Math.min(Math.max(((bmi - 15) / (40 - 15)) * 100, 0), 100);
 
-    const STAT_ITEMS = [
-        { label: "Workouts", value: stats.workoutCount, icon: Award, color: "#BF5AF2", bg: "rgba(191,90,242,0.12)" },
-        { label: "Kcal", value: stats.kcal, icon: Flame, color: "#FF9F0A", bg: "rgba(255,159,10,0.12)" },
-        { label: "Minutes", value: stats.mins, icon: Clock, color: "#0A84FF", bg: "rgba(10,132,255,0.12)" },
-    ];
-
-    if (loading && metrics.length === 0) {
+    if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="w-8 h-8 animate-spin text-[#0A84FF]" />
@@ -145,255 +126,159 @@ export default function BodyMetrics() {
 
     return (
         <div className="space-y-6 pb-32">
-            <h1 className="text-3xl font-bold text-[var(--text-primary)] px-2 tracking-tight">Report</h1>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] px-2 tracking-tight">Metrics</h1>
 
-            {/* Top 3 Stats */}
-            <div className="card p-5 grid grid-cols-3 divide-x divide-white/[0.06]">
-                {STAT_ITEMS.map(({ label, value, icon: Icon, color, bg }) => (
-                    <div key={label} className="flex flex-col items-center justify-center gap-2">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: bg }}>
-                            <Icon className="w-5 h-5" style={{ color }} />
-                        </div>
-                        <div className="text-2xl font-bold stat-num mt-1 text-[var(--text-primary)]">{value}</div>
-                        <div className="text-xs text-[var(--text-muted)] font-medium">{label}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* History Calendar */}
-            <div>
-                <div className="flex items-center justify-between mb-3 px-2">
-                    <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">History</h2>
-                    <button className="text-[#0A84FF] text-sm font-semibold">All records</button>
-                </div>
-                <div className="card p-6">
-                    <div className="flex justify-between items-center mb-7">
-                        {streakInfo.weekDays.map((date, i) => {
-                            const isToday = isSameDay(date, new Date());
-                            const dateStr = format(date, "yyyy-MM-dd");
-                            const hasActivity = streakInfo.activeDates.has(dateStr);
-
-                            return (
-                                <div key={i} className="flex flex-col items-center gap-2">
-                                    <span className="text-xs font-semibold text-[var(--text-muted)]">{format(date, "EEEEEE")}</span>
-                                    <div
-                                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 text-sm font-bold
-                                        ${isToday
-                                                ? "border-2 border-[#0A84FF] text-[#0A84FF]"
-                                                : hasActivity
-                                                    ? "bg-[#0A84FF] text-[var(--text-primary)]"
-                                                    : "text-[var(--text-muted)]"
-                                            }`}
-                                        style={isToday ? { boxShadow: "0 0 14px rgba(10,132,255,0.35)" } : {}}
-                                    >
-                                        {format(date, "d")}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <div className="border-t border-white/[0.06] pt-4">
-                        <div className="text-xs font-semibold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">Day Streak</div>
-                        <div className="flex items-center gap-1.5">
-                            <Flame className="w-5 h-5 text-[#FF453A]" fill="currentColor" />
-                            <span className="text-2xl font-bold stat-num text-[var(--text-primary)]">{streakInfo.streak}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Weight Section */}
-            <div>
-                <div className="flex items-center justify-between mb-3 px-2">
-                    <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Weight</h2>
-                    <button
-                        onClick={() => setLoggingWeight(true)}
-                        className="bg-[#0A84FF] text-[var(--text-primary)] px-5 py-2 rounded-full text-sm font-semibold active:scale-95 transition-all duration-200"
-                        style={{ boxShadow: "0 4px 14px rgba(10,132,255,0.4)" }}
-                    >
-                        Log
-                    </button>
-                </div>
-
-                {loggingWeight ? (
-                    <div className="card p-5 space-y-4 border-[#0A84FF]/20">
-                        <h3 className="font-bold text-[var(--text-primary)] tracking-tight">Log Today&apos;s Weight</h3>
-                        <div className="flex gap-4">
-                            <div className="flex-1">
-                                <label className="label">Weight (kg)</label>
-                                <input type="number" step="0.01" value={weight} onChange={e => setWeight(parseFloat(e.target.value) || 0)} className="field" />
-                            </div>
-                            <div className="flex-1">
-                                <label className="label">Height (cm)</label>
-                                <input type="number" step="0.1" value={height} onChange={e => setHeight(parseFloat(e.target.value) || 0)} className="field" />
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setLoggingWeight(false)} className="btn btn-ghost flex-1">Cancel</button>
-                            <button onClick={handleSaveMetric} className="btn btn-primary flex-1">Save</button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="card p-5 pt-6 pb-2">
-                        <div className="flex justify-between items-start mb-5">
-                            <div>
-                                <div className="text-sm text-[var(--text-muted)] font-medium mb-1">Current Weight</div>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{currentWeight.toFixed(2)}</span>
-                                    <span className="text-xl font-bold text-[var(--text-muted)]">kg</span>
-                                </div>
-                            </div>
-                            <div className="text-right space-y-1.5">
-                                <div className="flex justify-between gap-5 text-sm">
-                                    <span className="text-[var(--text-muted)] font-medium">Highest</span>
-                                    <span className="font-bold stat-num text-[var(--text-primary)]">{heaviest.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between gap-5 text-sm">
-                                    <span className="text-[var(--text-muted)] font-medium">Lowest</span>
-                                    <span className="font-bold stat-num text-[var(--text-primary)]">{lightest.toFixed(2)}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {weightData.length > 0 && (
-                            <div className="space-y-4">
-                                {/* Weight chart */}
-                                <div>
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Weight (kg) — last {Math.min(weightData.length, 30)} entries</div>
-                                    <div className="h-40 w-full">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={weightData.slice(-30)} margin={{ top: 8, right: 8, left: -28, bottom: 0 }}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                                <XAxis dataKey="timeLabel" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10, fontWeight: 500 }} dy={8} interval="preserveStartEnd" />
-                                                <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} />
-                                                <Tooltip
-                                                    contentStyle={{ background: "rgba(18,18,26,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "6px 12px", fontSize: 12 }}
-                                                    labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
-                                                    itemStyle={{ color: "#0A84FF", fontWeight: 700 }}
-                                                    formatter={(v: any) => [`${v.toFixed(2)} kg`, "Weight"]}
-                                                />
-                                                <Line type="monotone" dataKey="weight" stroke="#0A84FF" strokeWidth={2.5} dot={{ r: 4, fill: "#0A84FF", strokeWidth: 0 }} activeDot={{ r: 6, fill: "#0A84FF", stroke: "white", strokeWidth: 2 }} />
-                                            </LineChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </div>
-
-                                {/* Height chart — only if height varies or there are multiple entries */}
-                                {weightData.length > 0 && (
-                                    <div>
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Height (cm) — logged history</div>
-                                        <div className="h-32 w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={weightData.slice(-30)} margin={{ top: 8, right: 8, left: -28, bottom: 0 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                                    <XAxis dataKey="timeLabel" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} dy={8} interval="preserveStartEnd" />
-                                                    <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 10 }} />
-                                                    <Tooltip
-                                                        contentStyle={{ background: "rgba(18,18,26,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "6px 12px", fontSize: 12 }}
-                                                        labelStyle={{ color: "#a1a1aa", fontSize: 11 }}
-                                                        itemStyle={{ color: "#30D158", fontWeight: 700 }}
-                                                        formatter={(v: any) => [`${v.toFixed(2)} cm`, "Height"]}
-                                                    />
-                                                    <Line type="monotone" dataKey="height" stroke="#30D158" strokeWidth={2.5} dot={{ r: 4, fill: "#30D158", strokeWidth: 0 }} activeDot={{ r: 6, fill: "#30D158", stroke: "white", strokeWidth: 2 }} />
-                                                </LineChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        {weightData.length === 0 && (
-                            <p className="text-xs text-[var(--text-muted)] text-center py-4">No entries yet. Log your weight to see trends.</p>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Historical body log table */}
-            {metrics.length > 0 && (
+            {/* Weight & BMI Quick View */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="card p-5">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Historical Log</h3>
-                        <span className="text-[10px] text-[var(--text-muted)]">{metrics.length} entries</span>
+                    <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm text-[var(--text-muted)] font-medium">Weight</span>
+                        <button onClick={() => setLoggingWeight(true)} className="text-[#0A84FF] text-xs font-bold flex items-center gap-1">
+                            <Edit2 className="w-3 h-3" /> Log
+                        </button>
                     </div>
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
-                        {[...metrics].reverse().map((m, i) => (
-                            <div key={m.id || i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition-colors">
-                                <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-[var(--text-primary)]">
-                                        {format(m.timestamp.toDate(), "MMM dd, yyyy")}
-                                    </span>
-                                    <span className="text-[10px] text-[var(--text-muted)]">
-                                        {format(m.timestamp.toDate(), "EEEE, h:mm a")}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="text-right">
-                                        <div className="text-xs font-bold text-[var(--text-primary)] stat-num">{m.weight_kg.toFixed(2)} <span className="text-[10px] text-[var(--text-muted)]">kg</span></div>
-                                        <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter font-semibold">Weight</div>
-                                    </div>
-                                    <div className="w-px h-6 bg-white/10" />
-                                    <div className="text-right min-w-[50px]">
-                                        <div className="text-xs font-bold text-[var(--text-primary)] stat-num">{m.height_cm.toFixed(2)} <span className="text-[10px] text-[var(--text-muted)]">cm</span></div>
-                                        <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter font-semibold">Height</div>
-                                    </div>
-                                </div>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold stat-num text-[var(--text-primary)]">{currentWeight.toFixed(1)}</span>
+                        <span className="text-lg font-bold text-[var(--text-muted)]">kg</span>
+                    </div>
+                    <div className="mt-4 h-24">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={weightData}>
+                                <defs>
+                                    <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#0A84FF" stopOpacity={0.3}/>
+                                        <stop offset="95%" stopColor="#0A84FF" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <Area type="monotone" dataKey="weight" stroke="#0A84FF" fillOpacity={1} fill="url(#colorWeight)" strokeWidth={2} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="card p-5">
+                    <span className="text-sm text-[var(--text-muted)] font-medium">BMI</span>
+                    <div className="flex items-baseline gap-1 mt-2">
+                        <span className="text-3xl font-bold stat-num text-[var(--text-primary)]">{bmi.toFixed(1)}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 font-bold ml-2">Normal</span>
+                    </div>
+                    <div className="mt-6">
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex">
+                            <div className="h-full bg-blue-400" style={{ width: '18%' }} />
+                            <div className="h-full bg-green-400" style={{ width: '32%' }} />
+                            <div className="h-full bg-yellow-400" style={{ width: '25%' }} />
+                            <div className="h-full bg-red-400" style={{ width: '25%' }} />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1 font-bold">
+                            <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Sleep Chart */}
+            <div className="card p-5">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                        <Moon className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">Sleep Duration</h3>
+                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">Last 7 Sessions</p>
+                    </div>
+                </div>
+                <div className="h-48 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={sleepData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <Tooltip 
+                                contentStyle={{ background: "#12121a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }}
+                                itemStyle={{ color: "#818cf8" }}
+                            />
+                            <Bar dataKey="hours" fill="#818cf8" radius={[4, 4, 0, 0]} barSize={30} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Nutrition Chart */}
+            <div className="card p-5">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                        <Utensils className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">Calorie Intake</h3>
+                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">Daily Trends</p>
+                    </div>
+                </div>
+                <div className="h-48 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={nutritionData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <Tooltip 
+                                contentStyle={{ background: "#12121a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }}
+                                itemStyle={{ color: "#10b981" }}
+                            />
+                            <Line type="monotone" dataKey="calories" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Supplement Chart */}
+            <div className="card p-5">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 rounded-lg bg-orange-500/10 text-orange-400">
+                        <Pill className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-[var(--text-primary)]">Supplement Consistency</h3>
+                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">Daily Frequency</p>
+                    </div>
+                </div>
+                <div className="h-48 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={supplementData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} allowDecimals={false} />
+                            <Tooltip 
+                                contentStyle={{ background: "#12121a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }}
+                                itemStyle={{ color: "#f97316" }}
+                            />
+                            <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} barSize={30} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Log Weight Modal/Section Overlay */}
+            {loggingWeight && (
+                <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card w-full max-w-md p-6 space-y-4">
+                        <h3 className="text-xl font-bold text-[var(--text-primary)]">Log Metrics</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1 block">Weight (kg)</label>
+                                <input type="number" step="0.1" value={weight} onChange={e => setWeight(parseFloat(e.target.value))} className="field w-full" />
                             </div>
-                        ))}
-                    </div>
+                            <div>
+                                <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1 block">Height (cm)</label>
+                                <input type="number" step="0.1" value={height} onChange={e => setHeight(parseFloat(e.target.value))} className="field w-full" />
+                            </div>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button onClick={() => setLoggingWeight(false)} className="btn btn-ghost flex-1">Cancel</button>
+                            <button onClick={handleSaveMetric} className="btn btn-primary flex-1">Save Record</button>
+                        </div>
+                    </motion.div>
                 </div>
             )}
-
-            {/* BMI Section */}
-            <div>
-                <div className="flex items-center justify-between mb-3 px-2">
-                    <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">BMI</h2>
-                    <button
-                        onClick={() => setLoggingWeight(true)}
-                        className="bg-white/[0.08] hover:bg-white/[0.12] border border-[var(--border-subtle)] text-[var(--text-primary)] px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5"
-                    >
-                        <Edit2 className="w-3.5 h-3.5" /> Edit
-                    </button>
-                </div>
-
-                <div className="card p-6">
-                    <div className="flex justify-between items-center mb-8">
-                        <span className="text-4xl font-bold stat-num tracking-tight text-[var(--text-primary)]">{bmi.toFixed(2)}</span>
-                        <div
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold"
-                            style={{ color: bmiCategory.color, background: `${bmiCategory.color}18`, borderColor: `${bmiCategory.color}40` }}
-                        >
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: bmiCategory.color }} />
-                            {bmiCategory.label}
-                        </div>
-                    </div>
-
-                    <div className="relative mb-6 mt-2">
-                        <div className="absolute -top-3 -translate-x-1/2 transition-all duration-500 z-10" style={{ left: `${pointerLeft}%` }}>
-                            <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white" />
-                        </div>
-                        <div className="flex gap-1">
-                            <div className="bmi-segment flex-[1] bg-[#0A84FF]" />
-                            <div className="bmi-segment flex-[2.5] bg-[#5AC8FA]" />
-                            <div className="bmi-segment flex-[6.5] bg-[#30D158]" />
-                            <div className="bmi-segment flex-[5] bg-[#FF9F0A]" />
-                            <div className="bmi-segment flex-[5] bg-[#FF6B35]" />
-                            <div className="bmi-segment flex-[5] bg-[#FF453A]" />
-                        </div>
-                        <div className="flex justify-between text-[11px] font-semibold text-[var(--text-muted)] mt-2 px-1">
-                            <span>15</span><span>16</span><span>18.5</span><span>25</span><span>30</span><span>35</span><span>40</span>
-                        </div>
-                    </div>
-
-                    <div className="border-t border-white/[0.06] pt-4 flex justify-between items-center">
-                        <span className="text-[var(--text-muted)] font-medium">Height</span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-lg font-bold stat-num text-[var(--text-primary)]">{height.toFixed(2)}</span>
-                            <span className="text-[var(--text-muted)] font-bold">cm</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }

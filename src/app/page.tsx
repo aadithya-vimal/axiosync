@@ -23,6 +23,7 @@ import SettingsSection from "@/components/sections/SettingsSection";
 import DiscoverSection from "@/components/sections/DiscoverSection";
 import LibrarySection from "@/components/sections/LibrarySection";
 import ToolsSection from "@/components/sections/ToolsSection";
+import BodyMetrics from "@/components/BodyMetrics";
 
 import {
   Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library, Moon, Sun, Wrench
@@ -40,13 +41,14 @@ const BodyAnalytics = dynamic(() => import("@/components/BodyAnalytics"), {
   ),
 });
 
-type Section = "training" | "discover" | "body" | "library" | "analytics" | "log" | "settings" | "tools";
+type Section = "training" | "discover" | "anatomy" | "library" | "metrics" | "analytics" | "log" | "settings" | "tools";
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "training", label: "Workouts", icon: Timer },
   { id: "tools", label: "Tools", icon: Wrench },
   { id: "discover", label: "Discover", icon: Compass },
-  { id: "body", label: "Body", icon: Accessibility },
+  { id: "anatomy", label: "Anatomy", icon: Accessibility },
+  { id: "metrics", label: "Metrics", icon: BarChart3 },
   { id: "library", label: "Library", icon: Library },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "log", label: "Log", icon: BookOpen },
@@ -206,12 +208,18 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {section === "body" && (
-          <motion.div key="body" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="w-full">
+        {section === "anatomy" && (
+          <motion.div key="anatomy" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="w-full">
             <BodyAnalytics
               nutrientAura={nutrientAura}
               recentWorkouts={recentWorkouts}
             />
+          </motion.div>
+        )}
+
+        {section === "metrics" && (
+          <motion.div key="metrics" variants={pageVariants} initial="initial" animate="enter" exit="exit" className="w-full">
+            <BodyMetrics />
           </motion.div>
         )}
 
