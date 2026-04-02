@@ -43,22 +43,42 @@ export default function WorkoutDetailView({ workout, onClose, onStart }: Props) 
         : null;
 
     const muscles = useMemo(() => {
-        if (workout?.muscle_groups && workout.muscle_groups.length > 0) return workout.muscle_groups;
-        if (workout?.targetMuscles && workout.targetMuscles.length > 0) return workout.targetMuscles;
-        
-        // Derive from exercises
         const extracted = new Set<string>();
+        
+        // Base groups from metadata
+        if (workout?.muscle_groups) workout.muscle_groups.forEach(m => extracted.add(m));
+        if (workout?.targetMuscles) workout.targetMuscles.forEach(m => extracted.add(m));
+        
+        // Comprehensive derivation from exercises
         workout?.exercises?.forEach((ex: any) => {
-            let mg = ex.muscleGroup || ex.exercise?.muscleGroup;
+            let baseEx = null;
             
-            // If missing, try to find in database by name
-            if (!mg && ex.name) {
-                const found = EXERCISE_DATABASE.find(dbEx => dbEx.name.toLowerCase() === ex.name.toLowerCase());
-                if (found) mg = found.muscleGroup;
+            if (typeof ex === "string") {
+                // Scenario: ID String array
+                baseEx = EXERCISE_DATABASE.find(db => db.id === ex);
+            } else if (ex && typeof ex === "object") {
+                // Scenario: Full object or block with exerciseId
+                if (ex.id && EXERCISE_DATABASE.find(db => db.id === ex.id)) {
+                    baseEx = EXERCISE_DATABASE.find(db => db.id === ex.id);
+                } else if (ex.exerciseId) {
+                    baseEx = EXERCISE_DATABASE.find(db => db.id === ex.exerciseId);
+                } else if (ex.exercise) {
+                    baseEx = ex.exercise;
+                } else if (ex.name) {
+                    baseEx = EXERCISE_DATABASE.find(db => db.name.toLowerCase() === ex.name.toLowerCase());
+                }
             }
-            
-            if (mg) extracted.add(mg);
+
+            if (baseEx) {
+                extracted.add(baseEx.muscleGroup);
+                baseEx.secondaryMuscles?.forEach((sm: string) => extracted.add(sm));
+            } else if (ex && typeof ex === "object" && ex.muscleGroup) {
+                // Fallback for custom objects with manual muscleGroup
+                extracted.add(ex.muscleGroup);
+                if (ex.secondaryMuscles) ex.secondaryMuscles.forEach((sm: string) => extracted.add(sm));
+            }
         });
+
         return Array.from(extracted);
     }, [workout]);
 

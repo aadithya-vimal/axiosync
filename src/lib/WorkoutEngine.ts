@@ -159,6 +159,19 @@ export const EXERCISE_DATABASE: Exercise[] = [
   { id: "close_grip_stance_pushup_20", name: "Close-Grip/Stance Push-Up", muscleGroup: "chest", secondaryMuscles: ["triceps","shoulders"], equipment: ["bodyweight"], difficulty: 2, isCompound: true, modality: "strength", instructions: "Perform the Push-Up using the Close-Grip/Stance variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
   { id: "wide_grip_stance_pushup_21", name: "Wide-Grip/Stance Push-Up", muscleGroup: "chest", secondaryMuscles: ["triceps","shoulders"], equipment: ["bodyweight"], difficulty: 1, isCompound: true, modality: "strength", instructions: "Perform the Push-Up using the Wide-Grip/Stance variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
   { id: "standard_pullup_22", name: "Pull-Up", muscleGroup: "back", secondaryMuscles: ["biceps","forearms"], equipment: ["pull_up_bar"], difficulty: 2, isCompound: true, modality: "strength", instructions: "Perform the Pull-Up using the Standard variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "muscle_up_prog_1", name: "Negative Muscle-Up", muscleGroup: "back", secondaryMuscles: ["triceps", "chest", "core"], equipment: ["pull_up_bar"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Jump to the top of a dip on the bar, then lower yourself slowly through the transition to a pull-up hang.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "muscle_up_full", name: "Muscle-Up", muscleGroup: "back", secondaryMuscles: ["triceps", "chest", "shoulders", "core"], equipment: ["pull_up_bar"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Explosive pull-up followed by a transition into a bar dip.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "front_lever_tuck", name: "Tuck Front Lever", muscleGroup: "back", secondaryMuscles: ["core", "rear_delts"], equipment: ["pull_up_bar"], difficulty: 2, isCompound: true, modality: "isometric", instructions: "Hang from the bar, pull your knees to your chest, and lift your hips until your back is parallel to the floor.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 15 },
+  { id: "front_lever_full", name: "Front Lever", muscleGroup: "back", secondaryMuscles: ["core", "rear_delts", "lats"], equipment: ["pull_up_bar"], difficulty: 3, isCompound: true, modality: "isometric", instructions: "Hold your body completely horizontal while hanging from the bar with straight arms.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 10 },
+  { id: "planche_lean", name: "Planche Lean", muscleGroup: "shoulders", secondaryMuscles: ["core", "chest"], equipment: ["floor"], difficulty: 1, isCompound: true, modality: "isometric", instructions: "In a plank position, lean forward as far as possible while keeping your arms straight and protracting your scapula.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 30 },
+  { id: "planche_tuck", name: "Tuck Planche", muscleGroup: "shoulders", secondaryMuscles: ["core", "chest"], equipment: ["floor"], difficulty: 3, isCompound: true, modality: "isometric", instructions: "Support your weight on your hands with straight arms, tucking your knees to your chest and lifting your feet off the floor.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 10 },
+  { id: "handstand_pushup_wall", name: "Wall-Supported Handstand Push-Up", muscleGroup: "shoulders", secondaryMuscles: ["triceps", "core"], equipment: ["wall"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Kick up into a handstand against a wall and perform push-ups.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "pistol_squat", name: "Pistol Squat", muscleGroup: "quads", secondaryMuscles: ["glutes", "core", "calves"], equipment: ["bodyweight"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Perform a one-legged squat with the other leg extended forward.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "nordic_curl", name: "Nordic Hamstring Curl", muscleGroup: "hamstrings", secondaryMuscles: ["glutes", "lower_back"], equipment: ["floor"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Kneel on the floor with ankles secured, then lower your torso towards the floor using only your hamstrings.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "archer_pushup", name: "Archer Push-Up", muscleGroup: "chest", secondaryMuscles: ["triceps", "shoulders", "core"], equipment: ["bodyweight"], difficulty: 2, isCompound: true, modality: "strength", instructions: "Perform a push-up while extending one arm out to the side, shifting most of your weight to the other arm.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "one_arm_pushup", name: "One-Arm Push-Up", muscleGroup: "chest", secondaryMuscles: ["triceps", "shoulders", "core"], equipment: ["bodyweight"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Perform a push-up using only one arm.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "dragon_flag", name: "Dragon Flag", muscleGroup: "core", secondaryMuscles: ["lats", "glutes"], equipment: ["bench"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Lying on a bench, hold onto the end behind your head and lift your entire body into a straight line, pivoting on your shoulders.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
+  { id: "l_sit", name: "L-Sit", muscleGroup: "core", secondaryMuscles: ["triceps", "shoulders", "hip_flexors"], equipment: ["floor"], difficulty: 2, isCompound: true, modality: "isometric", instructions: "Support your weight on your hands with straight arms, lifting your legs straight out in front of you.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 20 },
   { id: "tempo__3_1_3__pullup_23", name: "Tempo (3-1-3) Pull-Up", muscleGroup: "back", secondaryMuscles: ["biceps","forearms"], equipment: ["pull_up_bar"], difficulty: 3, isCompound: true, modality: "strength", instructions: "Perform the Pull-Up using the Tempo (3-1-3) variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 15 },
   { id: "explosive_pullup_24", name: "Explosive Pull-Up", muscleGroup: "back", secondaryMuscles: ["biceps","forearms"], equipment: ["pull_up_bar"], difficulty: 3, isCompound: true, modality: "plyometric", instructions: "Perform the Pull-Up using the Explosive variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40" },
   { id: "isometric_hold_pullup_25", name: "Isometric Hold Pull-Up", muscleGroup: "back", secondaryMuscles: ["biceps","forearms"], equipment: ["pull_up_bar"], difficulty: 3, isCompound: true, modality: "isometric", instructions: "Perform the Pull-Up using the Isometric Hold variation. Focus on full range of motion.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&q=40", duration_s: 30 },
@@ -700,7 +713,6 @@ function shuffle<T>(array: T[]): T[] {
 export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
     const {
         focus, goal, availableEquipment,
-        difficulty = 2,
         duration = 45,
         intensity = "intermediate",
         style = "strength_hypertrophy",
@@ -717,17 +729,8 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
     // Effective difficulty cap from intensity
     const effectiveDifficultyMax = intensityConfig.difficultyMax;
 
-    // Rest = goal base × intensity multiplier ± style adjustment
-    const baseRest = scheme.rest;
-    const computedRest = Math.max(15, Math.round(baseRest * intensityConfig.restMultiplier + styleConfig.restAdjust));
-
-    // Sets scaled by intensity
-    const computedSets = Math.max(1, Math.round(scheme.sets * intensityConfig.setsMultiplier));
-
-    // Filter exercises by equipment AND difficulty
+    // Filter exercises by equipment AND difficulty (Progression Logic)
     const eligible = EXERCISE_DATABASE.filter(ex => {
-        // Must have all required equipment. 
-        // We handle some alternatives (bench/chair, dumbbell/kettlebell) as interchangeable for logic.
         const hasAllEquipment = ex.equipment.every(req => {
             if (availableEquipment.includes(req)) return true;
             if (req === "resistance_band" && availableEquipment.includes("bands")) return true;
@@ -738,48 +741,107 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
             if (req === "kettlebell" && availableEquipment.includes("dumbbell")) return true;
             return false;
         });
+        
+        // Progression: Advanced users get everything up to difficulty 3. 
+        // Beginners only get difficulty 1. Intermediate gets 1 and 2.
         return hasAllEquipment && ex.difficulty <= effectiveDifficultyMax;
     });
 
-    // Style dictates modality
     const modalFilter = styleConfig.modalFilter;
-    // Override modality for specific goals
     const effectiveModalFilter = goal === "mobility"
         ? ["mobility", "isometric"]
         : goal === "fat_loss" || focus === "hiit" || style === "hiit"
             ? ["strength", "plyometric", "cardio", "isometric"]
             : modalFilter;
 
-    const working_candidates = eligible.filter(ex =>
-        (targetMuscles.includes(ex.muscleGroup) || ex.secondaryMuscles.some(sm => targetMuscles.includes(sm))) &&
-        effectiveModalFilter.includes(ex.modality)
-    );
+    const getCandidates = (muscles: MuscleGroup[], compoundOnly?: boolean) => {
+        return eligible.filter(ex =>
+            (muscles.includes(ex.muscleGroup) || ex.secondaryMuscles.some(sm => muscles.includes(sm))) &&
+            effectiveModalFilter.includes(ex.modality) &&
+            (compoundOnly === undefined ? true : ex.isCompound === compoundOnly)
+        );
+    };
 
     let workingExercises: Exercise[] = [];
 
+    // Slot-based Selection Algorithm
+    const selectFromSlots = (slots: { muscles: MuscleGroup[], compound: boolean }[]) => {
+        const selected: Exercise[] = [];
+        const usedIds = new Set<string>();
+
+        for (const slot of slots) {
+            const candidates = shuffle(getCandidates(slot.muscles, slot.compound))
+                .filter(c => !usedIds.has(c.id));
+            
+            if (candidates[0]) {
+                selected.push(candidates[0]);
+                usedIds.add(candidates[0].id);
+            }
+        }
+        return selected;
+    };
+
+    const pushMuscles: MuscleGroup[] = ["chest", "shoulders", "triceps"];
+    const pullMuscles: MuscleGroup[] = ["back", "biceps", "forearms"];
+    const legMuscles: MuscleGroup[] = ["quads", "hamstrings", "glutes", "calves"];
+    const coreMuscles: MuscleGroup[] = ["core", "obliques", "lower_back"];
+
     if (focus === "full body") {
-        // Balanced selection: 1 Pull, 1 Push, 1 Legs, 1 Core, then fill rest with compounds
-        const pull = shuffle(working_candidates.filter(e => ["back", "biceps"].includes(e.muscleGroup)));
-        const push = shuffle(working_candidates.filter(e => ["chest", "shoulders", "triceps"].includes(e.muscleGroup)));
-        const legs = shuffle(working_candidates.filter(e => ["quads", "hamstrings", "glutes"].includes(e.muscleGroup)));
-        const core = shuffle(working_candidates.filter(e => ["core", "obliques"].includes(e.muscleGroup)));
-
-        if (pull[0]) workingExercises.push(pull[0]);
-        if (push[0]) workingExercises.push(push[0]);
-        if (legs[0]) workingExercises.push(legs[0]);
-        if (core[0]) workingExercises.push(core[0]);
-
-        const remaining = shuffle(working_candidates.filter(e => !workingExercises.includes(e)));
-        workingExercises = [...workingExercises, ...remaining].slice(0, exerciseCount);
-        
-        // Ensure priority: compound movements first
-        workingExercises.sort((a, b) => (b.isCompound ? 1 : 0) - (a.isCompound ? 1 : 0));
+        workingExercises = selectFromSlots([
+            { muscles: pushMuscles, compound: true },
+            { muscles: pullMuscles, compound: true },
+            { muscles: legMuscles, compound: true },
+            { muscles: coreMuscles, compound: false },
+            { muscles: ["chest", "back", "quads", "shoulders"], compound: true },
+            { muscles: ["arms", "calves", "core"], compound: false },
+        ]);
+    } else if (focus === "upper body") {
+        workingExercises = selectFromSlots([
+            { muscles: ["chest"], compound: true },
+            { muscles: ["back"], compound: true },
+            { muscles: ["shoulders"], compound: true },
+            { muscles: ["chest", "back"], compound: true },
+            { muscles: ["triceps"], compound: false },
+            { muscles: ["biceps"], compound: false },
+        ]);
+    } else if (focus === "push") {
+        workingExercises = selectFromSlots([
+            { muscles: ["chest"], compound: true },
+            { muscles: ["shoulders"], compound: true },
+            { muscles: ["chest", "shoulders"], compound: true },
+            { muscles: ["triceps"], compound: false },
+            { muscles: ["chest"], compound: false },
+            { muscles: ["shoulders"], compound: false },
+        ]);
+    } else if (focus === "pull") {
+        workingExercises = selectFromSlots([
+            { muscles: ["back"], compound: true },
+            { muscles: ["back"], compound: true },
+            { muscles: ["biceps"], compound: false },
+            { muscles: ["back"], compound: false },
+            { muscles: ["forearms", "grip"], compound: false },
+            { muscles: ["rear_delts", "traps"], compound: false },
+        ]);
+    } else if (focus === "legs") {
+        workingExercises = selectFromSlots([
+            { muscles: ["quads"], compound: true },
+            { muscles: ["hamstrings", "glutes"], compound: true },
+            { muscles: ["quads", "glutes"], compound: true },
+            { muscles: ["calves"], compound: false },
+            { muscles: ["hamstrings"], compound: false },
+            { muscles: ["quads"], compound: false },
+        ]);
     } else {
-        // Compounds first, then isolation
-        const compounds = shuffle(working_candidates.filter(e => e.isCompound));
-        const isolations = shuffle(working_candidates.filter(e => !e.isCompound));
-        workingExercises = [...compounds, ...isolations].slice(0, exerciseCount);
+        // Generic focus selection
+        const candidates = shuffle(getCandidates(targetMuscles));
+        const compounds = candidates.filter(e => e.isCompound);
+        const isolations = candidates.filter(e => !e.isCompound);
+        workingExercises = [...compounds, ...isolations];
     }
+
+    workingExercises = workingExercises.slice(0, exerciseCount);
+    // Final sort: Compounds before Isolations
+    workingExercises.sort((a, b) => (b.isCompound ? 1 : 0) - (a.isCompound ? 1 : 0));
 
     // Warmup: 2-3 mobility/low-difficulty exercises
     const warmupCandidates = shuffle(eligible.filter(ex =>
@@ -791,7 +853,13 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
 
     const buildSet = (ex: Exercise, is_warmup: boolean, setIndex: number): GeneratedSet => {
         const isDuration = !!ex.duration_s;
-        // Simple progressive overload: slightly increase RPE/intensity for later sets
+        
+        // Dynamic Rest Logic: Compound lifts get +30s rest. 
+        // Advanced intensity reduces rest. Style adjusts rest.
+        let rest = scheme.rest;
+        if (ex.isCompound) rest += 30;
+        
+        const computedRest = Math.max(15, Math.round(rest * intensityConfig.restMultiplier + styleConfig.restAdjust));
         const rpeBoost = !is_warmup ? Math.min(1, Math.floor(setIndex / 2)) : 0;
         
         return {
@@ -810,7 +878,7 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
 
     const working: GeneratedExercise[] = workingExercises.map(ex => ({
         exercise: ex,
-        sets: Array.from({ length: computedSets }, (_, i) => buildSet(ex, false, i)),
+        sets: Array.from({ length: Math.max(1, Math.round(scheme.sets * intensityConfig.setsMultiplier)) }, (_, i) => buildSet(ex, false, i)),
     }));
 
     const musclesWorked: MuscleGroup[] = Array.from(new Set([
@@ -818,20 +886,18 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
         ...workingExercises.flatMap(e => e.secondaryMuscles),
     ]));
 
-    const estimatedMinutes = Math.min(duration, Math.round(
+    const estimatedMinutes = Math.min(duration + 5, Math.round(
         warmup.length * 1.5 +
-        working.reduce((acc, ge) => acc + ge.sets.length * ((computedRest + 40) / 60), 0)
+        working.reduce((acc, ge) => acc + ge.sets.length * ((ge.sets[0].restSeconds + 40) / 60), 0)
     ));
 
     const color = FOCUS_COLOR[focus] ?? "#3B82F6";
     const emoji = styleConfig.emoji;
-
     const focusLabel = focus.charAt(0).toUpperCase() + focus.slice(1);
-    const styleLabel = styleConfig.label;
 
     return {
         id: `gen_${Date.now()}`,
-        name: `${focusLabel} ${styleLabel}`,
+        name: `${focusLabel} ${styleConfig.label}`,
         emoji,
         color,
         focus: [focus],
@@ -844,7 +910,7 @@ export function generateWorkout(opts: GenerateOptions): GeneratedWorkout {
         duration,
         intensity,
         style,
-        restSeconds: computedRest,
+        restSeconds: working[0]?.sets[0].restSeconds ?? 60,
         rpeLabel: intensityConfig.rpeLabel,
     };
 }
