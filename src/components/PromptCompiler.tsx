@@ -35,14 +35,7 @@ function buildPrompt(opts: {
     const getDateStr = (ts: any) => {
         if (!ts) return "";
         const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-<<<<<<< HEAD
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-=======
         return formatLocalISO(d);
->>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
     };
 
     // Frequency helper
@@ -145,17 +138,14 @@ function buildPrompt(opts: {
         `Training Frequency: ${(workouts.length / (range / 7)).toFixed(1)} sessions/week`,
         ``,
         `RECENT SESSIONS:`,
-<<<<<<< HEAD
         ...recentWorkoutsList.map(w => {
             const exInfo = w.exercises?.map((ex: any) => {
                 const setsStr = ex.sets?.map((s: any) => `${s.reps}${s.weight_kg ? "x" + s.weight_kg + "kg" : " reps"}`).join(", ");
                 return `    - ${ex.name}: ${setsStr}`;
             }).join("\n") || "    - No details";
-            return `  • ${getDateStr(w.timestamp)}: ${w.name} (${Math.round(w.total_volume_kg || 0)}kg vol)\n${exInfo}`;
+            const volLabel = w.total_volume_kg > 0 ? `${Math.round(w.total_volume_kg)}kg vol` : "Bodyweight";
+            return `  • ${getDateStr(w.timestamp)}: ${w.name} (${volLabel})\n${exInfo}`;
         }),
-=======
-        ...recentWorkoutsList.map(w => `  • ${getDateStr(w.timestamp)}: ${w.name} (${w.total_volume_kg > 0 ? `${Math.round(w.total_volume_kg)}kg vol` : "Bodyweight"})`),
->>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
         recentWorkoutsList.length === 0 ? "  No recent sessions logged." : "",
         ``,
         `Top Muscle Groups (by sets):`,

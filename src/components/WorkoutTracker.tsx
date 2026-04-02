@@ -511,10 +511,12 @@ function CompleteView({
     session,
     onClose,
     onRefresh,
+    selectedDate
 }: {
     session: SessionState;
     onClose: () => void;
     onRefresh?: () => Promise<void>;
+    selectedDate?: Date;
 }) {
     const totalVolume = calcTotalVolume(session.sessionLogs, session.userWeight);
     const completedSets = session.sessionLogs.reduce((a, ex) => a + ex.sets.filter(s => s.completed).length, 0);
@@ -542,13 +544,8 @@ function CompleteView({
                 })),
                 muscle_groups: Array.from(new Set(session.sessionLogs.map(l => l.muscleGroup))),
                 total_volume_kg: totalVolume,
-<<<<<<< HEAD
                 notes: `Completed via Axiosync Workout Engine (Bodyweight adjusted)`,
-            });
-=======
-                notes: `Completed via Axiosync Workout Engine`,
             }, selectedDate);
->>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
             setSaved(true);
             if (onRefresh) await onRefresh();
         } catch (e) {
@@ -598,11 +595,7 @@ function CompleteView({
                         <div key={log.exerciseId} className="flex items-center justify-between p-3">
                             <div className="text-sm font-medium text-[var(--text-primary)]">{log.name}</div>
                             <div className="text-xs text-[var(--text-muted)] stat-num">
-<<<<<<< HEAD
-                                {completedSets.length} sets · {vol.toFixed(0)}kg
-=======
                                 {completedSets.length} sets{vol > 0 ? ` · ${vol.toFixed(0)}kg` : " · Bodyweight"}
->>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
                             </div>
                         </div>
                     );
@@ -972,12 +965,14 @@ export default function WorkoutTracker({
     initialPlan,
     onClearPlan,
     onRefresh,
-    onStateChange
+    onStateChange,
+    selectedDate
 }: {
     initialPlan?: WorkoutPlan;
     onClearPlan?: () => void;
     onRefresh?: () => Promise<void>;
     onStateChange?: (state: EngineState) => void;
+    selectedDate?: Date;
 } = {}) {
     const { user } = useAuth();
     const [engineState, setEngineState] = useState<EngineState>(initialPlan ? "active" : "browse");
@@ -1176,7 +1171,7 @@ export default function WorkoutTracker({
     }
 
     if (engineState === "complete" && session) {
-        return <CompleteView session={session} onClose={handleClose} onRefresh={onRefresh} />;
+        return <CompleteView session={session} onClose={handleClose} onRefresh={onRefresh} selectedDate={selectedDate} />;
     }
 
     if (engineState === "preview" && selectedPlan) {
