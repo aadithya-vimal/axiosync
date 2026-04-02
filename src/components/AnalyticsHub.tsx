@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-    getWorkoutLogs, getNutritionLogs, getReadinessLogs, addReadinessLog, calcReadiness,
+    getWorkoutLogs, getNutritionLogs, getReadinessLogs, addReadinessLog, calcReadiness, formatLocalISO,
     type WorkoutLog, type NutritionLog, type ReadinessLog,
 } from "@/lib/firestore";
 import { Brain, Dumbbell, Leaf, Loader2, Plus } from "lucide-react";
