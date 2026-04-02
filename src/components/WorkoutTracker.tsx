@@ -1020,17 +1020,33 @@ export default function WorkoutTracker({
 
     // ── Elapsed session timer ──
     useEffect(() => {
-        if (engineState === "active" || engineState === "rest") {
-            const startTime = Date.now() - (session?.elapsed || 0) * 1000;
-            elapsedRef.current = setInterval(() => {
-                const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
+        let interval: ReturnType<typeof setInterval>;
+        
+        const updateTimer = () => {
+            if (engineState === "active" || engineState === "rest") {
+                const now = Date.now();
+                const start = session?.startedAt ? new Date(session.startedAt).getTime() : now;
+                const currentElapsed = Math.floor((now - start) / 1000);
                 setSession(s => s ? { ...s, elapsed: currentElapsed } : s);
-            }, 1000);
-        } else {
-            if (elapsedRef.current) clearInterval(elapsedRef.current);
+            }
+        };
+
+        if (engineState === "active" || engineState === "rest") {
+            interval = setInterval(updateTimer, 1000);
+            
+            const handleVisibilityChange = () => {
+                if (document.visibilityState === "visible") {
+                    updateTimer(); // Sync immediately when returning
+                }
+            };
+            
+            window.addEventListener("visibilitychange", handleVisibilityChange);
+            return () => {
+                clearInterval(interval);
+                window.removeEventListener("visibilitychange", handleVisibilityChange);
+            };
         }
-        return () => { if (elapsedRef.current) clearInterval(elapsedRef.current); };
-    }, [engineState, session?.elapsed]);
+    }, [engineState, session?.startedAt]);
 
     // ── Start workout ──
     const startWorkout = useCallback((plan: WorkoutPlan) => {

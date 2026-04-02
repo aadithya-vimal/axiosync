@@ -98,15 +98,26 @@ export default function DashboardPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [workoutActive]);
 
+  const [pendingSection, setPendingSection] = useState<Section | null>(null);
+
   const confirmSwitch = useCallback((newSection: Section) => {
-    if (workoutActive) {
-      if (confirm("Workout in progress. Switching tabs will exit the session. Continue?")) {
-        setSection(newSection);
-      }
+    if (workoutActive && newSection !== section) {
+      setPendingSection(newSection);
     } else {
       setSection(newSection);
     }
-  }, [workoutActive]);
+  }, [workoutActive, section]);
+
+  const handleConfirmSwitch = () => {
+    if (pendingSection) {
+      setSection(pendingSection);
+      setPendingSection(null);
+    }
+  };
+
+  const handleCancelSwitch = () => {
+    setPendingSection(null);
+  };
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -402,6 +413,46 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-y-auto no-scrollbar relative z-10 w-full px-4 sm:px-8 pt-[140px] sm:pt-6 pb-[88px] sm:pb-12 max-w-[1000px] mx-auto overflow-x-hidden">
           <SectionContent />
         </main>
+
+        {/* ── Custom Confirmation Modal ── */}
+        <AnimatePresence>
+          {pendingSection && (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="w-full max-w-sm bg-[#111113] border border-white/10 rounded-[32px] p-6 space-y-6 shadow-2xl"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto border border-amber-500/20">
+                  <AlertTriangle className="w-7 h-7 text-amber-500" />
+                </div>
+                
+                <div className="text-center space-y-2">
+                  <h3 className="text-xl font-bold text-white tracking-tight">Active Workout</h3>
+                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                    Switching sections will terminate your current session and discard unsaved progress. Continue?
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handleConfirmSwitch}
+                    className="w-full py-4 rounded-2xl bg-amber-500 text-black font-bold text-sm shadow-[0_8px_20px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
+                    Yes, End Session
+                  </button>
+                  <button
+                    onClick={handleCancelSwitch}
+                    className="w-full py-4 rounded-2xl bg-white/5 text-white font-bold text-sm hover:bg-white/10 transition-all"
+                  >
+                    Maintain Workout
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* ── Mobile Bottom Nav ── */}
         <div className="mobile-nav sm:hidden">
