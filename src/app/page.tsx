@@ -112,6 +112,7 @@ export default function DashboardPage() {
     if (pendingSection) {
       setSection(pendingSection);
       setPendingSection(null);
+      setWorkoutWorkoutActive(false); // Clear the active state so the modal stops appearing
     }
   };
 
