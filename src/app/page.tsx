@@ -29,7 +29,7 @@ import GlobalDatePicker from "@/components/GlobalDatePicker";
 
 import {
   Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library, Moon, Sun, Wrench, CalendarIcon,
-  Activity, LineChart
+  Activity, LineChart, AlertTriangle
 } from "lucide-react";
 
 const BodyAnalytics = dynamic(() => import("@/components/BodyAnalytics"), {
