@@ -29,16 +29,21 @@ function buildAchievements(workouts: WorkoutLog[], activities: ActivityLog[]): A
     const totalCycleKm = activities.filter(a => a.type === "cycle").reduce((a, b) => a + (b.distance_km || 0), 0);
     const totalSwimKm = activities.filter(a => a.type === "swim").reduce((a, b) => a + (b.distance_km || 0), 0);
 
+    const parseDate = (ts: any): Date => {
+        if (!ts) return new Date();
+        return ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+    };
+
     // Streak calc
     const allDays = new Set([
-        ...workouts.map(w => w.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
-        ...activities.map(a => a.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
+        ...workouts.map(w => formatLocalISO(parseDate(w.timestamp))),
+        ...activities.map(a => formatLocalISO(parseDate(a.timestamp))),
     ]);
     let currentStreak = 0;
     const today = new Date();
     for (let i = 0; i < 365; i++) {
         const d = new Date(today); d.setDate(today.getDate() - i);
-        const key = d.toISOString().split("T")[0];
+        const key = formatLocalISO(d);
         if (allDays.has(key)) currentStreak++;
         else if (i > 0) break;
     }
@@ -286,7 +291,7 @@ function buildAchievements(workouts: WorkoutLog[], activities: ActivityLog[]): A
             desc: "Log an activity before 7:00 AM",
             color: "#FFD60A",
             unlocked: [...workouts, ...activities].some(s => {
-                const d = s.timestamp?.toDate?.() || new Date(s.timestamp);
+                const d = parseDate(s.timestamp);
                 return d.getHours() < 7;
             }),
             category: "special",
@@ -298,7 +303,7 @@ function buildAchievements(workouts: WorkoutLog[], activities: ActivityLog[]): A
             desc: "Log an activity after 10:00 PM",
             color: "#5E5CE6",
             unlocked: [...workouts, ...activities].some(s => {
-                const d = s.timestamp?.toDate?.() || new Date(s.timestamp);
+                const d = parseDate(s.timestamp);
                 return d.getHours() >= 22;
             }),
             category: "special",
@@ -327,9 +332,6 @@ export default function AchievementBadges({
     const achievements = useMemo(() => buildAchievements(workouts, activities), [workouts, activities]);
     const unlocked = achievements.filter(a => a.unlocked);
     const locked = achievements.filter(a => !a.unlocked);
-
-    // Group by category
-    const categories = Array.from(new Set(achievements.map(a => a.category)));
 
     return (
         <div className="space-y-6">
