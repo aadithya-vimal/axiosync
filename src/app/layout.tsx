@@ -14,10 +14,6 @@ export const metadata: Metadata = {
   creator: "Aadithya Vimal",
   publisher: "Aadithya Vimal",
   manifest: "/manifest.json",
-  icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
-  },
   openGraph: {
     title: "Axiosync — Proactive Health Companion",
     description: "Your AI-powered health dashboard for 3D body tracking, nutrition, and supplement logging.",

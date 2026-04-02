@@ -2,10 +2,9 @@
 
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Target, Dumbbell, Flame, CheckCircle2, ChevronRight, Info, Eye } from "lucide-react";
+import { X, Clock, Target, Dumbbell, Flame, Info } from "lucide-react";
 import { EXERCISE_DATABASE } from "@/lib/WorkoutEngine";
 import dynamic from "next/dynamic";
-import { Timestamp } from "firebase/firestore";
 
 const AnatomyMap = dynamic<any>(() => import("./BodyMap2D"), { ssr: false });
 
@@ -87,6 +86,10 @@ export default function WorkoutDetailView({ workout, onClose, onStart }: Props) 
                                         <div className="flex items-center gap-1">
                                             <Clock className="w-3.5 h-3.5" /> {duration}m
                                         </div>
+                                        <div className="w-1 h-1 rounded-full bg-white/20" />
+                                        <div className="text-[#30D158] font-bold">
+                                            {workout.total_volume_kg && workout.total_volume_kg > 0 ? `${Math.round(workout.total_volume_kg).toLocaleString()}kg` : "Bodyweight"}
+                                        </div>
                                         {dateStr && (
                                             <>
                                                 <div className="w-1 h-1 rounded-full bg-white/20" />
@@ -151,10 +154,10 @@ export default function WorkoutDetailView({ workout, onClose, onStart }: Props) 
                                                         <span className="text-purple-400/80">{ex.muscleGroup?.replace("_", " ") || "Full Body"}</span>
                                                         <span>•</span>
                                                         <span>{totalSets} Sets × {reps} Reps</span>
-                                                        {weight !== null && weight > 0 && (
+                                                        {weight !== null && (
                                                             <>
                                                                 <span>•</span>
-                                                                <span className="text-blue-400/80">{weight}kg</span>
+                                                                <span className="text-blue-400/80">{weight > 0 ? `${weight}kg` : "Bodyweight"}</span>
                                                             </>
                                                         )}
                                                     </div>

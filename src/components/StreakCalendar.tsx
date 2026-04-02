@@ -1,24 +1,31 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { WorkoutLog, ActivityLog } from "@/lib/firestore";
+import { useMemo, useState, useEffect } from "react";
+import { WorkoutLog, ActivityLog, NutritionLog, SupplementLog, getTodayNutrition, getTodaySupplements, formatLocalISO } from "@/lib/firestore";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Target, Trash2, Maximize2, Flame, Calendar, Info, ChevronDown, Eye } from "lucide-react";
+import { X, Clock, Target, Trash2, Maximize2, Flame, Calendar, Info, ChevronDown, Eye, Utensils, Pill, Loader2, Plus } from "lucide-react";
 import WorkoutDetailView from "./WorkoutDetailView";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
     workouts: WorkoutLog[];
     activities: ActivityLog[];
     onDelete?: (id: string, type: 'workout' | 'activity') => Promise<void>;
+    onSelectDate?: (date: Date) => void;
 }
 
 function getDateKey(ts: any): string {
     if (!ts) return "";
+<<<<<<< HEAD
     const d = ts?.toDate?.() || new Date(ts);
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+=======
+    const d = ts?.toDate?.() || (ts instanceof Date ? ts : new Date(ts));
+    return formatLocalISO(d);
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
 }
 
 const MONTHS = [
@@ -30,7 +37,8 @@ const START_YEAR = 2024;
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - START_YEAR + 1 }, (_, i) => START_YEAR + i).reverse();
 
-export default function StreakCalendar({ workouts, activities, onDelete }: Props) {
+export default function StreakCalendar({ workouts, activities, onDelete, onSelectDate }: Props) {
+    const { user } = useAuth();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -40,6 +48,10 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
     const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const [nutritionLogs, setNutritionLogs] = useState<NutritionLog[]>([]);
+    const [supplementLogs, setSupplementLogs] = useState<SupplementLog[]>([]);
+    const [loadingDetails, setLoadingDetails] = useState(false);
 
     // Build activity map
     const activityMap = useMemo(() => {
@@ -55,6 +67,31 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
         return map;
     }, [workouts, activities]);
 
+    useEffect(() => {
+        if (!selectedDate || !user) return;
+
+        const fetchDetails = async () => {
+            setLoadingDetails(true);
+            try {
+                // Ensure date string is parsed correctly as local date
+                const dateParts = selectedDate.date.split("-").map(Number);
+                const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const [nLogs, sLogs] = await Promise.all([
+                    getTodayNutrition(user.uid, date),
+                    getTodaySupplements(user.uid, date)
+                ]);
+                setNutritionLogs(nLogs);
+                setSupplementLogs(sLogs);
+            } catch (e) {
+                console.error("Error fetching daily details:", e);
+            } finally {
+                setLoadingDetails(false);
+            }
+        };
+
+        fetchDetails();
+    }, [selectedDate, user]);
+
     // Monthly Grid Logic
     const { monthDays, firstDayOfWeek } = useMemo(() => {
         const firstDay = new Date(selectedYear, selectedMonth, 1);
@@ -68,7 +105,12 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
     const { monthActiveDays, monthIntensity } = useMemo(() => {
         let active = 0, intensity = 0;
         for (let d = 1; d <= monthDays; d++) {
+<<<<<<< HEAD
             const key = getDateKey(new Date(selectedYear, selectedMonth, d));
+=======
+            const date = new Date(selectedYear, selectedMonth, d);
+            const key = formatLocalISO(date);
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
             const entries = activityMap[key];
             if (entries) {
                 active++;
@@ -85,7 +127,11 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
         for (let i = 0; i < checkDays; i++) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
+<<<<<<< HEAD
             const key = getDateKey(d);
+=======
+            const key = formatLocalISO(d);
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
             if (activityMap[key]) {
                 temp++;
             } else {
@@ -95,13 +141,23 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
             longest = Math.max(longest, temp);
         }
         if (cur === 0) {
+<<<<<<< HEAD
             const yesterdayKey = getDateKey(today.getTime() - 86400000);
+=======
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const yesterdayKey = formatLocalISO(yesterday);
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
             if (activityMap[yesterdayKey]) {
                 let yTemp = 0;
                 for (let i = 1; i < checkDays; i++) {
                     const d = new Date(today);
                     d.setDate(today.getDate() - i);
+<<<<<<< HEAD
                     const key = getDateKey(d);
+=======
+                    const key = formatLocalISO(d);
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
                     if (activityMap[key]) yTemp++; else break;
                 }
                 cur = yTemp;
@@ -127,7 +183,11 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
         }
         for (let d = 1; d <= monthDays; d++) {
             const date = new Date(selectedYear, selectedMonth, d);
+<<<<<<< HEAD
             const key = getDateKey(date);
+=======
+            const key = formatLocalISO(date);
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
             gridDays.push({ d, key, count: activityMap[key]?.count || 0, items: activityMap[key]?.items || [] });
         }
 
@@ -149,12 +209,12 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
                             {day ? (
                                 <motion.div
                                     whileHover={{ scale: 1.1, zIndex: 10 }}
-                                    onClick={() => day.count > 0 && setSelectedDate({ date: day.key, items: day.items })}
-                                    className={`relative flex items-center justify-center transition-all duration-300 w-full h-full ${day.count > 0 ? "cursor-pointer" : "cursor-default"}`}
+                                    onClick={() => setSelectedDate({ date: day.key, items: day.items })}
+                                    className={`relative flex items-center justify-center transition-all duration-300 w-full h-full cursor-pointer`}
                                     style={{
                                         borderRadius: 4,
                                         background: cellColor(day.count),
-                                        border: day.key === getDateKey(today) ? "1px solid rgba(255,255,255,0.4)" : "none",
+                                        border: day.key === formatLocalISO(today) ? "1px solid rgba(255,255,255,0.4)" : "none",
                                     }}
                                 >
                                     <span className={`text-[9px] sm:text-xs font-bold ${day.count > 0 ? "text-white" : "text-white/10"}`}>
@@ -255,91 +315,163 @@ export default function StreakCalendar({ workouts, activities, onDelete }: Props
                                 <div>
                                     <h4 className="font-bold text-xl text-white">Daily Summary</h4>
                                     <p className="text-sm text-[var(--text-muted)]">
-                                        {new Date(selectedDate.date).toLocaleDateString(undefined, {
-                                            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-                                        })}
+                                        {(() => {
+                                            const parts = selectedDate.date.split("-").map(Number);
+                                            return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString(undefined, {
+                                                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+                                            });
+                                        })()}
                                     </p>
                                 </div>
-                                <button onClick={() => setSelectedDate(null)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                                    <X className="w-6 h-6" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {onSelectDate && (
+                                        <button 
+                                            onClick={() => {
+                                                const parts = selectedDate.date.split("-").map(Number);
+                                                onSelectDate(new Date(parts[0], parts[1] - 1, parts[2]));
+                                                setSelectedDate(null);
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500 text-white text-xs font-bold"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" /> Log
+                                        </button>
+                                    )}
+                                    <button onClick={() => setSelectedDate(null)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-                                {selectedDate.items.map((item, idx) => {
-                                    const isWorkout = 'exercises' in item;
-                                    const wItem = item as WorkoutLog;
-                                    const aItem = item as ActivityLog;
-                                    const itemId = item.id || '';
-                                    const isConfirming = deletingId === itemId;
+                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                                {loadingDetails ? (
+                                    <div className="flex items-center justify-center py-20">
+                                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Workouts & Activities */}
+                                        {selectedDate.items.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h5 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Training</h5>
+                                                {selectedDate.items.map((item, idx) => {
+                                                    const isWorkout = 'exercises' in item;
+                                                    const wItem = item as WorkoutLog;
+                                                    const aItem = item as ActivityLog;
+                                                    const itemId = item.id || '';
+                                                    const isConfirming = deletingId === itemId;
 
-                                    return (
-                                        <div key={itemId || idx} className="bg-white/[0.03] border border-white/[0.05] rounded-2xl p-4 flex flex-col gap-3 group relative">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isWorkout ? 'bg-purple-500/20 text-purple-500' : 'bg-blue-500/20 text-blue-500'}`}>
-                                                        {isWorkout ? <Target className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-sm font-bold text-white capitalize block decoration-blue-500 underline-offset-4 decoration-2">
-                                                            {isWorkout ? "Strength Session" : aItem.type.replace("_", " ")}
-                                                        </span>
-                                                        <span className="text-[10px] text-[var(--text-muted)] font-bold">{item.duration_min} Minutes logged</span>
-                                                    </div>
-                                                </div>
+                                                    return (
+                                                        <div key={itemId || idx} className="bg-white/[0.03] border border-white/[0.05] rounded-2xl p-4 flex flex-col gap-3 group relative">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isWorkout ? 'bg-purple-500/20 text-purple-500' : 'bg-blue-500/20 text-blue-500'}`}>
+                                                                        {isWorkout ? <Target className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-sm font-bold text-white capitalize block">
+                                                                            {isWorkout ? "Strength Session" : aItem.type.replace("_", " ")}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-[var(--text-muted)] font-bold">{item.duration_min} Minutes logged</span>
+                                                                    </div>
+                                                                </div>
 
-                                                <div className="flex items-center gap-1.5">
-                                                    {isWorkout && (
-                                                        <button 
-                                                            onClick={() => setViewingWorkout(item)}
-                                                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all"
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                        </button>
-                                                    )}
+                                                                <div className="flex items-center gap-1.5">
+                                                                    {isWorkout && (
+                                                                        <button 
+                                                                            onClick={() => setViewingWorkout(item)}
+                                                                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all"
+                                                                        >
+                                                                            <Eye className="w-4 h-4" />
+                                                                        </button>
+                                                                    )}
 
-                                                {onDelete && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (isConfirming) {
-                                                                (async () => {
-                                                                    setIsDeleting(true);
-                                                                    await onDelete(itemId, isWorkout ? 'workout' : 'activity');
-                                                                    setSelectedDate(prev => prev ? { ...prev, items: prev.items.filter(i => i.id !== itemId) } : null);
-                                                                    setDeletingId(null);
-                                                                    setIsDeleting(false);
-                                                                })();
-                                                            } else {
-                                                                setDeletingId(itemId);
-                                                            }
-                                                        }}
-                                                        disabled={isDeleting}
-                                                        className={`p-2 rounded-xl transition-all ${isConfirming ? "bg-red-500 text-white" : "text-red-400 opacity-0 group-hover:opacity-100 bg-red-500/10"}`}
-                                                    >
-                                                        {isConfirming ? <span className="text-[10px] font-bold px-2">Confirm</span> : <Trash2 className="w-4 h-4" />}
-                                                    </button>
-                                                )}
-                                                </div>
+                                                                {onDelete && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            if (isConfirming) {
+                                                                                (async () => {
+                                                                                    setIsDeleting(true);
+                                                                                    await onDelete(itemId, isWorkout ? 'workout' : 'activity');
+                                                                                    setSelectedDate(prev => prev ? { ...prev, items: prev.items.filter(i => i.id !== itemId) } : null);
+                                                                                    setDeletingId(null);
+                                                                                    setIsDeleting(false);
+                                                                                })();
+                                                                            } else {
+                                                                                setDeletingId(itemId);
+                                                                            }
+                                                                        }}
+                                                                        disabled={isDeleting}
+                                                                        className={`p-2 rounded-xl transition-all ${isConfirming ? "bg-red-500 text-white" : "text-red-400 opacity-0 group-hover:opacity-100 bg-red-500/10"}`}
+                                                                    >
+                                                                        {isConfirming ? <span className="text-[10px] font-bold px-2">Confirm</span> : <Trash2 className="w-4 h-4" />}
+                                                                    </button>
+                                                                )}
+                                                                </div>
+                                                            </div>
+
+                                                            {isWorkout && (
+                                                                <div className="text-xs text-[var(--text-muted)] font-medium flex-1">
+                                                                    <span className="text-purple-400 font-bold">{wItem.name}</span> • {wItem.exercises.length} Exercises completed • {wItem.total_volume_kg > 0 ? `${Math.round(wItem.total_volume_kg)}kg vol` : "Bodyweight"}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
+                                        )}
 
-                                            {isWorkout && (
-                                                <div className="text-xs text-[var(--text-muted)] font-medium flex-1">
-                                                    <span className="text-purple-400 font-bold">{wItem.name}</span> • {wItem.exercises.length} Exercises completed
-                                                </div>
-                                            )}
+                                        {/* Nutrition */}
+                                        {nutritionLogs.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h5 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Nutrition</h5>
+                                                {nutritionLogs.map((log) => (
+                                                    <div key={log.id} className="bg-white/[0.03] border border-white/[0.05] rounded-2xl p-4 flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-green-500/20 text-green-500 flex items-center justify-center">
+                                                                <Utensils className="w-5 h-5" />
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-sm font-bold text-white block">{log.meal_name}</span>
+                                                                <span className="text-[10px] text-[var(--text-muted)] font-bold">
+                                                                    {log.calories} kcal • {log.protein_g}g P • {log.carbs_g}g C • {log.fat_g}g F
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
 
-                                            {isConfirming && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); setDeletingId(null); }}
-                                                    className="absolute -top-2 -right-2 bg-white text-black text-[10px] font-bold px-3 py-1 rounded-full shadow-lg"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                                        {/* Supplements */}
+                                        {supplementLogs.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h5 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Supplements</h5>
+                                                {supplementLogs.map((log) => (
+                                                    <div key={log.id} className="bg-white/[0.03] border border-white/[0.05] rounded-2xl p-4 flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-500 flex items-center justify-center">
+                                                                <Pill className="w-5 h-5" />
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-sm font-bold text-white block">{log.name}</span>
+                                                                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase">
+                                                                    {log.category} {log.amount_g ? `• ${log.amount_g}g` : ""}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {selectedDate.items.length === 0 && nutritionLogs.length === 0 && supplementLogs.length === 0 && (
+                                            <div className="py-12 text-center text-[var(--text-muted)] text-sm italic">
+                                                No activity or logs found for this day.
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     </div>

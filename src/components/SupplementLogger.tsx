@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
     getTodaySupplements, addSupplementLog, deleteSupplementLog, SupplementLog
 } from "@/lib/firestore";
+import { Timestamp } from "firebase/firestore";
 import {
     CheckCircle, Loader2, Plus, Pill, X, ChevronDown, ChevronUp,
     Zap, Droplets, Apple, Dumbbell, Moon, Heart, Trash2, Edit2, Info
@@ -49,7 +50,7 @@ const QUICK_SUPPLEMENTS: SupplementEntry[] = [
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Promise<void> }) {
+export default function SupplementLogger({ onRefresh, selectedDate }: { onRefresh?: () => Promise<void>; selectedDate?: Date }) {
     const { user } = useAuth();
     const [todayLogs, setTodayLogs] = useState<SupplementLog[]>([]);
     const [fetching, setFetching] = useState(true);
@@ -68,14 +69,14 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
         if (!user) return;
         setFetching(true);
         try {
-            const data = await getTodaySupplements(user.uid);
+            const data = await getTodaySupplements(user.uid, selectedDate);
             setTodayLogs(data);
         } catch (e) {
             console.error("Failed to fetch supplements:", e);
         } finally {
             setFetching(false);
         }
-    }, [user]);
+    }, [user, selectedDate]);
 
     useEffect(() => {
         fetchLogs();
@@ -85,9 +86,9 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
         if (!user || saving) return;
         setSaving(true);
         try {
-            const ref = await addSupplementLog(user.uid, s);
+            const ref = await addSupplementLog(user.uid, s, selectedDate);
             if (ref) {
-                setTodayLogs(prev => [{ id: ref.id, uid: user.uid, timestamp: new Date() as any, ...s }, ...prev]);
+                setTodayLogs(prev => [{ id: ref.id, uid: user.uid, timestamp: (selectedDate ? Timestamp.fromDate(selectedDate) : new Date()) as any, ...s }, ...prev]);
                 setSaved(s.name);
                 if (onRefresh) await onRefresh();
                 setTimeout(() => setSaved(""), 2500);
@@ -97,7 +98,7 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
         } finally {
             setSaving(false);
         }
-    }, [user, saving, onRefresh]);
+    }, [user, saving, onRefresh, selectedDate]);
 
     const handleSave = useCallback(async () => {
         if (!user || !name || saving) return;
@@ -120,12 +121,12 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
         };
 
         try {
-            const ref = await addSupplementLog(user.uid, entry);
+            const ref = await addSupplementLog(user.uid, entry, selectedDate);
             if (ref) {
                 if (editingId) {
                     setTodayLogs(prev => prev.filter(l => l.id !== editingId));
                 }
-                setTodayLogs(prev => [{ id: ref.id, uid: user.uid, timestamp: new Date() as any, ...entry }, ...prev]);
+                setTodayLogs(prev => [{ id: ref.id, uid: user.uid, timestamp: (selectedDate ? Timestamp.fromDate(selectedDate) : new Date()) as any, ...entry }, ...prev]);
                 setSaved(name);
                 if (onRefresh) await onRefresh();
                 setTimeout(() => setSaved(""), 2500);
@@ -137,7 +138,7 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
             setShowForm(false);
             setName(""); setAmountG(""); setNotes(""); setEditingId(null);
         }
-    }, [user, name, selectedCategory, amountG, notes, editingId, onRefresh]);
+    }, [user, name, selectedCategory, amountG, notes, editingId, onRefresh, selectedDate]);
 
     const handleDelete = async (id: string) => {
         if (!user) return;
@@ -165,12 +166,14 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
         catGroups[s.category].push(s);
     });
 
+    const isToday = !selectedDate || new Date(selectedDate).toDateString() === new Date().toDateString();
+
     return (
         <div className="space-y-6">
             {/* Today's Stack List */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <p className="section-header border-none mb-0">Today's Stack</p>
+                    <p className="section-header border-none mb-0">{isToday ? "Today's Stack" : `Stack for ${selectedDate?.toLocaleDateString()}`}</p>
                     {fetching && <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--text-muted)]" />}
                     {saved && (
                         <motion.div
@@ -185,7 +188,7 @@ export default function SupplementLogger({ onRefresh }: { onRefresh?: () => Prom
                 <div className="space-y-1.5">
                     {!fetching && todayLogs.length === 0 && (
                         <div className="text-center py-6 border border-dashed border-white/10 rounded-2xl text-[var(--text-muted)] text-sm">
-                            No supplements logged today.
+                            No supplements logged for this day.
                         </div>
                     )}
                     {todayLogs.map((log) => {

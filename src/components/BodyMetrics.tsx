@@ -24,6 +24,7 @@ export default function BodyMetrics() {
     const [loggingWeight, setLoggingWeight] = useState(false);
     const [weight, setWeight] = useState(70);
     const [height, setHeight] = useState(170);
+    const [logDate, setLogDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
     useEffect(() => {
         if (!user) return;
@@ -52,8 +53,11 @@ export default function BodyMetrics() {
                 setMetrics(finalMetrics.reverse());
                 if (finalMetrics.length > 0) {
                     const latest = finalMetrics[finalMetrics.length - 1];
-                    setWeight(latest.weight_kg);
-                    setHeight(latest.height_cm);
+                    // Don't overwrite if user is currently editing
+                    if (!loggingWeight) {
+                        setWeight(latest.weight_kg);
+                        setHeight(latest.height_cm);
+                    }
                 }
 
                 setActivities(actData);
@@ -73,7 +77,9 @@ export default function BodyMetrics() {
 
     const handleSaveMetric = async () => {
         if (!user) return;
-        await addBodyMetric(user.uid, weight, height);
+        const customDate = logDate ? new Date(logDate) : undefined;
+        // Adjust for timezone if needed, but simple Date(logDate) is usually enough for "that day"
+        await addBodyMetric(user.uid, weight, height, true, customDate);
         setLoggingWeight(false);
     };
 
@@ -278,6 +284,10 @@ export default function BodyMetrics() {
                     <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card w-full max-w-md p-6 space-y-4">
                         <h3 className="text-xl font-bold text-[var(--text-primary)]">Log Metrics</h3>
                         <div className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1 block">Date</label>
+                                <input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} className="field w-full" />
+                            </div>
                             <div>
                                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1 block">Weight (kg)</label>
                                 <input type="number" step="0.1" value={weight} onChange={e => setWeight(parseFloat(e.target.value))} className="field w-full" />

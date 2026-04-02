@@ -142,7 +142,7 @@ function HRZoneChart({ zones }: { zones: number[] }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function CardioTracker({ onRefresh }: { onRefresh?: () => Promise<void> }) {
+export default function CardioTracker({ onRefresh, selectedDate }: { onRefresh?: () => Promise<void>; selectedDate?: Date }) {
     const { user } = useAuth();
     const [modality, setModality] = useState<ModalityId>("run");
     const [durationMin, setDurationMin] = useState("");
@@ -194,7 +194,7 @@ export default function CardioTracker({ onRefresh }: { onRefresh?: () => Promise
                 hr_zones: {
                     z1_min: zones[0], z2_min: zones[1], z3_min: zones[2], z4_min: zones[3], z5_min: zones[4],
                 },
-            } as any);
+            } as any, selectedDate);
             setSaved(true);
             if (onRefresh) await onRefresh();
             setTimeout(() => setSaved(false), 3000);
@@ -203,7 +203,7 @@ export default function CardioTracker({ onRefresh }: { onRefresh?: () => Promise
         } finally {
             setSaving(false);
         }
-    }, [user, modality, durationMin, distanceKm, elevation, avgHR, maxHR, zones, durNum, distNum, eleNum, hrNum, calBurned, current.label, onRefresh]);
+    }, [user, modality, durationMin, distanceKm, elevation, avgHR, maxHR, zones, durNum, distNum, eleNum, hrNum, calBurned, current.label, onRefresh, selectedDate]);
 
     return (
         <div className="space-y-5">

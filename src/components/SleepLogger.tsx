@@ -7,7 +7,7 @@ import { Timestamp } from "firebase/firestore";
 import { Moon, CheckCircle, Plus, Trash2, Loader2, Clock, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function SleepLogger({ onRefresh }: { onRefresh?: () => Promise<void> }) {
+export default function SleepLogger({ onRefresh, selectedDate }: { onRefresh?: () => Promise<void>; selectedDate?: Date }) {
     const { user } = useAuth();
     const [wakeTime, setWakeTime] = useState("07:00");
     const [sleepTime, setSleepTime] = useState("23:00");
@@ -21,14 +21,14 @@ export default function SleepLogger({ onRefresh }: { onRefresh?: () => Promise<v
         if (!user) return;
         setLoading(true);
         try {
-            const data = await getTodaySleepLogs(user.uid);
+            const data = await getTodaySleepLogs(user.uid, selectedDate);
             setLogs(data);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, selectedDate]);
 
     useEffect(() => {
         fetchLogs();
@@ -45,14 +45,15 @@ export default function SleepLogger({ onRefresh }: { onRefresh?: () => Promise<v
     const handleLog = async () => {
         if (!user || saving) return;
         setSaving(true);
-        const today = new Date();
+        const baseDate = selectedDate ? new Date(selectedDate) : new Date();
         const [wH, wM] = wakeTime.split(":").map(Number);
         const [sH, sM] = sleepTime.split(":").map(Number);
-        const wake = new Date(today); wake.setHours(wH, wM, 0, 0);
-        const sleep = new Date(today); 
-        if (durationHours > 0) {
-            // If duration calculation assumes it started yesterday
-            sleep.setDate(sleep.getDate() - ( (wH * 60 + wM) < (sH * 60 + sM) ? 1 : 0 ));
+        const wake = new Date(baseDate); wake.setHours(wH, wM, 0, 0);
+        const sleep = new Date(baseDate); 
+        
+        // If wake time is earlier than sleep time (e.g. wake 7am, sleep 11pm), sleep must have started the previous day
+        if (wH * 60 + wM < sH * 60 + sM) {
+            sleep.setDate(sleep.getDate() - 1);
         }
         sleep.setHours(sH, sM, 0, 0);
         
@@ -91,8 +92,11 @@ export default function SleepLogger({ onRefresh }: { onRefresh?: () => Promise<v
     const qualityMap = ["", "Terrible", "Bad", "Poor", "Below avg", "Average", "Okay", "Good", "Great", "Excellent", "Perfect"];
     const getQualityColor = (q: number) => q >= 8 ? "#10b981" : q >= 6 ? "#f59e0b" : "#ef4444";
 
+    const isToday = !selectedDate || new Date(selectedDate).toDateString() === new Date().toDateString();
+
     return (
         <div className="space-y-4">
+            <h3 className="section-header border-none mb-0">{isToday ? "Today's Sleep" : `Sleep for ${selectedDate?.toLocaleDateString()}`}</h3>
             {/* Input Form */}
             <div className="grid grid-cols-2 gap-3">
                 <div className="card p-3">

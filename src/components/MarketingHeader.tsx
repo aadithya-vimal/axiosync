@@ -10,7 +10,7 @@ export default function MarketingHeader() {
     return (
         <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between z-30 relative">
             <Link href="/" className="flex items-center gap-3">
-                <Image src="/icon.png" alt="Axiosync" width={32} height={32} className="rounded-xl border border-white/10" />
+                <Image src="/icon.png" alt="Axiosync" width={32} height={32} className="rounded-xl border border-white/10" priority />
                 <span className="text-xl font-bold tracking-tight text-white">Axiosync</span>
             </Link>
             <div className="hidden sm:flex items-center gap-8">

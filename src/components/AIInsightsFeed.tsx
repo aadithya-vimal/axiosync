@@ -70,15 +70,25 @@ function generateInsights(opts: {
     }
 
     // Training insight
-    if (daysSinceWorkout === 0 && totalVolumeToday > 0) {
-        const nameList = todayWorkoutNames.length > 0 ? `the ${todayWorkoutNames.join(", ")} session` : "your session";
-        insights.push({
-            id: "trained_today",
-            category: "training",
-            text: `You've completed ${nameList} today, logging ${Math.round(totalVolumeToday).toLocaleString()}kg volume. Remember: growth happens during recovery, not the session itself. Prioritize protein intake and sleep tonight.`,
-            emoji: "💪",
-            color: "#FF9F0A",
-        });
+    if (daysSinceWorkout === 0) {
+        if (totalVolumeToday > 0) {
+            const nameList = todayWorkoutNames.length > 0 ? `the ${todayWorkoutNames.join(", ")} session` : "your session";
+            insights.push({
+                id: "trained_today",
+                category: "training",
+                text: `You've completed ${nameList} today, logging ${Math.round(totalVolumeToday).toLocaleString()}kg volume. Remember: growth happens during recovery, not the session itself. Prioritize protein intake and sleep tonight.`,
+                emoji: "💪",
+                color: "#FF9F0A",
+            });
+        } else {
+            insights.push({
+                id: "trained_today_bw",
+                category: "training",
+                text: `Pure bodyweight session completed! Focus on high-quality movement and control to maximize metabolic benefits. Recovery is still key — fuel up!`,
+                emoji: "🧘",
+                color: "#30D158",
+            });
+        }
     } else if (daysSinceWorkout >= 3) {
         insights.push({
             id: "overdue",

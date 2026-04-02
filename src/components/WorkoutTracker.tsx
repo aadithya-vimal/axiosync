@@ -542,8 +542,13 @@ function CompleteView({
                 })),
                 muscle_groups: Array.from(new Set(session.sessionLogs.map(l => l.muscleGroup))),
                 total_volume_kg: totalVolume,
+<<<<<<< HEAD
                 notes: `Completed via Axiosync Workout Engine (Bodyweight adjusted)`,
             });
+=======
+                notes: `Completed via Axiosync Workout Engine`,
+            }, selectedDate);
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
             setSaved(true);
             if (onRefresh) await onRefresh();
         } catch (e) {
@@ -569,12 +574,12 @@ function CompleteView({
             {/* Stats grid */}
             <div className="grid grid-cols-3 gap-3 w-full max-w-xs mb-8">
                 {[
-                    { label: "Volume", value: `${totalVolume.toFixed(0)}`, unit: "kg" },
+                    { label: "Volume", value: totalVolume > 0 ? `${totalVolume.toFixed(0)}` : "Bodyweight", unit: totalVolume > 0 ? "kg" : "" },
                     { label: "Sets Done", value: `${completedSets}/${totalSets}`, unit: "sets" },
                     { label: "Duration", value: formatTime(session.elapsed), unit: "" },
                 ].map(({ label, value, unit }) => (
                     <div key={label} className="card p-3 text-center">
-                        <div className="text-xl font-bold stat-num text-[var(--text-primary)]">{value}</div>
+                        <div className={`font-bold stat-num text-[var(--text-primary)] ${label === "Volume" && totalVolume === 0 ? "text-sm" : "text-xl"}`}>{value}</div>
                         <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{unit || label}</div>
                         {unit && <div className="text-[9px] text-[var(--text-muted)]">{label}</div>}
                     </div>
@@ -593,7 +598,11 @@ function CompleteView({
                         <div key={log.exerciseId} className="flex items-center justify-between p-3">
                             <div className="text-sm font-medium text-[var(--text-primary)]">{log.name}</div>
                             <div className="text-xs text-[var(--text-muted)] stat-num">
+<<<<<<< HEAD
                                 {completedSets.length} sets · {vol.toFixed(0)}kg
+=======
+                                {completedSets.length} sets{vol > 0 ? ` · ${vol.toFixed(0)}kg` : " · Bodyweight"}
+>>>>>>> 4c089c4 (Implement historical logging, fix date shift, enhance achievements, and UI refinements)
                             </div>
                         </div>
                     );

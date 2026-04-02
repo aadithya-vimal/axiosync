@@ -8,6 +8,7 @@ import WorkoutDetailView from "../WorkoutDetailView";
 import CardioTracker from "@/components/CardioTracker";
 import AIInsightsFeed from "@/components/AIInsightsFeed";
 import AchievementBadges from "@/components/AchievementBadges";
+import { format } from "date-fns";
 
 const pageVariants = {
     initial: { opacity: 0, y: 16 },
@@ -35,6 +36,7 @@ export default function TrainingSection({
     onClearWorkoutPlan,
     onRefresh,
     onWorkoutStateChange,
+    selectedDate,
 }: {
     recentWorkouts: any[];
     recentActivities: any[];
@@ -49,6 +51,7 @@ export default function TrainingSection({
     onClearWorkoutPlan?: () => void;
     onRefresh?: () => Promise<void>;
     onWorkoutStateChange?: (state: string) => void;
+    selectedDate?: Date;
 }) {
     const [subView, setSubView] = useState<"home" | "strength" | "cardio">("home");
     const [viewingWorkout, setViewingWorkout] = useState<any | null>(null);
@@ -91,9 +94,12 @@ export default function TrainingSection({
         ? Math.floor((Date.now() - lastWorkoutTs.getTime()) / 86400000)
         : 99;
     const lastCardioKm = recentActivities[0]?.distance_km || 0;
+    
+    // Filter workouts for the active (today or historical) day
+    const baseDate = selectedDate || new Date();
     const todayWorkouts = recentWorkouts.filter(w => {
         const d = w.timestamp?.toDate?.();
-        return d && new Date().toDateString() === d.toDateString();
+        return d && baseDate.toDateString() === d.toDateString();
     });
     const todayWorkoutNames = todayWorkouts.map(w => w.name);
     const totalToday = todayWorkouts.reduce((a: number, w: any) => a + (w.total_volume_kg || 0), 0);
@@ -114,6 +120,7 @@ export default function TrainingSection({
                     onClearPlan={onClearWorkoutPlan}
                     onRefresh={onRefresh}
                     onStateChange={onWorkoutStateChange}
+                    selectedDate={selectedDate}
                 />
             </div>
         );
@@ -125,17 +132,21 @@ export default function TrainingSection({
                 <button onClick={() => setSubView("home")} className="flex items-center gap-2 text-[#FF9F0A] text-sm font-semibold mb-5 hover:opacity-80 transition-opacity">
                     ← Back
                 </button>
-                <CardioTracker onRefresh={onRefresh} />
+                <CardioTracker onRefresh={onRefresh} selectedDate={selectedDate} />
             </div>
         );
     }
+
+    const isToday = !selectedDate || selectedDate.toDateString() === new Date().toDateString();
 
     return (
         <motion.div
             variants={pageVariants} initial="initial" animate="enter" exit="exit"
             className="space-y-4 pb-32"
         >
-            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight px-1 pt-2">Workouts</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight px-1 pt-2">
+                {isToday ? "Workouts" : `Workouts for ${format(selectedDate!, "MMM dd")}`}
+            </h1>
 
             {/* ── AI Insights Feed ── */}
             {dataLoaded && (
@@ -157,7 +168,7 @@ export default function TrainingSection({
             )}
             {!dataLoaded && <Skeleton className="h-40" />}
 
-            {/* ── Hero Readiness Card (full-width, mobile-first) ── */}
+            {/* ── Hero Readiness Card ── */}
             <motion.div
                 className="relative overflow-hidden rounded-[24px] p-5 shadow-2xl"
                 style={{
@@ -221,7 +232,7 @@ export default function TrainingSection({
                             <div>
                                 <div className="text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-widest">Volume</div>
                                 <div className="text-lg font-bold stat-num text-[#30D158]">
-                                    {dataLoaded ? `${Math.round(totalToday)}kg` : "—"}
+                                    {dataLoaded ? (totalToday > 0 ? `${Math.round(totalToday)}kg` : "BW") : "—"}
                                 </div>
                             </div>
                             {lastCardioKm > 0 && (
@@ -295,7 +306,7 @@ export default function TrainingSection({
             {dataLoaded && (recentWorkouts.length > 0 || recentActivities.length > 0) && (
                 <div className="card p-4 space-y-3">
                     <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">Recent Sessions</div>
-                    {[...recentWorkouts.slice(0, 2).map(w => ({ type: "strength" as const, name: w.name, value: `${Math.round(w.total_volume_kg || 0).toLocaleString()}kg`, date: w.timestamp?.toDate?.() })),
+                    {[...recentWorkouts.slice(0, 2).map(w => ({ type: "strength" as const, name: w.name, value: w.total_volume_kg > 0 ? `${Math.round(w.total_volume_kg).toLocaleString()}kg` : "Bodyweight", date: w.timestamp?.toDate?.() })),
                     ...recentActivities.slice(0, 2).map(a => ({ type: "cardio" as const, name: a.name || a.type, value: a.distance_km ? `${a.distance_km.toFixed(1)}km` : `${a.duration_min}min`, date: a.timestamp?.toDate?.() })),
                     ].sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0)).slice(0, 3).map((s, i) => {
                         const originalItem = s.type === "strength" 

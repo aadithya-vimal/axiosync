@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { addNutritionLog, getTodayNutrition, deleteNutritionLog, NutritionLog } from "@/lib/firestore";
+import { Timestamp } from "firebase/firestore";
 import { Plus, Utensils, ChevronDown, ChevronUp, CheckCircle, Loader2, Flame, Beef, Wheat, Droplets, Trash2, RefreshCw } from "lucide-react";
 
 // ── Quick-add templates ────────────────────────────────────────────────────────
@@ -77,7 +78,7 @@ function MacroBar({ label, grams, color, icon }: { label: string; grams: number;
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function NutritionLogger({ calTarget = 2500, onRefresh }: { calTarget?: number; onRefresh?: () => Promise<void> }) {
+export default function NutritionLogger({ calTarget = 2500, onRefresh, selectedDate }: { calTarget?: number; onRefresh?: () => Promise<void>; selectedDate?: Date }) {
     const { user } = useAuth();
 
     const [meals, setMeals] = useState<NutritionLog[]>([]);
@@ -121,16 +122,16 @@ export default function NutritionLogger({ calTarget = 2500, onRefresh }: { calTa
         if (!user) return;
         setFetching(true);
         try {
-            const data = await getTodayNutrition(user.uid);
+            const data = await getTodayNutrition(user.uid, selectedDate);
             setMeals(data);
         } catch (e) {
             console.error(e);
         } finally {
             setFetching(false);
         }
-    }, [user]);
+    }, [user, selectedDate]);
 
-    // Fetch on mount
+    // Fetch on mount or when selectedDate changes
     useEffect(() => { fetchMeals(); }, [fetchMeals]);
 
     const handleDelete = async (logId?: string) => {
@@ -160,9 +161,9 @@ export default function NutritionLogger({ calTarget = 2500, onRefresh }: { calTa
             }
         };
         try {
-            const ref = await addNutritionLog(user.uid, mealData);
+            const ref = await addNutritionLog(user.uid, mealData, selectedDate);
             if (ref) {
-                setMeals(prev => [{ id: ref.id, uid: user.uid, timestamp: new Date() as any, ...mealData }, ...prev]);
+                setMeals(prev => [{ id: ref.id, uid: user.uid, timestamp: (selectedDate ? Timestamp.fromDate(selectedDate) : new Date()) as any, ...mealData }, ...prev]);
             }
             setName(""); setCalories(""); setProtein(""); setCarbs("");
             setFat(""); setFiber(""); setSodium(""); setSugar("");
@@ -175,7 +176,9 @@ export default function NutritionLogger({ calTarget = 2500, onRefresh }: { calTa
         } finally {
             setSaving(false);
         }
-    }, [user, name, calories, protein, carbs, fat, fiber, sodium, sugar, onRefresh]);
+    }, [user, name, calories, protein, carbs, fat, fiber, sodium, sugar, onRefresh, selectedDate]);
+
+    const isToday = !selectedDate || new Date(selectedDate).toDateString() === new Date().toDateString();
 
     return (
         <div className="space-y-4">
@@ -192,12 +195,12 @@ export default function NutritionLogger({ calTarget = 2500, onRefresh }: { calTa
             {/* Today's meals list */}
             <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                    <p className="section-header border-none mb-1">Today's Meals</p>
+                    <p className="section-header border-none mb-1">{isToday ? "Today's Meals" : `Meals for ${selectedDate?.toLocaleDateString()}`}</p>
                     {fetching && <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--text-muted)]" />}
                 </div>
                 {!fetching && meals.length === 0 && (
                     <div className="text-center py-6 border border-dashed border-white/10 rounded-2xl text-[var(--text-muted)] text-sm">
-                        No meals logged today.
+                        No meals logged for this day.
                     </div>
                 )}
                 {meals.map((m) => (

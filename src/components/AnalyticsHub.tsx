@@ -110,7 +110,7 @@ function ReadinessTab({ readinessLogs, onRefresh }: { readinessLogs: ReadinessLo
         const exertion_score = exertion * 20;
         const readiness_pct = calcReadiness(hrv_ms, resting_hr, sleep_score, exertion_score);
         await addReadinessLog(user.uid, {
-            date: new Date().toISOString().split("T")[0],
+            date: formatLocalISO(new Date()),
             hrv_ms, resting_hr, sleep_score, exertion_score, readiness_pct,
         });
         setSaving(false);

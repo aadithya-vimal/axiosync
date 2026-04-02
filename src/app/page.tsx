@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   getTodayToxins, getTodayNutrition, getOnboarding,
   getRecentWorkouts, getRecentActivities, getTodayReadiness, getBodyMetrics,
-  deleteWorkoutLog, deleteActivityLog,
+  deleteWorkoutLog, deleteActivityLog, formatLocalISO
 } from "@/lib/firestore";
 
 // Analytics
@@ -24,9 +25,11 @@ import DiscoverSection from "@/components/sections/DiscoverSection";
 import LibrarySection from "@/components/sections/LibrarySection";
 import ToolsSection from "@/components/sections/ToolsSection";
 import BodyMetrics from "@/components/BodyMetrics";
+import GlobalDatePicker from "@/components/GlobalDatePicker";
 
 import {
-  Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library, Moon, Sun, Wrench
+  Timer, BarChart3, BookOpen, User, Accessibility, Compass, Library, Moon, Sun, Wrench, CalendarIcon,
+  Activity, LineChart
 } from "lucide-react";
 
 const BodyAnalytics = dynamic(() => import("@/components/BodyAnalytics"), {
@@ -48,9 +51,9 @@ const NAV_ITEMS: { id: Section; label: string; icon: React.ComponentType<{ class
   { id: "tools", label: "Tools", icon: Wrench },
   { id: "discover", label: "Discover", icon: Compass },
   { id: "anatomy", label: "Anatomy", icon: Accessibility },
-  { id: "metrics", label: "Metrics", icon: BarChart3 },
+  { id: "metrics", label: "Metrics", icon: Activity },
   { id: "library", label: "Library", icon: Library },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "analytics", label: "Analytics", icon: LineChart },
   { id: "log", label: "Log", icon: BookOpen },
   { id: "settings", label: "Profile", icon: User },
 ];
@@ -68,6 +71,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [section, setSection] = useState<Section>("training");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [nutrientAura, setNutrientAura] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingData, setOnboardingData] = useState<any>(null);
@@ -111,10 +115,10 @@ export default function DashboardPage() {
   const refreshBodyState = useCallback(async () => {
     if (!user) return;
     const [n, workouts, activities, readiness, metrics] = await Promise.all([
-      getTodayNutrition(user.uid),
+      getTodayNutrition(user.uid, selectedDate),
       getRecentWorkouts(user.uid, 50),
       getRecentActivities(user.uid, 50),
-      getTodayReadiness(user.uid),
+      getTodayReadiness(user.uid, selectedDate),
       getBodyMetrics(user.uid, 1),
     ]);
 
@@ -133,21 +137,27 @@ export default function DashboardPage() {
 
     // Streak calc
     const allDays = new Set([
-      ...workouts.map((w: any) => w.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
-      ...activities.map((a: any) => a.timestamp?.toDate?.()?.toISOString().split("T")[0] || ""),
+      ...workouts.map((w: any) => {
+        const d = w.timestamp?.toDate?.();
+        return d ? formatLocalISO(d) : "";
+      }),
+      ...activities.map((a: any) => {
+        const d = a.timestamp?.toDate?.();
+        return d ? formatLocalISO(d) : "";
+      }),
     ]);
     let s = 0;
     const today = new Date();
     for (let i = 0; i < 90; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
-      const key = d.toISOString().split("T")[0];
+      const key = formatLocalISO(d);
       if (allDays.has(key)) s++;
       else if (i > 0) break;
     }
     setStreakDays(s);
     setDataLoaded(true);
-  }, [user]);
+  }, [user, selectedDate]);
 
   useEffect(() => {
     if (!user) return;
@@ -178,7 +188,7 @@ export default function DashboardPage() {
           animate={{ scale: [0.95, 1.05, 0.95], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <img src="/icon.png" alt="Loading" className="w-full h-full object-cover" />
+          <Image src="/icon.png" alt="Loading" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
         </motion.div>
         <div className="flex flex-col items-center gap-1">
@@ -210,6 +220,7 @@ export default function DashboardPage() {
             onClearWorkoutPlan={() => setActiveWorkoutPlan(null)}
             onRefresh={refreshBodyState}
             onWorkoutStateChange={(s) => setWorkoutWorkoutActive(s === "active" || s === "rest")}
+            selectedDate={selectedDate}
           />
         )}
 
@@ -253,6 +264,8 @@ export default function DashboardPage() {
             recentActivities={recentActivities}
             onDelete={handleDelete}
             onRefresh={refreshBodyState}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
           />
         )}
 
@@ -274,10 +287,12 @@ export default function DashboardPage() {
 
       <div className="flex flex-col sm:flex-row h-screen overflow-hidden" style={{ background: "var(--bg-base)" }}>
         {/* ── Desktop Sidebar ── */}
-        <nav className="hidden sm:flex flex-col w-60 shrink-0 h-screen sticky top-0 p-4 bg-[var(--bg-elevated)] border-r border-[var(--border-subtle)]">
-          <div className="flex items-center justify-between px-2 mb-8 mt-2">
+        <nav className="hidden sm:flex flex-col w-64 shrink-0 h-screen sticky top-0 p-4 bg-[var(--bg-elevated)] border-r border-[var(--border-subtle)] overflow-y-auto no-scrollbar">
+          <div className="flex items-center justify-between px-2 mb-6 mt-2">
             <div className="flex items-center gap-2.5">
-              <img src="/icon.png" alt="Axiosync Logo" className="w-8 h-8 rounded-[10px] object-cover border border-[var(--border-subtle)]" />
+              <div className="relative w-8 h-8">
+                <Image src="/icon.png" alt="Axiosync Logo" fill className="rounded-[10px] object-cover border border-[var(--border-subtle)]" />
+              </div>
               <span className="font-extrabold text-2xl tracking-tight">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Axio</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">sync</span>
@@ -290,6 +305,11 @@ export default function DashboardPage() {
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
+          </div>
+
+          {/* GLOBAL DATE PICKER - Sidebar */}
+          <div className="mb-6 px-1">
+             <GlobalDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
           </div>
 
           <div className="flex-1 space-y-1">
@@ -318,7 +338,7 @@ export default function DashboardPage() {
           </div>
 
           {user && (
-            <div className="mt-auto pt-4 border-t border-[var(--border-subtle)]">
+            <div className="mt-8 pt-4 border-t border-[var(--border-subtle)]">
               <div className="flex items-center gap-3 px-2">
                 {user.photoURL ? (
                   <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full ring-1 ring-[var(--border-subtle)]" />
@@ -343,38 +363,43 @@ export default function DashboardPage() {
           WebkitBackdropFilter: "blur(24px) saturate(180%)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
-          <div className="flex justify-between items-center px-5 py-3.5">
-            <div className="flex items-center gap-2.5">
-              {/* App Logo */}
-              <div className="relative w-8 h-8 rounded-[10px] flex-shrink-0 border border-white/10 overflow-hidden shadow-[0_0_12px_rgba(99,102,241,0.3)]">
-                <img src="/icon.png" alt="Logo" className="w-full h-full object-cover" />
-              </div>
-              <span className="font-extrabold text-[17px] tracking-tight">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Axio</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">sync</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] transition-colors"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              </button>
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full ring-1 ring-white/10" />
-              ) : (
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "linear-gradient(135deg,#3B82F6,#7C3AED)", color: "white" }}>
-                  {user?.displayName?.[0]?.toUpperCase() || "A"}
+          <div className="flex flex-col p-3 gap-2">
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2.5">
+                    {/* App Logo */}
+                    <div className="relative w-8 h-8 rounded-[10px] flex-shrink-0 border border-white/10 overflow-hidden shadow-[0_0_12px_rgba(99,102,241,0.3)]">
+                        <Image src="/icon.png" alt="Logo" fill className="object-cover" />
+                    </div>
+                    <span className="font-extrabold text-[17px] tracking-tight">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Axio</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">sync</span>
+                    </span>
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] transition-colors"
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    >
+                        {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                    </button>
+                    {user?.photoURL ? (
+                        <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full ring-1 ring-white/10" />
+                    ) : (
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "linear-gradient(135deg,#3B82F6,#7C3AED)", color: "white" }}>
+                            {user?.displayName?.[0]?.toUpperCase() || "A"}
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* GLOBAL DATE PICKER - Mobile */}
+            <GlobalDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
           </div>
         </div>
 
         {/* ── Main Content ── */}
-        <main className="flex-1 overflow-y-auto no-scrollbar relative z-10 w-full px-4 sm:px-8 pt-[62px] sm:pt-6 pb-[88px] sm:pb-12 max-w-[1000px] mx-auto overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto no-scrollbar relative z-10 w-full px-4 sm:px-8 pt-[140px] sm:pt-6 pb-[88px] sm:pb-12 max-w-[1000px] mx-auto overflow-x-hidden">
           <SectionContent />
         </main>
 

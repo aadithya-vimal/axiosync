@@ -196,6 +196,13 @@ export interface AIInsight {
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
+export function formatLocalISO(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
 function userCol(uid: string, col: string) {
     return collection(db, "users", uid, col);
 }
@@ -308,13 +315,13 @@ export async function getOnboarding(uid: string): Promise<UserOnboarding | null>
 
 // ─── BODY METRICS ─────────────────────────────────────────────────────────────
 
-export async function addBodyMetric(uid: string, weight_kg: number, height_cm: number, syncProfile = true) {
+export async function addBodyMetric(uid: string, weight_kg: number, height_cm: number, syncProfile = true, customTimestamp?: Date) {
     if (isDemoMode) return;
     const { bmi, category } = calcBMI(weight_kg, height_cm);
     
     // 1. Add to historical logs
     const docRef = await addDoc(userCol(uid, "body_metrics"), {
-        uid, weight_kg, height_cm, bmi, bmi_category: category, timestamp: Timestamp.now(),
+        uid, weight_kg, height_cm, bmi, bmi_category: category, timestamp: customTimestamp ? Timestamp.fromDate(customTimestamp) : Timestamp.now(),
     });
 
     // 2. Sync to profile (onboarding) so the "Current Weight" is always correct everywhere
@@ -335,15 +342,24 @@ export async function getBodyMetrics(uid: string, count = 30): Promise<BodyMetri
 
 // ─── NUTRITION ─────────────────────────────────────────────────────────────────
 
-export async function addNutritionLog(uid: string, log: Omit<NutritionLog, "id" | "uid" | "timestamp">) {
+export async function addNutritionLog(uid: string, log: Omit<NutritionLog, "id" | "uid" | "timestamp">, customTimestamp?: Date) {
     if (isDemoMode) return;
-    return addDoc(userCol(uid, "logs_nutrition"), { uid, ...log, timestamp: Timestamp.now() });
+    return addDoc(userCol(uid, "logs_nutrition"), { uid, ...log, timestamp: customTimestamp ? Timestamp.fromDate(customTimestamp) : Timestamp.now() });
 }
 
-export async function getTodayNutrition(uid: string): Promise<NutritionLog[]> {
+export async function getTodayNutrition(uid: string, date?: Date): Promise<NutritionLog[]> {
     if (isDemoMode) return [];
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const q = query(userCol(uid, "logs_nutrition"), where("timestamp", ">=", Timestamp.fromDate(today)), orderBy("timestamp", "desc"));
+    const targetDate = date ? new Date(date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(targetDate.getDate() + 1);
+
+    const q = query(
+        userCol(uid, "logs_nutrition"), 
+        where("timestamp", ">=", Timestamp.fromDate(targetDate)), 
+        where("timestamp", "<", Timestamp.fromDate(nextDay)),
+        orderBy("timestamp", "desc")
+    );
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as NutritionLog));
 }
@@ -363,9 +379,9 @@ export async function deleteNutritionLog(uid: string, id: string): Promise<void>
 
 // ─── TOXINS ────────────────────────────────────────────────────────────────────
 
-export async function addToxinLog(uid: string, log: Omit<ToxinLog, "id" | "uid" | "timestamp">) {
+export async function addToxinLog(uid: string, log: Omit<ToxinLog, "id" | "uid" | "timestamp">, customTimestamp?: Date) {
     if (isDemoMode) return;
-    return addDoc(userCol(uid, "logs_toxins"), { uid, ...log, timestamp: Timestamp.now() });
+    return addDoc(userCol(uid, "logs_toxins"), { uid, ...log, timestamp: customTimestamp ? Timestamp.fromDate(customTimestamp) : Timestamp.now() });
 }
 
 export async function getToxinLogs(uid: string, days = 30): Promise<ToxinLog[]> {
@@ -376,10 +392,18 @@ export async function getToxinLogs(uid: string, days = 30): Promise<ToxinLog[]> 
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ToxinLog));
 }
 
-export async function getTodayToxins(uid: string) {
+export async function getTodayToxins(uid: string, date?: Date) {
     if (isDemoMode) return { hasSmoking: false, hasAlcohol: false, smokingCount: 0, alcoholUnits: 0 };
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const q = query(userCol(uid, "logs_toxins"), where("timestamp", ">=", Timestamp.fromDate(today)));
+    const targetDate = date ? new Date(date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(targetDate.getDate() + 1);
+
+    const q = query(
+        userCol(uid, "logs_toxins"), 
+        where("timestamp", ">=", Timestamp.fromDate(targetDate)),
+        where("timestamp", "<", Timestamp.fromDate(nextDay))
+    );
     const snap = await getDocs(q);
     const logs = snap.docs.map((d) => d.data() as ToxinLog);
     return {
@@ -413,11 +437,20 @@ export async function getSleepLogs(uid: string, days = 30): Promise<SleepLog[]> 
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SleepLog));
 }
 
-export async function getTodaySleepLogs(uid: string): Promise<SleepLog[]> {
+export async function getTodaySleepLogs(uid: string, date?: Date): Promise<SleepLog[]> {
     if (isDemoMode) return [];
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const targetDate = date ? new Date(date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(targetDate.getDate() + 1);
+
     // Sleep usually starts the night before, so we look for logs where sleep_end (wake time) is today
-    const q = query(userCol(uid, "logs_sleep"), where("sleep_end", ">=", Timestamp.fromDate(today)), orderBy("sleep_end", "desc"));
+    const q = query(
+        userCol(uid, "logs_sleep"), 
+        where("sleep_end", ">=", Timestamp.fromDate(targetDate)),
+        where("sleep_end", "<", Timestamp.fromDate(nextDay)),
+        orderBy("sleep_end", "desc")
+    );
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SleepLog));
 }
@@ -429,9 +462,9 @@ export async function deleteSleepLog(uid: string, id: string): Promise<void> {
 
 // ─── ACTIVITY ─────────────────────────────────────────────────────────────────
 
-export async function addActivityLog(uid: string, log: Omit<ActivityLog, "id" | "uid" | "timestamp">) {
+export async function addActivityLog(uid: string, log: Omit<ActivityLog, "id" | "uid" | "timestamp">, customTimestamp?: Date) {
     if (isDemoMode) return;
-    return addDoc(userCol(uid, "logs_activity"), { uid, ...log, timestamp: Timestamp.now() });
+    return addDoc(userCol(uid, "logs_activity"), { uid, ...log, timestamp: customTimestamp ? Timestamp.fromDate(customTimestamp) : Timestamp.now() });
 }
 
 export async function getRecentActivities(uid: string, count = 20): Promise<ActivityLog[]> {
@@ -451,9 +484,9 @@ export async function getActivityLogs(uid: string, days = 30): Promise<ActivityL
 
 // ─── WORKOUT ──────────────────────────────────────────────────────────────────
 
-export async function addWorkoutLog(uid: string, log: Omit<WorkoutLog, "id" | "uid" | "timestamp">) {
+export async function addWorkoutLog(uid: string, log: Omit<WorkoutLog, "id" | "uid" | "timestamp">, customTimestamp?: Date) {
     if (isDemoMode) return;
-    return addDoc(userCol(uid, "logs_workout"), { uid, ...log, timestamp: Timestamp.now() });
+    return addDoc(userCol(uid, "logs_workout"), { uid, ...log, timestamp: customTimestamp ? Timestamp.fromDate(customTimestamp) : Timestamp.now() });
 }
 
 export async function getRecentWorkouts(uid: string, count = 20): Promise<WorkoutLog[]> {
@@ -483,15 +516,25 @@ export async function deleteActivityLog(uid: string, id: string): Promise<void> 
 
 // ─── READINESS ────────────────────────────────────────────────────────────────
 
-export async function addReadinessLog(uid: string, log: Omit<ReadinessLog, "id" | "uid" | "timestamp">) {
+export async function addReadinessLog(uid: string, log: Omit<ReadinessLog, "id" | "uid" | "timestamp">, customTimestamp?: Date) {
     if (isDemoMode) return;
-    return addDoc(userCol(uid, "logs_readiness"), { uid, ...log, timestamp: Timestamp.now() });
+    return addDoc(userCol(uid, "logs_readiness"), { uid, ...log, timestamp: customTimestamp ? Timestamp.fromDate(customTimestamp) : Timestamp.now() });
 }
 
-export async function getTodayReadiness(uid: string): Promise<ReadinessLog | null> {
+export async function getTodayReadiness(uid: string, date?: Date): Promise<ReadinessLog | null> {
     if (isDemoMode) return null;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const q = query(userCol(uid, "logs_readiness"), where("timestamp", ">=", Timestamp.fromDate(today)), orderBy("timestamp", "desc"), limit(1));
+    const targetDate = date ? new Date(date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(targetDate.getDate() + 1);
+
+    const q = query(
+        userCol(uid, "logs_readiness"), 
+        where("timestamp", ">=", Timestamp.fromDate(targetDate)),
+        where("timestamp", "<", Timestamp.fromDate(nextDay)),
+        orderBy("timestamp", "desc"), 
+        limit(1)
+    );
     const snap = await getDocs(q);
     if (snap.empty) return null;
     return { id: snap.docs[0].id, ...snap.docs[0].data() } as ReadinessLog;
@@ -507,13 +550,22 @@ export async function getReadinessLogs(uid: string, days = 30): Promise<Readines
 
 // ─── SUPPLEMENTS ──────────────────────────────────────────────────────────────
 
-export async function addSupplementLog(uid: string, log: Omit<SupplementLog, "id" | "uid" | "timestamp">) {
-    return addDoc(userCol(uid, "logs_supplements"), { uid, ...log, timestamp: Timestamp.now() });
+export async function addSupplementLog(uid: string, log: Omit<SupplementLog, "id" | "uid" | "timestamp">, customTimestamp?: Date) {
+    return addDoc(userCol(uid, "logs_supplements"), { uid, ...log, timestamp: customTimestamp ? Timestamp.fromDate(customTimestamp) : Timestamp.now() });
 }
 
-export async function getTodaySupplements(uid: string): Promise<SupplementLog[]> {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const q = query(userCol(uid, "logs_supplements"), where("timestamp", ">=", Timestamp.fromDate(today)), orderBy("timestamp", "desc"));
+export async function getTodaySupplements(uid: string, date?: Date): Promise<SupplementLog[]> {
+    const targetDate = date ? new Date(date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(targetDate.getDate() + 1);
+
+    const q = query(
+        userCol(uid, "logs_supplements"), 
+        where("timestamp", ">=", Timestamp.fromDate(targetDate)),
+        where("timestamp", "<", Timestamp.fromDate(nextDay)),
+        orderBy("timestamp", "desc")
+    );
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SupplementLog));
 }
